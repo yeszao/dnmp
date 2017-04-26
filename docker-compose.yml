@@ -1,5 +1,5 @@
 nginx:
-  image: nginx:latest
+  image: nginx:alpine
   ports:
     - "80:80"
     - "443:443"
@@ -30,7 +30,8 @@ mysql:
   ports:
     - "3306:3306"
   volumes:
-    - ./mysql/:/var/lib/mysql/
-    - ./logs/mysql/:/var/log/mysql/
+    - ./conf/mysql/mysql.cnf:/etc/mysql/conf.d/mysql.cnf:ro
+    - ./mysql/:/var/lib/mysql/:rw
+    - ./logs/mysql/:/var/log/mysql/:rw
   environment:
     MYSQL_ROOT_PASSWORD: "123456"
