@@ -1,5 +1,5 @@
 # dlnmp
-Completely LNMP environment for ONE KEY deploy.
+Completely LNMP environment for ONE KEY deploying.
 
 ### Feature
 1. Multiple domains support.
