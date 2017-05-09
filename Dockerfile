@@ -83,6 +83,10 @@ RUN docker-php-ext-install mysqli
 #RUN docker-php-ext-install soap
 #RUN docker-php-ext-install wddx
 
+# Readline
+#RUN apt-get install -y libreadline-dev
+#RUN docker-php-ext-install readline
+
 # SNMP
 #RUN apt-get install -y libsnmp-dev
 #RUN apt-get install -y snmp
