@@ -18,8 +18,6 @@ php-fpm:
   volumes:
     - ./www/:/var/www/html/:rw
     - ./conf/php/php.ini:/usr/local/etc/php/php.ini:ro
-    - ./conf/php/conf.d:/usr/local/etc/php/conf.d/:rw
-    - ./conf/php/php-fpm.conf:/usr/local/etc/php-fpm.conf:ro
     - ./conf/php/php-fpm.d/www.conf:/usr/local/etc/php-fpm.d/www.conf:rw
     - ./logs/php-fpm/:/var/log/php-fpm/:rw
   links:
