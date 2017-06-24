@@ -1,11 +1,13 @@
 FROM php:fpm
 
+# You may need proxy
+# RUN export http_proxy=192.168.1.10:1080
+# RUN export https_proxy=192.168.1.10:1080
+
 # Update ubuntu
 RUN apt-get update
-RUN apt-get upgrade -y
-RUN apt-get install -y apt-utils
 
-# mctypt
+# mcrypt
 RUN apt-get install -y libmcrypt-dev
 RUN docker-php-ext-install mcrypt
 
@@ -24,6 +26,10 @@ RUN docker-php-ext-install pcntl
 RUN docker-php-ext-install opcache
 RUN docker-php-ext-install pdo_mysql
 RUN docker-php-ext-install mysqli
+
+# SOAP Client
+RUN apt-get install -y libxml2-dev
+RUN docker-php-ext-install soap
 
 # General extensions that may had be installed default
 # If not, install them with following command
@@ -75,12 +81,10 @@ RUN docker-php-ext-install mysqli
 #RUN docker-php-ext-install dba
 #RUN docker-php-ext-install interbase
 
-# More Extensions depend on libxml
-#RUN apt-get install -y libxml2-dev
+# execute `RUN apt-get install -y libxml2-dev` before using following command
 #RUN apt-get install -y libxslt-dev
 #RUN docker-php-ext-install xsl
 #RUN docker-php-ext-install xmlrpc
-#RUN docker-php-ext-install soap
 #RUN docker-php-ext-install wddx
 
 # Readline
