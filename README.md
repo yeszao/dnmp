@@ -23,7 +23,7 @@ Docker deploying Nginx MySQL PHP7 in one key, support full feature functions.
     ```
     You may need use `sudo` before this command.
 5. Go to your browser and type `localhost`, you will see:
-    ![Demo Image](https://github.com/yeszao/dlnmp/raw/master/snapshot.png)
+    ![Demo Image](https://github.com/yeszao/dnmp/raw/master/snapshot.png)
     Change `index.php` in `./www/site1/` for more testing.
 
 ### HTTPS and HTTP/2
