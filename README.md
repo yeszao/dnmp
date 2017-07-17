@@ -1,6 +1,8 @@
 # dnmp
 Docker deploying Nginx MySQL PHP7 in one key, support full feature functions.
 
+![Demo Image](./dnmp.png)
+
 ### Feature
 1. Support Multiple domains.
 2. Support HTTPS and HTTP/2.
@@ -13,25 +15,27 @@ Docker deploying Nginx MySQL PHP7 in one key, support full feature functions.
 
 ### Usage
 1. Install `git`, `docker` and `docker-compose`;
-2. Clone all dlnmp directories and files from Github:
+2. Clone project:
     ```
-    $ git clone https://github.com/yeszao/dlnmp.git
+    $ git clone https://github.com/yeszao/dnmp.git
     ```
-4. Start docker container:
+4. Start docker containers:
     ```
     $ docker-compose up
     ```
-    You may need use `sudo` before this command.
+    You may need use `sudo` before this command in Linux.
 5. Go to your browser and type `localhost`, you will see:
-    ![Demo Image](https://github.com/yeszao/dnmp/raw/master/snapshot.png)
-    Change `index.php` in `./www/site1/` for more testing.
+
+![Demo Image](./snapshot.png)
+
+The index file is located in `./www/site1/`.
 
 ### HTTPS and HTTP/2
-Demo include 2 sites:
-* http://www.site1.com (same as http://localhost)
+Default demo include 2 sites:
+* http://www.site1.com (same with http://localhost)
 * https://www.site2.com
 
-To preview them, add following two lines to your hosts file (at `/etc/hosts` on Linux and `C:\Windows\System32\drivers\etc\hosts` on Windows):
+To preview them, add 2 lines to your hosts file (at `/etc/hosts` on Linux and `C:\Windows\System32\drivers\etc\hosts` on Windows):
 ```
 127.0.0.1 www.site1.com
 127.0.0.1 www.site2.com
