@@ -1,5 +1,5 @@
-# dlnmp
-Completely LNMP environment for ONE KEY deploying.
+# dnmp
+Docker deploying Nginx MySQL PHP7 in one key, support full feature functions.
 
 ### Feature
 1. Support Multiple domains.
