@@ -7,7 +7,7 @@ nginx:
     - ./www/:/var/www/html/:rw
     - ./conf/nginx/conf.d:/etc/nginx/conf.d/:ro
     - ./conf/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    - ./logs/nginx/:/var/log/nginx/:rw
+    - ./log/nginx/:/var/log/nginx/:rw
   links:
     - php-fpm:fpm
 
@@ -19,7 +19,7 @@ php-fpm:
     - ./www/:/var/www/html/:rw
     - ./conf/php/php.ini:/usr/local/etc/php/php.ini:ro
     - ./conf/php/php-fpm.d/www.conf:/usr/local/etc/php-fpm.d/www.conf:rw
-    - ./logs/php-fpm/:/var/log/php-fpm/:rw
+    - ./log/php-fpm/:/var/log/php-fpm/:rw
   links:
     - mysql:mysql
 
@@ -30,6 +30,6 @@ mysql:
   volumes:
     - ./conf/mysql/mysql.cnf:/etc/mysql/conf.d/mysql.cnf:ro
     - ./mysql/:/var/lib/mysql/:rw
-    - ./logs/mysql/:/var/log/mysql/:rw
+    - ./log/mysql/:/var/log/mysql/:rw
   environment:
     MYSQL_ROOT_PASSWORD: "123456"
