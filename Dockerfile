@@ -4,6 +4,15 @@ FROM php:fpm
 # RUN export http_proxy=192.168.1.10:1080
 # RUN export https_proxy=192.168.1.10:1080
 
+
+RUN sed -i "s/archive.ubuntu./mirrors.aliyun./g" /etc/apt/sources.list 
+RUN sed -i "s/deb.debian.org/mirrors.aliyun.com/g" /etc/apt/sources.list 
+RUN sed -i "s/security.debian.org/mirrors.aliyun.com\/debian-security/g" /etc/apt/sources.list
+
+
+
+
+
 # Update ubuntu
 RUN apt-get update
 
