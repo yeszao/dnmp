@@ -1,0 +1,5 @@
+*
+!certs
+!site1.conf  
+!site2.conf
+!.gitignore
