@@ -10,6 +10,7 @@ nginx:
     - ./log/nginx/:/var/log/nginx/:rw
   links:
     - php-fpm:fpm
+    - php56-fpm:fpm56
 
 php-fpm:
   build: .
@@ -20,6 +21,19 @@ php-fpm:
     - ./conf/php/php.ini:/usr/local/etc/php/php.ini:ro
     - ./conf/php/php-fpm.d/www.conf:/usr/local/etc/php-fpm.d/www.conf:rw
     - ./log/php-fpm/:/var/log/php-fpm/:rw
+  links:
+    - mysql:mysql
+
+
+php56-fpm:
+  build: .
+  expose:
+    - "9000"
+  volumes:
+    - ./www/:/var/www/html/:rw
+    - ./conf/php5.6/php.ini:/usr/local/etc/php/php.ini:ro
+    - ./conf/php5.6/php-fpm.d/www.conf:/usr/local/etc/php-fpm.d/www.conf:rw
+    - ./log/php5.6-fpm/:/var/log/php-fpm/:rw
   links:
     - mysql:mysql
 
