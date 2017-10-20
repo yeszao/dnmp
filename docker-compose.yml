@@ -22,14 +22,20 @@ php-fpm:
     - ./log/php-fpm/:/var/log/php-fpm/:rw
   links:
     - mysql:mysql
+    - redis:redis
 
 mysql:
   image: mysql:latest
   ports:
     - "3306:3306"
   volumes:
-    - ./conf/mysql/mysql.cnf:/etc/mysql/conf.d/mysql.cnf:ro
+    - ./conf/mysql/my.cnf:/etc/mysql/my.cnf:ro
     - ./mysql/:/var/lib/mysql/:rw
     - ./log/mysql/:/var/log/mysql/:rw
   environment:
     MYSQL_ROOT_PASSWORD: "123456"
+
+redis:
+  image: redis:latest
+  ports:
+    - "6379:6379"
