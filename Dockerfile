@@ -19,11 +19,11 @@ RUN docker-php-ext-install mcrypt
 ## GD
 RUN apt-get install -y libfreetype6-dev libjpeg62-turbo-dev libpng12-dev
 RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/
-RUN docker-php-ext-install -j$(nproc) gd
+RUN docker-php-ext-install gd
 
 ## Intl
 RUN apt-get install -y libicu-dev
-RUN docker-php-ext-install -j$(nproc) intl
+RUN docker-php-ext-install intl
 
 ## General
 RUN docker-php-ext-install zip
@@ -41,7 +41,7 @@ RUN docker-php-ext-install soap
 RUN apt-get install -y libbz2-dev
 RUN docker-php-ext-install bz2
 
-## These files:
+## Extensions:
 ##     ctype, dom, fileinfo, ftp, hash, iconv, json, pdo, pdo_sqlite, session,
 ##     tokenizer, simplexml, xml, xmlreader, xmlwriter, phar
 ## are bundled and compiled into PHP by default.
@@ -54,7 +54,7 @@ RUN docker-php-ext-install bz2
 #RUN apt-get install -y libcurl4-openssl-dev
 #RUN docker-php-ext-install curl
 
-## More files
+## More extensions
 #RUN docker-php-ext-install exif
 #RUN docker-php-ext-install bcmath
 #RUN docker-php-ext-install calendar
@@ -65,7 +65,7 @@ RUN docker-php-ext-install bz2
 #RUN docker-php-ext-install sysvsem
 #RUN docker-php-ext-install sysvshm
 
-## More files handle database
+## More extensions handle database
 #RUN docker-php-ext-install pdo_firebird
 #RUN docker-php-ext-install pdo_dblib
 #RUN docker-php-ext-install pdo_oci
@@ -149,6 +149,6 @@ RUN docker-php-ext-install bz2
 #RUN cd /tmp/ \
 #        && tar -xf yaf-3.0.5.tgz \
 #		&& rm yaf-3.0.5.tgz \
-#        && ( cd yaf-3.0.5 && phpize && ./configure && make -j$(nproc) && make install ) \
+#        && ( cd yaf-3.0.5 && phpize && ./configure && make && make install ) \
 #        && rm -r yaf-3.0.5
 #RUN docker-php-ext-enable yaf
