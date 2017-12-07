@@ -101,18 +101,14 @@ RUN apt-get update \
 # Composer
 #RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer \
 
-# Install pecl extensions
+# Install extension using pecl
 # Notice: if pecl install get error
 #    `No releases available for package "pecl.php.net/xxx"`
 # or
 #    `Package "xxx" does not have REST xml available`
-# Please turn on proxy with:
+# Please turn on proxy (The proxy IP may be docker host IP or others):
 RUN pear config-set http_proxy http://10.0.75.1:1080
-# The proxy IP may be docker host IP or others
-#
-# Notice:
-# pecl install xdebug requires PHP version >= 5.5.0
-# pecl install memcached requires PHP (version >= 7.0.0)
+
 RUN pecl install redis-3.1.4 \
     && docker-php-ext-enable redis \
     && :\

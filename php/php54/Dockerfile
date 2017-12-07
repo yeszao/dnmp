@@ -1,157 +1,141 @@
 FROM php:5.4-fpm
 
 COPY ./sources.list.jessie /etc/apt/sources.list
-RUN apt-get update
 
-# mcrypt
-RUN apt-get install -y libmcrypt-dev
-RUN docker-php-ext-install mcrypt
+# Extensions: ctype, dom, fileinfo, ftp, hash, iconv, json, pdo, pdo_sqlite, session,
+# tokenizer, simplexml, xml, xmlreader, xmlwriter and phar are bundled and compiled into
+# PHP by default. If missing, install them directly by `docker-php-ext-install extension_name`
 
-# GD
-RUN apt-get install -y libfreetype6-dev libjpeg62-turbo-dev libpng12-dev
-RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/
-RUN docker-php-ext-install gd
-
-# Intl
-RUN apt-get install -y libicu-dev
-RUN docker-php-ext-install intl
-
-# General
-RUN docker-php-ext-install zip
-RUN docker-php-ext-install pcntl
-#RUN docker-php-ext-install opcache
-RUN docker-php-ext-install pdo_mysql
-RUN docker-php-ext-install mysqli
-RUN docker-php-ext-install mbstring
-
-# SOAP Client
-RUN apt-get install -y libxml2-dev
-RUN docker-php-ext-install soap
-
-# The following extensions are bundled and compiled into PHP by default.
-# ctype, dom, fileinfo, ftp, hash, iconv, json, pdo, pdo_sqlite, session,
-# tokenizer, simplexml, xml, xmlreader, xmlwriter, phar
-# If not, install them with `RUN docker-php-ext-install extension_name`
-
-# CURL, may had be installed default
-#RUN apt-get install -y curl
-#RUN apt-get install -y libcurl3
-#RUN apt-get install -y libcurl4-openssl-dev
-#RUN docker-php-ext-install curl
-
-# bz2
-RUN apt-get install -y libbz2-dev
-RUN docker-php-ext-install bz2
-
-# More extensions
-RUN docker-php-ext-install exif
-#RUN docker-php-ext-install bcmath
-RUN docker-php-ext-install calendar
-RUN docker-php-ext-install sockets
-RUN docker-php-ext-install gettext
-RUN docker-php-ext-install shmop
-RUN docker-php-ext-install sysvmsg
-RUN docker-php-ext-install sysvsem
-RUN docker-php-ext-install sysvshm
-
-# More extensions handle database
-#RUN docker-php-ext-install pdo_firebird
-#RUN docker-php-ext-install pdo_dblib
-#RUN docker-php-ext-install pdo_oci
-#RUN docker-php-ext-install pdo_odbc
-#RUN docker-php-ext-install pdo_pgsql
-#RUN docker-php-ext-install pgsql
-#RUN docker-php-ext-install oci8
-#RUN docker-php-ext-install odbc
-#RUN docker-php-ext-install dba
-#RUN docker-php-ext-install interbase
-
-# execute `RUN apt-get install -y libxml2-dev` before using following command
-# RUN apt-get install -y libxml2-dev
-RUN apt-get install -y libxslt-dev
-RUN docker-php-ext-install xsl
-RUN docker-php-ext-install xmlrpc
-RUN docker-php-ext-install wddx
-
-# Readline
-#RUN apt-get install -y libreadline-dev
-#RUN docker-php-ext-install readline
-
-# SNMP
-#RUN apt-get install -y libsnmp-dev
-#RUN apt-get install -y snmp
-#RUN docker-php-ext-install snmp
-
-# pspell
-#RUN apt-get install -y libpspell-dev
-#RUN apt-get install -y aspell-en
-#RUN docker-php-ext-install pspell
-
-# recode
-#RUN apt-get install -y librecode0
-#RUN apt-get install -y librecode-dev
-#RUN docker-php-ext-install recode
-
-# Tidy
-RUN apt-get install -y libtidy-dev
-RUN docker-php-ext-install tidy
-
-# GMP
-RUN apt-get install -y libgmp-dev
-# Fixing "configure: error: Unable to locate gmp.h"
-RUN ln -s /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h
-RUN docker-php-ext-install gmp
-
-# Client
-#RUN apt-get install -y postgresql-client
-#RUN apt-get install -y mysql-client
-
-# IMAP
-#RUN apt-get install -y libc-client-dev
-#RUN docker-php-ext-configure imap --with-kerberos --with-imap-ssl
-#RUN docker-php-ext-install imap
-
-# LDAP
-#RUN apt-get install -y libldb-dev
-#RUN apt-get install -y libldap2-dev
-#RUN docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu
-#RUN docker-php-ext-install ldap
+# Notice:
+# 1. Mcrypt was DEPRECATED in PHP 7.1.0, and REMOVED in PHP 7.2.0.
+# 2. opcache requires PHP version >= 7.0.0.
+# 3. soap requires libxml2-dev.
+# 4. xml, xmlrpc, wddx require libxml2-dev and libxslt-dev.
+# 5. Line `&& :\` is just for better reading and do nothing.
+RUN apt-get update \
+    && apt-get install -y libfreetype6-dev libjpeg62-turbo-dev libpng-dev \
+    && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
+    && docker-php-ext-install gd \
+    && :\
+    && apt-get install -y libicu-dev \
+    && docker-php-ext-install intl \
+    && :\
+    && apt-get install -y libxml2-dev \
+    && apt-get install -y libxslt-dev \
+    && docker-php-ext-install soap \
+    && docker-php-ext-install xsl \
+    && docker-php-ext-install xmlrpc \
+    && docker-php-ext-install wddx \
+    && :\
+    && apt-get install -y libbz2-dev \
+    && docker-php-ext-install bz2 \
+    && :\
+    && docker-php-ext-install zip \
+    && docker-php-ext-install pcntl \
+    && docker-php-ext-install pdo_mysql \
+    && docker-php-ext-install mysqli \
+    && docker-php-ext-install mbstring \
+    && docker-php-ext-install exif \
+    && docker-php-ext-install bcmath \
+    && docker-php-ext-install calendar \
+    && docker-php-ext-install sockets \
+    && docker-php-ext-install gettext \
+    && docker-php-ext-install shmop \
+    && docker-php-ext-install sysvmsg \
+    && docker-php-ext-install sysvsem \
+    && docker-php-ext-install sysvshm
+    #&& docker-php-ext-install opcache
+    #&& docker-php-ext-install pdo_firebird \
+    #&& docker-php-ext-install pdo_dblib \
+    #&& docker-php-ext-install pdo_oci \
+    #&& docker-php-ext-install pdo_odbc \
+    #&& docker-php-ext-install pdo_pgsql \
+    #&& docker-php-ext-install pgsql \
+    #&& docker-php-ext-install oci8 \
+    #&& docker-php-ext-install odbc \
+    #&& docker-php-ext-install dba \
+    #&& docker-php-ext-install interbase \
+    #&& :\
+    #&& apt-get install -y libmcrypt-dev \
+    #&& docker-php-ext-install mcrypt \
+    #&& :\
+    #&& apt-get install -y curl \
+    #&& apt-get install -y libcurl3 \
+    #&& apt-get install -y libcurl4-openssl-dev \
+    #&& docker-php-ext-install curl \
+    #&& :\
+    #&& apt-get install -y libreadline-dev \
+    #&& docker-php-ext-install readline \
+    #&& :\
+    #&& apt-get install -y libsnmp-dev \
+    #&& apt-get install -y snmp \
+    #&& docker-php-ext-install snmp \
+    #&& :\
+    #&& apt-get install -y libpspell-dev \
+    #&& apt-get install -y aspell-en \
+    #&& docker-php-ext-install pspell \
+    #&& :\
+    #&& apt-get install -y librecode0 \
+    #&& apt-get install -y librecode-dev \
+    #&& docker-php-ext-install recode \
+    #&& :\
+    #&& apt-get install -y libtidy-dev \
+    #&& docker-php-ext-install tidy \
+    #&& :\
+    #&& apt-get install -y libgmp-dev \
+    #&& ln -s /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h \
+    #&& docker-php-ext-install gmp \
+    #&& :\
+    #&& apt-get install -y postgresql-client \
+    #&& apt-get install -y mysql-client \
+    #&& :\
+    #&& apt-get install -y libc-client-dev \
+    #&& docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
+    #&& docker-php-ext-install imap \
+    #&& :\
+    #&& apt-get install -y libldb-dev \
+    #&& apt-get install -y libldap2-dev \
+    #&& docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu \
+    #&& docker-php-ext-install ldap \
 
 # Composer
-#RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer
+#RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer \
 
-# pecl extensions
-# Notice: if get error 
+# Install extension using pecl
+# Notice: if pecl install get error
 #    `No releases available for package "pecl.php.net/xxx"`
 # or
 #    `Package "xxx" does not have REST xml available`
-# Please turn on you proxy (the proxy IP may be docker host IP or others).
-#RUN export http_proxy=10.0.75.1:1080
-#RUN export https_proxy=10.0.75.1:1080
+# Please turn on proxy (The proxy IP may be docker host IP or others):
+RUN pear config-set http_proxy http://10.0.75.1:1080
 
-RUN pecl install redis && docker-php-ext-enable redis
-#pecl install xdebug requires PHP >= 5.5.0
-#RUN pecl install xdebug && docker-php-ext-enable xdebug
-RUN pecl install igbinary && docker-php-ext-enable igbinary
-RUN apt-get install -y libmagickwand-dev && pecl install imagick && docker-php-ext-enable imagick
-#pecl install memcached requires PHP (version >= 7.0.0)
-#RUN apt-get install -y libmemcached-dev zlib1g-dev && pecl install memcached && docker-php-ext-enable memcached
+RUN pecl install redis-3.1.4 \
+    && docker-php-ext-enable redis \
+    && :\
+    && pecl install xdebug-2.4.1 \
+    && docker-php-ext-enable xdebug \
+    && :\
+    && pecl install igbinary-2.0.5 \
+    && docker-php-ext-enable igbinary \
+    && :\
+    && apt-get install -y libmagickwand-dev \
+    && pecl install imagick-3.4.3 \
+    && docker-php-ext-enable imagick \
+    && :\
+    && apt-get install -y libmemcached-dev zlib1g-dev \
+    && pecl install memcached-2.2.0 \
+    && docker-php-ext-enable memcached
 
-# Install xdebug from source
-# Read here for suitable xdebug version: https://xdebug.org/download.php
-COPY ./xdebug-2.2.7.tgz /tmp/
+# Install extension from source
+#
+# However, we can also use pecl to install pecl extensions:
+#   && pecl install zendopcache-7.0.5 \
+#   && docker-php-ext-enable opcache \
+# Here is only an example showing how to install an extension from source.
+COPY ./zendopcache-7.0.5.tgz /tmp/
 RUN cd /tmp/ \
-        && tar -xf xdebug-2.2.7.tgz \
-		&& rm xdebug-2.2.7.tgz \
-        && ( cd xdebug-2.2.7 && phpize && ./configure && make && make install ) \
-        && rm -r xdebug-2.2.7
-RUN docker-php-ext-enable xdebug
-
-# Install Yaf from source
-COPY ./yaf-2.3.2-x.tgz /tmp/
-RUN cd /tmp/ \
-        && tar -xf yaf-2.3.2-x.tgz \
-		&& rm yaf-2.3.2-x.tgz \
-        && ( cd yaf-2.3.2-x && phpize && ./configure && make && make install ) \
-        && rm -r yaf-2.3.2-x
-RUN docker-php-ext-enable yaf
+        && tar -xf zendopcache-7.0.5.tgz \
+		&& rm zendopcache-7.0.5.tgz \
+        && ( cd zendopcache-7.0.5 && phpize && ./configure && make && make install ) \
+        && rm -r zendopcache-7.0.5 \
+        && docker-php-ext-enable opcache
