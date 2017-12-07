@@ -9,10 +9,10 @@ nginx:
     - ./conf/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     - ./log/nginx/:/var/log/nginx/:rw
   links:
-    - php-fpm:fpm
+    - php72:fpm
 
-php-fpm:
-  build: .
+php72:
+  build: ./php/php72/
   expose:
     - "9000"
   volumes:
