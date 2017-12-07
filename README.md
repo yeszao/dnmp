@@ -4,14 +4,17 @@ Docker deploying Nginx MySQL PHP7 in one key, support full feature functions.
 ![Demo Image](./dnmp.png)
 
 ### Feature
-1. Support Multiple domains.
-2. Support HTTPS and HTTP/2.
-3. Support PHP7, Nginx and MySQL version latest.
-4. PHP source located in host.
-5. MySQL data directory in host.
-6. All conf files located in host.
-7. All log files located in host.
-8. Built-in PHP extensions install commands.
+1. Completely open source.
+2. Support Multiple PHP version(PHP5.4, PHP5.6, PHP7.2) switch.
+3. Support Multiple domains.
+4. Support HTTPS and HTTP/2.
+5. PHP source located in host.
+6. MySQL data directory in host.
+7. All conf files located in host.
+8. All log files located in host.
+9. Built-in PHP extensions install commands.
+10. Promise 100% available.
+11. Supported any OS with docker.
 
 ### Usage
 1. Install `git`, `docker` and `docker-compose`;
@@ -29,6 +32,20 @@ Docker deploying Nginx MySQL PHP7 in one key, support full feature functions.
 ![Demo Image](./snapshot.png)
 
 The index file is located in `./www/site1/`.
+
+### Other PHP version?
+Default, we start LATEST PHP version by using:
+```
+$ docker-compose up
+```
+we can also start PHP5.4 or PHP5.6 by using:
+```
+$ docker-compose -f docker-compose54.yml up
+$ docker-compose -f docker-compose56.yml up
+```
+We need not change any other files, such as nginx config file or php.ini, everything will work fine in current environment (except code compatibility error).
+
+> Notice: We can only start one php version, for they using same port. We must STOP the running project then START the other one.
 
 ### HTTPS and HTTP/2
 Default demo include 2 sites:
