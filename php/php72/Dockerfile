@@ -115,9 +115,6 @@ RUN pecl install redis-3.1.4 \
     && pecl install xdebug-2.6.0alpha1 \
     && docker-php-ext-enable xdebug \
     && :\
-    && pecl install igbinary-2.0.5 \
-    && docker-php-ext-enable igbinary \
-    && :\
     && apt-get install -y libmagickwand-dev \
     && pecl install imagick-3.4.3 \
     && docker-php-ext-enable imagick \
