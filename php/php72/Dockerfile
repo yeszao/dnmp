@@ -107,7 +107,7 @@ RUN apt-get update \
 # or
 #    `Package "xxx" does not have REST xml available`
 # Please turn on proxy (The proxy IP may be docker host IP or others):
-RUN pear config-set http_proxy http://10.0.75.1:1080
+# RUN pear config-set http_proxy http://10.0.75.1:1080
 
 RUN pecl install redis-3.1.4 \
     && docker-php-ext-enable redis \
@@ -122,3 +122,9 @@ RUN pecl install redis-3.1.4 \
     && apt-get install -y libmemcached-dev zlib1g-dev \
     && pecl install memcached-3.0.4 \
     && docker-php-ext-enable memcached
+
+RUN php -r "copy('https://install.phpcomposer.com/installer', 'composer-setup.php');" \
+    && php composer-setup.php \
+    && php -r "unlink('composer-setup.php');" \
+    && mv composer.phar /bin/composer \
+    && composer config -g repo.packagist composer https://packagist.phpcomposer.com
