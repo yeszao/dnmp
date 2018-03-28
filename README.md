@@ -24,6 +24,7 @@ Docker deploying Nginx MySQL PHP7 in one key, support full feature functions.
     ```
 4. Start docker containers:
     ```
+    $ cd dnmp
     $ docker-compose up
     ```
     You may need use `sudo` before this command in Linux.
