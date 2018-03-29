@@ -35,7 +35,24 @@ mysql:
   environment:
     MYSQL_ROOT_PASSWORD: "123456"
 
+phpadmin:
+  image: phpmyadmin/phpmyadmin:latest
+  ports:
+    - "8080:80"
+  links:
+    - mysql:db
+
 redis:
   image: redis:latest
   ports:
     - "6379:6379"
+
+redisadmin:
+  image: erikdubbelboer/phpredisadmin:latest
+  ports:
+    - "8081:80"
+  links:
+    - redis:redis
+  environment:
+    - REDIS_1_HOST=redis
+    - REDIS_1_PORT=6379
