@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="./PhalconTestHelper.php"
+         backupGlobals="false"
+         backupStaticAttributes="false"
+         verbose="false"
+         colors="true"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+         processIsolation="false"
+         stopOnFailure="false"
+         syntaxCheck="true">
+    <testsuite name="PhalconPHP - Testsuite">
+        <directory>./</directory>
+    </testsuite>
+    <testsuite name="PHPT Test Suite">
+        <file>tests/PHPTTestSuite.php</file>
+    </testsuite>
+</phpunit>
