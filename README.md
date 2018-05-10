@@ -71,16 +71,16 @@ But, there are some differences:
 Nginx will auto generate all log files.
 
 ### 5.2 PHP-FPM log
-To use `php-fpm` log, you must create log file manually:
+To use `php-fpm` log, you must create log file manually(in host):
 ```bash
-$ touch /var/log/dnmp/php.fpm.error.log
-$ chmod a+w /var/log/dnmp/php.fpm.error.log
+$ touch log/php.fpm.error.log
+$ chmod a+w log/php.fpm.error.log
 ```
 ### 5.3 MySQL log
-Same as `php-fpm`, log file must be created manually:
+Same as `php-fpm`, log file must be created manually(in host):
 ```bash
-$ touch /var/log/dnmp/mysql.slow.log
-$ chmod a+w /var/log/dnmp/mysql.slow.log
+$ touch log/mysql.slow.log
+$ chmod a+w log/mysql.slow.log
 ```
 
 ## 6. License
