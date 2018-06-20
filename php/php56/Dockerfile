@@ -13,24 +13,25 @@ COPY ./sources.list.jessie /etc/apt/sources.list
 # 4. xml, xmlrpc, wddx require libxml2-dev and libxslt-dev.
 # 5. Line `&& :\` is just for better reading and do nothing.
 RUN apt-get update \
-    && apt-get install -y libfreetype6-dev libjpeg62-turbo-dev libpng-dev \
-    && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
-    && docker-php-ext-install gd \
+    && apt-get upgrade -y \
+    # && apt-get install -y libfreetype6-dev libjpeg62-turbo-dev libpng-dev \
+    # && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
+    # && docker-php-ext-install gd \
     && :\
     && apt-get install -y libicu-dev \
     && docker-php-ext-install intl \
     && :\
-    && apt-get install -y libxml2-dev \
-    && apt-get install -y libxslt-dev \
-    && docker-php-ext-install soap \
-    && docker-php-ext-install xsl \
-    && docker-php-ext-install xmlrpc \
-    && docker-php-ext-install wddx \
+    # && apt-get install -y libxml2-dev \
+    # && apt-get install -y libxslt-dev \
+    # && docker-php-ext-install soap \
+    # && docker-php-ext-install xsl \
+    # && docker-php-ext-install xmlrpc \
+    # && docker-php-ext-install wddx \
     && :\
-    && apt-get install -y libbz2-dev \
-    && docker-php-ext-install bz2 \
+    # && apt-get install -y libbz2-dev \
+    # && docker-php-ext-install bz2 \
     && :\
-    && docker-php-ext-install zip \
+    && apt-get install -y zip \
     && docker-php-ext-install pcntl \
     && docker-php-ext-install pdo_mysql \
     && docker-php-ext-install mysqli \
@@ -38,7 +39,7 @@ RUN apt-get update \
     && docker-php-ext-install exif \
     && docker-php-ext-install bcmath \
     && docker-php-ext-install calendar \
-    && docker-php-ext-install sockets \
+    # && docker-php-ext-install sockets \
     && docker-php-ext-install gettext \
     && docker-php-ext-install shmop \
     && docker-php-ext-install sysvmsg \
@@ -107,18 +108,24 @@ RUN apt-get update \
 # or
 #    `Package "xxx" does not have REST xml available`
 # Please turn on proxy (The proxy IP may be docker host IP or others):
-RUN pear config-set http_proxy http://10.0.75.1:1080
+# RUN pear config-set http_proxy http://10.0.75.1:1080
 
-RUN pecl install redis-3.1.4 \
-    && docker-php-ext-enable redis \
-    && :\
-    && pecl install xdebug-2.5.5 \
-    && docker-php-ext-enable xdebug \
-    && :\
-    && apt-get install -y libmagickwand-dev \
-    && pecl install imagick-3.4.3 \
-    && docker-php-ext-enable imagick \
-    && :\
-    && apt-get install -y libmemcached-dev zlib1g-dev \
-    && pecl install memcached-2.2.0 \
-    && docker-php-ext-enable memcached
+# RUN pecl install redis-3.1.4 \
+#     && docker-php-ext-enable redis \
+#     && :\
+#     && pecl install xdebug-2.5.5 \
+#     && docker-php-ext-enable xdebug \
+#     && :\
+#     && apt-get install -y libmagickwand-dev \
+#     && pecl install imagick-3.4.3 \
+#     && docker-php-ext-enable imagick \
+#     && :\
+#     && apt-get install -y libmemcached-dev zlib1g-dev \
+#     && pecl install memcached-2.2.0 \
+#     && docker-php-ext-enable memcached
+
+RUN php -r "copy('https://install.phpcomposer.com/installer', 'composer-setup.php');" \
+&& php composer-setup.php \
+&& php -r "unlink('composer-setup.php');" \
+&& mv composer.phar /bin/composer \
+&& composer config -g repo.packagist composer https://packagist.phpcomposer.com

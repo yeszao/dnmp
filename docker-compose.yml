@@ -9,10 +9,10 @@ nginx:
     - ./conf/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     - ./log/nginx/:/var/log/nginx/:rw
   links:
-    - php72:fpm
+    - php56:fpm
 
-php72:
-  build: ./php/php72/
+php56:
+  build: ./php/php56/
   expose:
     - "9000"
   volumes:
@@ -22,10 +22,10 @@ php72:
     - ./log/php-fpm/:/var/log/php-fpm/:rw
   links:
     - mysql:mysql
-    - redis:redis
+    # - redis:redis
 
 mysql:
-  image: mysql:latest
+  image: mysql:5.6
   ports:
     - "3306:3306"
   volumes:
@@ -42,17 +42,7 @@ phpadmin:
   links:
     - mysql:db
 
-redis:
-  image: redis:latest
-  ports:
-    - "6379:6379"
-
-redisadmin:
-  image: erikdubbelboer/phpredisadmin:latest
-  ports:
-    - "8081:80"
-  links:
-    - redis:redis
-  environment:
-    - REDIS_1_HOST=redis
-    - REDIS_1_PORT=6379
+# redis:
+#   image: redis:latest
+#   ports:
+#     - "6379:6379"
