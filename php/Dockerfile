@@ -1,4 +1,4 @@
-FROM php:7.2-fpm
+FROM php:5.6-fpm
 
 COPY ./sources.list.stretch /etc/apt/sources.list
 
@@ -109,19 +109,19 @@ RUN apt-get update \
 # Please turn on proxy (The proxy IP may be docker host IP or others):
 # RUN pear config-set http_proxy http://10.0.75.1:1080
 
-RUN pecl install redis-3.1.4 \
-    && docker-php-ext-enable redis \
-    && :\
-    && pecl install xdebug-2.6.0alpha1 \
-    && docker-php-ext-enable xdebug \
-    && :\
-    && apt-get install -y libmagickwand-dev \
-    && pecl install imagick-3.4.3 \
-    && docker-php-ext-enable imagick \
-    && :\
-    && apt-get install -y libmemcached-dev zlib1g-dev \
-    && pecl install memcached-3.0.4 \
-    && docker-php-ext-enable memcached
+# RUN pecl install redis-3.1.4 \
+#     && docker-php-ext-enable redis \
+#     && :\
+#     && pecl install xdebug-2.6.0alpha1 \
+#     && docker-php-ext-enable xdebug \
+#     && :\
+#     && apt-get install -y libmagickwand-dev \
+#     && pecl install imagick-3.4.3 \
+#     && docker-php-ext-enable imagick \
+#     && :\
+#     && apt-get install -y libmemcached-dev zlib1g-dev \
+#     && pecl install memcached-3.0.4 \
+#     && docker-php-ext-enable memcached
 
 RUN php -r "copy('https://install.phpcomposer.com/installer', 'composer-setup.php');" \
     && php composer-setup.php \
