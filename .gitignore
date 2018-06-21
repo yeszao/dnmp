@@ -1,3 +1,4 @@
 .*
 !.gitignore
 www
+conf/nginx/conf.d/*
