@@ -76,4 +76,4 @@ services:
 networks:
   net-php:
   net-mysql:
-  net-re
+  net-redis:
