@@ -30,7 +30,7 @@ services:
       - net-redis
 
   mysql:
-    image: mysql:latest
+    image: mysql:8.0
     container_name: dnmp-mysql
     ports:
       - "3306:3306"
@@ -44,12 +44,34 @@ services:
       MYSQL_ROOT_PASSWORD: "123456"
 
   redis:
-    image: redis:latest
+    image: redis:4.0
     container_name: dnmp-redis
     networks:
       - net-redis
     ports:
       - "6379:6379"
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: dnmp-phpmyadmin
+    ports:
+      - "8080:80"
+    networks:
+      - net-mysql
+    environment:
+      - PMA_HOST=mysql
+      - PMA_PORT=3306
+
+  phpredisadmin:
+    image: erikdubbelboer/phpredisadmin:latest
+    container_name: dnmp-phpredisadmin
+    ports:
+      - "8081:80"
+    networks:
+      - net-redis
+    environment:
+      - REDIS_1_HOST=redis
+      - REDIS_1_PORT=6379
 
 networks:
   net-php:
