@@ -20,7 +20,7 @@ services:
     volumes:
       - ./www/:/var/www/html/:rw
       - ./conf/php.ini:/usr/local/etc/php/php.ini:ro
-      - ./conf/php-fpm.d/www.conf:/usr/local/etc/php-fpm.d/www.conf:rw
+      - ./conf/php-fpm.conf:/usr/local/etc/php-fpm.d/www.conf:rw
       - ./log/:/var/log/dnmp/:rw
     networks:
       - net-php
@@ -32,9 +32,8 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - ./conf/my.cnf:/etc/mysql/my.cnf:ro
+      - ./conf/mysql.cnf:/etc/mysql/conf.d/mysql.cnf:ro
       - ./mysql/:/var/lib/mysql/:rw
-      - ./log/:/var/log/dnmp/:rw
     networks:
       - net-mysql
     environment:
