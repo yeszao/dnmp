@@ -2,7 +2,6 @@ version: "3"
 services:
   nginx:
     image: nginx:alpine
-    container_name: dnmp-nginx
     ports:
       - "80:80"
       - "443:443"
@@ -16,7 +15,6 @@ services:
 
   php:
     build: ./php/php56/
-    container_name: dnmp-php
     expose:
       - "9000"
     volumes:
@@ -31,7 +29,6 @@ services:
 
   mysql:
     image: mysql:8.0
-    container_name: dnmp-mysql
     ports:
       - "3306:3306"
     volumes:
@@ -45,7 +42,6 @@ services:
 
   redis:
     image: redis:4.0
-    container_name: dnmp-redis
     networks:
       - net-redis
     ports:
@@ -53,7 +49,6 @@ services:
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
-    container_name: dnmp-phpmyadmin
     ports:
       - "8080:80"
     networks:
@@ -64,7 +59,6 @@ services:
 
   phpredisadmin:
     image: erikdubbelboer/phpredisadmin:latest
-    container_name: dnmp-phpredisadmin
     ports:
       - "8081:80"
     networks:
