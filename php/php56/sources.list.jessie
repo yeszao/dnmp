@@ -1,11 +1,4 @@
-deb https://mirrors.ustc.edu.cn/debian/ jessie main contrib non-free
-deb-src https://mirrors.ustc.edu.cn/debian/ jessie main contrib non-free
-
-deb https://mirrors.ustc.edu.cn/debian/ jessie-updates main contrib non-free
-deb-src https://mirrors.ustc.edu.cn/debian/ jessie-updates main contrib non-free
-
-deb https://mirrors.ustc.edu.cn/debian/ jessie-backports main contrib non-free
-deb-src https://mirrors.ustc.edu.cn/debian/ jessie-backports main contrib non-free
-
-deb https://mirrors.ustc.edu.cn/debian-security/ jessie/updates main contrib non-free
-deb-src https://mirrors.ustc.edu.cn/debian-security/ jessie/updates main contrib non-free
+deb http://mirrors.ustc.edu.cn/debian stable main contrib non-free
+deb-src http://mirrors.ustc.edu.cn/debian stable main contrib non-free
+deb http://mirrors.ustc.edu.cn/debian stable-proposed-updates main contrib non-free
+deb-src http://mirrors.ustc.edu.cn/debian stable-proposed-updates main contrib non-free
