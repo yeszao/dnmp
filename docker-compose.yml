@@ -2,7 +2,6 @@ version: "3"
 services:
   nginx:
     image: nginx:alpine
-    container_name: dnmp-nginx
     ports:
       - "80:80"
       - "443:443"
@@ -16,13 +15,12 @@ services:
 
   php:
     build: ./php/php72/
-    container_name: dnmp-php
     expose:
       - "9000"
     volumes:
       - ./www/:/var/www/html/:rw
       - ./conf/php.ini:/usr/local/etc/php/php.ini:ro
-      - ./conf/php-fpm.d/www.conf:/usr/local/etc/php-fpm.d/www.conf:rw
+      - ./conf/php-fpm.conf:/usr/local/etc/php-fpm.d/www.conf:rw
       - ./log/:/var/log/dnmp/:rw
     networks:
       - net-php
@@ -30,26 +28,43 @@ services:
       - net-redis
 
   mysql:
-    image: mysql:latest
-    container_name: dnmp-mysql
+    image: mysql:8.0
     ports:
       - "3306:3306"
     volumes:
-      - ./conf/my.cnf:/etc/mysql/my.cnf:ro
+      - ./conf/mysql.cnf:/etc/mysql/conf.d/mysql.cnf:ro
       - ./mysql/:/var/lib/mysql/:rw
-      - ./log/:/var/log/dnmp/:rw
     networks:
       - net-mysql
     environment:
       MYSQL_ROOT_PASSWORD: "123456"
 
   redis:
-    image: redis:latest
-    container_name: dnmp-redis
+    image: redis:4.0
     networks:
       - net-redis
     ports:
       - "6379:6379"
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    ports:
+      - "8080:80"
+    networks:
+      - net-mysql
+    environment:
+      - PMA_HOST=mysql
+      - PMA_PORT=3306
+
+  phpredisadmin:
+    image: erikdubbelboer/phpredisadmin:latest
+    ports:
+      - "8081:80"
+    networks:
+      - net-redis
+    environment:
+      - REDIS_1_HOST=redis
+      - REDIS_1_PORT=6379
 
 networks:
   net-php:
