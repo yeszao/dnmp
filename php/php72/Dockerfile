@@ -104,3 +104,25 @@ RUN php -r "copy('https://install.phpcomposer.com/installer', 'composer-setup.ph
     && php -r "unlink('composer-setup.php');" \
     && mv composer.phar /bin/composer \
     && composer config -g repo.packagist composer https://packagist.phpcomposer.com
+
+# Install extension using pecl
+# Notice: if pecl install get error
+#    `No releases available for package "pecl.php.net/xxx"`
+# or
+#    `Package "xxx" does not have REST xml available`
+# Please turn on proxy (The proxy IP may be docker host IP or others):
+#RUN pear config-set http_proxy http://10.0.75.1:1080
+
+RUN pecl install redis-3.1.4 \
+    && docker-php-ext-enable redis \
+    && :\
+    && pecl install xdebug-2.4.1 \
+    && docker-php-ext-enable xdebug \
+    && :\
+    && apt-get install -y libmagickwand-dev \
+    && pecl install imagick-3.4.3 \
+    && docker-php-ext-enable imagick \
+    && :\
+    && apt-get install -y libmemcached-dev zlib1g-dev \
+    && pecl install memcached-2.2.0 \
+    && docker-php-ext-enable memcached
