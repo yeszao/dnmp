@@ -33,6 +33,7 @@ DNMP项目特点：
 └── www                     PHP代码目录
 ```
 结构示意图：
+
 ![Demo Image](./dnmp.png)
 
 
