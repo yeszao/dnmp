@@ -174,6 +174,21 @@ Redis连接信息如下：
 - host: (本项目的Redis容器网络)
 - port: `6379`
 
+
+## 8 使用XDEBUG调试
+默认情况下，我们已经安装了Xdebug扩展，但并未在php.ini中配置启用。
+
+要使用xdebug调试，在php.ini文件最后加上这几行：
+```
+[XDebug]
+xdebug.remote_enable = 1
+xdebug.remote_handler = "dbgp"
+xdebug.remote_host = "172.17.0.1"
+xdebug.remote_port = 9000
+xdebug.remote_log = "/var/log/dnmp/php.xdebug.log"
+```
+然后重启PHP容器。
+
 ## 常见问题
 1. 遇到“No releases available for package "pecl.php.net/redis”
     > 请参考： https://github.com/yeszao/dnmp/issues/10
