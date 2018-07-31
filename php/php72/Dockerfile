@@ -105,24 +105,22 @@ RUN php -r "copy('https://install.phpcomposer.com/installer', 'composer-setup.ph
     && mv composer.phar /bin/composer \
     && composer config -g repo.packagist composer https://packagist.phpcomposer.com
 
-# Install extension using pecl
-# Notice: if pecl install get error
-#    `No releases available for package "pecl.php.net/xxx"`
-# or
-#    `Package "xxx" does not have REST xml available`
-# Please turn on proxy (The proxy IP may be docker host IP or others):
-#RUN pear config-set http_proxy http://10.0.75.1:1080
+# Install Redis extension from source
+COPY ./redis-4.1.0.tgz /tmp/redis.tgz
+RUN ls /tmp
+RUN mkdir -p /tmp/redis \
+    && tar -xf /tmp/redis.tgz -C /tmp/redis --strip-components=1 \
+    && rm /tmp/redis.tgz \
+    && docker-php-ext-configure /tmp/redis --enable-redis \
+    && docker-php-ext-install /tmp/redis \
+    && rm -r /tmp/redis
 
-RUN pecl install redis-3.1.4 \
-    && docker-php-ext-enable redis \
-    && :\
-    && pecl install xdebug-2.4.1 \
-    && docker-php-ext-enable xdebug \
-    && :\
-    && apt-get install -y libmagickwand-dev \
-    && pecl install imagick-3.4.3 \
-    && docker-php-ext-enable imagick \
-    && :\
-    && apt-get install -y libmemcached-dev zlib1g-dev \
-    && pecl install memcached-2.2.0 \
-    && docker-php-ext-enable memcached
+# Install Xdebug extension from source
+COPY ./xdebug-2.6.0.tgz /tmp/xdebug.tgz
+RUN mkdir -p /tmp/xdebug \
+    && tar -xf /tmp/xdebug.tgz -C /tmp/xdebug --strip-components=1 \
+    && rm /tmp/xdebug.tgz \
+    && docker-php-ext-configure /tmp/xdebug --enable-xdebug \
+    && docker-php-ext-install /tmp/xdebug \
+    && rm -r /tmp/xdebug
+
