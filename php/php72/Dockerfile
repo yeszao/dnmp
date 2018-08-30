@@ -107,7 +107,6 @@ RUN php -r "copy('https://install.phpcomposer.com/installer', 'composer-setup.ph
 
 # Install Redis extension from source
 COPY ./redis-4.1.0.tgz /tmp/redis.tgz
-RUN ls /tmp
 RUN mkdir -p /tmp/redis \
     && tar -xf /tmp/redis.tgz -C /tmp/redis --strip-components=1 \
     && rm /tmp/redis.tgz \
