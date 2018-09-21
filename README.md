@@ -3,13 +3,13 @@ DNMP（Docker + Nginx + MySQL + PHP7/5）是一款全功能的**LNMP一键安装
 DNMP项目特点：
 1. `100%`开源
 2. `100%`遵循Docker标准
-2. 支持**多版本PHP**随意切换（PHP5.4、PHP5.6、PHP7.2)
-3. 支持绑定任意**多个域名**
+2. 支持**多版本PHP**共存，任意可切换（PHP5.4、PHP5.6、PHP7.2)
+3. 支持绑定**任意多个域名**
 4. 支持**HTTPS和HTTP/2**
-5. PHP源代码位于host中
-6. MySQL data位于host中
-7. 所有配置文件可在host中直接修改
-8. 所有日志文件可在host中直接查看
+5. PHP源代码位于Host中
+6. MySQL数据位于host中
+7. 所有配置文件可在Host中直接修改
+8. 所有日志文件可在Host中直接查看
 9. 内置**完整PHP扩展安装**命令
 10. 实际项目中应用，确保`100%`可用
 11. 一次配置，**Windows、Linux、MacOs**皆可用
@@ -24,13 +24,12 @@ DNMP项目特点：
 │   ├── mysql.cnf           MySQL用户配置文件
 │   ├── php-fpm.conf        PHP-FPM配置文件（部分会覆盖php.ini配置）
 │   └── php.ini             PHP默认配置文件
-├── docker-compose54.yml    PHP5.4 docker-compose项目文件
-├── docker-compose56.yml    PHP5.6 docker-compose项目文件
-├── docker-compose.yml      PHP最新版docker-compose项目文件
+├── Dockerfile              PHP镜像构建文件
+├── extensions              PHP扩展源码包
 ├── log                     Nginx日志目录
 ├── mysql                   MySQL数据目录
-├── php                     PHP各版本的Dockerfile目录
-└── www                     PHP代码目录
+├── www                     PHP代码目录
+└── source.list             Debian源目录
 ```
 结构示意图：
 
@@ -59,31 +58,26 @@ DNMP项目特点：
 这是项目的演示效果，PHP代码在这个目录：`./www/site1/`。
 
 
-## 3. 使用其他PHP版本？
-默认情况下，我们启动的是**最新版本的PHP**，命令如下：
-```
-$ docker-compose up
-```
-在`docker-compose stop`后，我们可以用下面的命令启动**PHP5.4**或**PHP5.6**:
-```
-$ docker-compose -f docker-compose54.yml up
-$ docker-compose -f docker-compose56.yml up
-```
-如果该版本是第一次启动，那么还需要加上`--build`参数构建，不然还是会启动最新版本：
-```
-$ docker-compose -f docker-compose54.yml up --build
-$ docker-compose -f docker-compose56.yml up --build
-```
-在版本切换时，我们不需要修改任何配置文件，包括Nginx配置文件和php.ini等，
-除非是代码兼容错误，否则切换版本后应该都能正常工作。
+## 3. 切换PHP版本？
+默认情况下，我们同时创建 **PHP5.4、PHP5.6和PHP7.2** 三个PHP版本的容器，
 
-> 注意：因为所有PHP版本使用的是同一个端口配置，所以我们同时只能使用一个版本，要切换到另外一个版本，必须先停止原来的版本。
+切换PHP仅需修改 Nginx 的`fastcgi_pass`选项，
 
+例如，示例的**localhost**用的是PHP5.4，Nginx 配置：
+```
+    fastcgi_pass   php54:9000;
+```
+要改用PHP7.2，修改为：
+```
+    fastcgi_pass   php72:9000;
+```
+再 **重启 Nginx** 生效。
 
 ## 4. HTTPS和HTTP/2
 本项目的演示站点有两个：
+
 * http://www.site1.com (同 http://localhost)
-* https://www.site2.com
+* https://www.site2.com（https站点）
 
 要预览这两个站点，请在主机的`hosts`文件中加上如下两行：
 ```
@@ -97,7 +91,7 @@ $ docker-compose -f docker-compose56.yml up --build
 然后通过浏览器这两个地址就能看到效果，其中：
 
 * Site1和localhost是同一个站点，是经典的http站，
-* Site2是自定义证书的https站点，浏览器会有安全提示，忽略提示访问即可。
+* Site2是自定义证书的**https站点**，浏览器会有安全提示，忽略提示访问即可。
 
 
 ## 5. 使用Log
@@ -175,19 +169,12 @@ Redis连接信息如下：
 - port: `6379`
 
 
-## 8 使用XDEBUG调试
-默认情况下，我们已经安装了Xdebug扩展，但并未在php.ini中配置启用。
+## 8 在正式环境中安全使用
+要在正式环境中使用，请：
+1. 在php.ini中关闭XDebug调试
+2. 增强MySQL数据库访问的安全策略
+3. 增强redis访问的安全策略
 
-要使用xdebug调试，在php.ini文件最后加上这几行：
-```
-[XDebug]
-xdebug.remote_enable = 1
-xdebug.remote_handler = "dbgp"
-xdebug.remote_host = "172.17.0.1"
-xdebug.remote_port = 9000
-xdebug.remote_log = "/var/log/dnmp/php.xdebug.log"
-```
-然后重启PHP容器。
 
 ## 常见问题
 1. 遇到“No releases available for package "pecl.php.net/redis”

@@ -1,19 +1,34 @@
-FROM php:5.4-fpm
+ARG PHP_VERSION
+FROM php:${PHP_VERSION}-fpm
 
-COPY ./sources.list.jessie /etc/apt/sources.list
+ARG SOURCE_LIST
+ARG XDEBUG_VERSION
+ARG SWOOLE_VERSION
+ARG REDIS_VERSION=4.1.1
+ARG SUPPORT_MCRYPT
+ARG BUILT_IN_OPCACHE
 
-# Extensions: ctype, dom, fileinfo, ftp, hash, iconv, json, pdo, pdo_sqlite, session,
-# tokenizer, simplexml, xml, xmlreader, xmlwriter and phar are bundled and compiled into
-# PHP by default. If missing, install them directly by `docker-php-ext-install extension_name`
+COPY ./sources.list/$SOURCE_LIST /etc/apt/sources.list
+RUN apt-get update
 
-# Notice:
-# 1. Mcrypt was DEPRECATED in PHP 7.1.0, and REMOVED in PHP 7.2.0.
-# 2. opcache requires PHP version >= 7.0.0.
-# 3. soap requires libxml2-dev.
-# 4. xml, xmlrpc, wddx require libxml2-dev and libxslt-dev.
-# 5. Line `&& :\` is just for better reading and do nothing.
-RUN apt-get update \
-    && apt-get install -y libfreetype6-dev libjpeg62-turbo-dev libpng-dev \
+# Composer
+RUN php -r "copy('https://install.phpcomposer.com/installer', 'composer-setup.php');" \
+    && php composer-setup.php \
+    && php -r "unlink('composer-setup.php');" \
+    && mv composer.phar /bin/composer \
+    && composer config -g repo.packagist composer https://packagist.phpcomposer.com
+
+# Install extensions from source
+COPY ./extensions /tmp/extensions
+RUN chmod +x /tmp/extensions/install.sh \
+    && /tmp/extensions/install.sh \
+    && rm -rf /tmp/extensions
+
+# More extensions
+# 1. soap requires libxml2-dev.
+# 2. xml, xmlrpc, wddx require libxml2-dev and libxslt-dev.
+# 3. Line `&& :\` do nothing just for better reading.
+RUN apt-get install -y libfreetype6-dev libjpeg62-turbo-dev libpng-dev \
     && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
     && docker-php-ext-install gd \
     && :\
@@ -56,9 +71,6 @@ RUN apt-get update \
     #&& docker-php-ext-install dba \
     #&& docker-php-ext-install interbase \
     #&& :\
-    #&& apt-get install -y libmcrypt-dev \
-    #&& docker-php-ext-install mcrypt \
-    #&& :\
     #&& apt-get install -y curl \
     #&& apt-get install -y libcurl3 \
     #&& apt-get install -y libcurl4-openssl-dev \
@@ -97,46 +109,11 @@ RUN apt-get update \
     #&& apt-get install -y libldap2-dev \
     #&& docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu \
     #&& docker-php-ext-install ldap \
-
-# Composer
-RUN php -r "copy('https://install.phpcomposer.com/installer', 'composer-setup.php');" \
-    && php composer-setup.php \
-    && php -r "unlink('composer-setup.php');" \
-    && mv composer.phar /bin/composer \
-    && composer config -g repo.packagist composer https://packagist.phpcomposer.com
-
-# Install extension using pecl
-# Notice: if pecl install get error
-#    `No releases available for package "pecl.php.net/xxx"`
-# or
-#    `Package "xxx" does not have REST xml available`
-# Please turn on proxy (The proxy IP may be docker host IP or others):
-#RUN pear config-set http_proxy http://10.0.75.1:1080
-
-RUN pecl install redis-3.1.4 \
-    && docker-php-ext-enable redis \
-    && :\
-    && pecl install xdebug-2.4.1 \
-    && docker-php-ext-enable xdebug \
-    && :\
-    && apt-get install -y libmagickwand-dev \
-    && pecl install imagick-3.4.3 \
-    && docker-php-ext-enable imagick \
-    && :\
-    && apt-get install -y libmemcached-dev zlib1g-dev \
-    && pecl install memcached-2.2.0 \
-    && docker-php-ext-enable memcached
-
-# Install extension from source
-#
-# However, we can also use pecl to install pecl extensions:
-#   && pecl install zendopcache-7.0.5 \
-#   && docker-php-ext-enable opcache \
-# Here is only an example showing how to install an extension from source.
-COPY ./zendopcache-7.0.5.tgz /tmp/
-RUN cd /tmp/ \
-        && tar -xf zendopcache-7.0.5.tgz \
-		&& rm zendopcache-7.0.5.tgz \
-        && ( cd zendopcache-7.0.5 && phpize && ./configure && make && make install ) \
-        && rm -r zendopcache-7.0.5 \
-        && docker-php-ext-enable opcache
+    #&& :\
+    #&& apt-get install -y libmagickwand-dev \
+    #&& pecl install imagick-3.4.3 \
+    #&& docker-php-ext-enable imagick \
+    #&& :\
+    #&& apt-get install -y libmemcached-dev zlib1g-dev \
+    #&& pecl install memcached-2.2.0 \
+    #&& docker-php-ext-enable memcached
