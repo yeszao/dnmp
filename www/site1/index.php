@@ -25,7 +25,7 @@ function getMysqlVersion()
             $sth = $dbh->query('SELECT VERSION() as version');
             $info = $sth->fetch();
         } catch (PDOException $e) {
-            echo "Error!: ", $e->getMessage(), "<br/>";
+            return $e->getMessage();
         }
         return $info['version'];
     } else {
@@ -40,10 +40,14 @@ function getMysqlVersion()
 function getRedisVersion()
 {
     if (extension_loaded('redis')) {
-        $redis = new Redis();
-        $redis->connect('redis', 6379);
-        $info = $redis->info();
-        return $info['redis_version'];
+        try {
+            $redis = new Redis();
+            $redis->connect('redis', 6379);
+            $info = $redis->info();
+            return $info['redis_version'];
+        } catch (Exception $e) {
+            return $e->getMessage();
+        }
     } else {
         return 'Redis 扩展未安装 ×';
     }
