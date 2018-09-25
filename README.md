@@ -51,17 +51,18 @@ DNMP项目特点：
     $ cd dnmp
     $ docker-compose up
     ```
-5. 在浏览器中访问 `localhost`，会看到类似如下的输出：
+5. 访问在浏览器中访问：
 
-![Demo Image](./snapshot.png)
+ - [http://localhost](http://localhost)： 默认*http*站点
+ - [https://localhost](https://localhost)：自定义证书*https*站点，访问时浏览器会有安全提示，忽略提示访问即可
 
-这是项目的演示效果，PHP代码在这个目录：`./www/site1/`。
+两个站点使用同一PHP代码：`./www/localhost/index.php`。
 
 
 ## 3. 切换PHP版本？
 默认情况下，我们同时创建 **PHP5.4、PHP5.6和PHP7.2** 三个PHP版本的容器，
 
-切换PHP仅需修改 Nginx 的`fastcgi_pass`选项，
+切换PHP仅需修改相应站点 Nginx 配置的`fastcgi_pass`选项，
 
 例如，示例的**localhost**用的是PHP5.4，Nginx 配置：
 ```
@@ -73,26 +74,18 @@ DNMP项目特点：
 ```
 再 **重启 Nginx** 生效。
 
-## 4. HTTPS和HTTP/2
-本项目的演示站点有两个：
+## 4. 添加快捷命令
+在开发的时候，我们可能经常使用docker exec -it切换到容器中，把常用的做成命令别名是个省事的方法。
 
-* http://www.site1.com (同 http://localhost)
-* https://www.site2.com（https站点）
-
-要预览这两个站点，请在主机的`hosts`文件中加上如下两行：
+打开~/.bashrc，加上：
+```bash
+alias dnginx='docker exec -it dnmp_nginx_1 /bin/sh'
+alias dphp72='docker exec -it dnmp_php72_1 /bin/bash'
+alias dphp56='docker exec -it dnmp_php56_1 /bin/bash'
+alias dphp54='docker exec -it dnmp_php54_1 /bin/bash'
+alias dmysql='docker exec -it dnmp_mysql_1 /bin/bash'
+alias dredis='docker exec -it dnmp_redis_1 /bin/bash'
 ```
-127.0.0.1 www.site1.com
-127.0.0.1 www.site2.com
-```
-
-* Linux和Mac的`hosts`文件位置： `/etc/hosts`
-* Windows的`hosts`文件位置： `C:\Windows\System32\drivers\etc\hosts`
-
-然后通过浏览器这两个地址就能看到效果，其中：
-
-* Site1和localhost是同一个站点，是经典的http站，
-* Site2是自定义证书的**https站点**，浏览器会有安全提示，忽略提示访问即可。
-
 
 ## 5. 使用Log
 
@@ -103,7 +96,7 @@ Nginx日志是我们用得最多的日志，所以我们单独放在根目录`lo
 
 `log`会目录映射Nginx容器的`/var/log/dnmp`目录，所以在Nginx配置文件中，需要输出log的位置，我们需要配置到`/var/log/dnmp`目录，如：
 ```
-error_log  /var/log/dnmp/nginx.site1.error.log  warn;
+error_log  /var/log/dnmp/nginx.localhost.error.log  warn;
 ```
 
 
@@ -138,7 +131,7 @@ $ docker exec -it dnmp_php_1 /bin/bash
 ```
 然后进入相应目录，使用composer：
 ```
-# cd /var/www/html/site1
+# cd /var/www/html/localhost
 # composer update
 ```
 因为composer依赖于PHP，所以，是必须在容器里面操作composer的。
