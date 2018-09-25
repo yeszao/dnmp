@@ -1,5 +1,4 @@
 .*
 !.gitignore
 www/
-!www/site1/
-!www/site2/
+!www/localhost/
