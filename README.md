@@ -11,7 +11,7 @@ DNMP项目特点：
 7. 所有配置文件可在Host中直接修改
 8. 所有日志文件可在Host中直接查看
 9. 内置**完整PHP扩展安装**命令
-10. 默认安装`pdo_mysql`、`redis`、`xdebug`、`swoole`等常用热门扩展
+10. 默认安装`pdo_mysql`、`redis`、`xdebug`、`swoole`等常用热门扩展，拿来即用
 11. 实际项目中应用，确保`100%`可用
 12. 一次配置，**Windows、Linux、MacOs**皆可用
 
