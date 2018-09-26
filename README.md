@@ -1,19 +1,17 @@
-DNMP（Docker + Nginx + MySQL + PHP7/5）是一款全功能的**LNMP一键安装程序**。
+DNMP（Docker + Nginx + MySQL + PHP7/5 + Redis）是一款全功能的**LNMP一键安装程序**。
 
 DNMP项目特点：
 1. `100%`开源
 2. `100%`遵循Docker标准
-2. 支持**多版本PHP**共存，任意可切换（PHP5.4、PHP5.6、PHP7.2)
-3. 支持绑定**任意多个域名**
-4. 支持**HTTPS和HTTP/2**
-5. PHP源代码位于Host中
-6. MySQL数据位于host中
-7. 所有配置文件可在Host中直接修改
-8. 所有日志文件可在Host中直接查看
-9. 内置**完整PHP扩展安装**命令
-10. 默认安装`pdo_mysql`、`redis`、`xdebug`、`swoole`等常用热门扩展，拿来即用
-11. 实际项目中应用，确保`100%`可用
-12. 一次配置，**Windows、Linux、MacOs**皆可用
+3. 支持**多版本PHP**共存，可任意切换（PHP5.4、PHP5.6、PHP7.2)
+4. 支持绑定**任意多个域名**
+5. 支持**HTTPS和HTTP/2**
+6. **PHP源代码、MySQL数据、配置文件、日志文件**都可在Host中直接修改查看
+7. 内置**完整PHP扩展安装**命令
+8. 默认安装`pdo_mysql`、`redis`、`xdebug`、`swoole`等常用热门扩展，拿来即用
+9. 带有phpmyadmin和phpredisadmin数据库在线管理程序
+10. 实际项目中应用，确保`100%`可用
+11. 一次配置，**Windows、Linux、MacOs**皆可用
 
 ## 1.项目结构
 目录说明：
