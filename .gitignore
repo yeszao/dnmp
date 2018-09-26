@@ -1,4 +1,4 @@
 .*
 !.gitignore
-www/
+www/*
 !www/localhost/
