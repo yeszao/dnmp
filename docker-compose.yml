@@ -7,7 +7,7 @@ services:
       - "443:443"
     volumes:
       - ./www/:/var/www/html/:rw
-      - ./conf/conf.d:/etc/nginx/conf.d/:ro
+      - ./conf/conf.d:/etc/nginx/conf.d/:rw
       - ./conf/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./log/:/var/log/dnmp/:rw
     restart: always
