@@ -12,7 +12,8 @@ COPY ./sources.list/$SOURCE_LIST /etc/apt/sources.list
 RUN apt-get update
 
 # Composer
-RUN php -r "copy('https://install.phpcomposer.com/installer', 'composer-setup.php');" \
+RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
+
     && php composer-setup.php \
     && php -r "unlink('composer-setup.php');" \
     && mv composer.phar /bin/composer \
