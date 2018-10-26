@@ -8,7 +8,8 @@ ARG REDIS_VERSION=4.1.1
 ARG SUPPORT_MCRYPT
 ARG BUILT_IN_OPCACHE
 
-COPY ./sources.list/$SOURCE_LIST /etc/apt/sources.list
+COPY ./sources.list/$SOURCE_LIST /etc/apt/sources.list.tmp
+RUN cc=$(curl 'https://ifconfig.co/country'); if [ "$cc" = "China" ]; then mv /etc/apt/sources.list.tmp /etc/apt/sources.list; fi
 RUN apt-get update
 
 # Composer
@@ -17,7 +18,7 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
     && php composer-setup.php \
     && php -r "unlink('composer-setup.php');" \
     && mv composer.phar /bin/composer \
-    && composer config -g repo.packagist composer https://packagist.phpcomposer.com
+    && cc=$(curl 'https://ifconfig.co/country'); if [ "$cc" = "China" ]; then composer config -g repo.packagist composer https://packagist.phpcomposer.com; fi
 
 # Install extensions from source
 COPY ./extensions /tmp/extensions
