@@ -29,87 +29,87 @@ RUN chmod +x /tmp/extensions/install.sh \
 # 1. soap requires libxml2-dev.
 # 2. xml, xmlrpc, wddx require libxml2-dev and libxslt-dev.
 # 3. Line `&& :\` do nothing just for better reading.
-RUN apt-get install -y libfreetype6-dev libjpeg62-turbo-dev libpng-dev \
+RUN if echo "$PHP_VERSION" | egrep -vq "5.4"; then echo "PHP_VERSION is $PHP_VERSION"; mt="-j$(nproc)"; fi; apt-get install -y libfreetype6-dev libjpeg62-turbo-dev libpng-dev \
     && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
-    && docker-php-ext-install gd \
+    && docker-php-ext-install $mt gd \
     && :\
     && apt-get install -y libicu-dev \
-    && docker-php-ext-install intl \
+    && docker-php-ext-install $mt intl \
     && :\
     && apt-get install -y libxml2-dev \
     && apt-get install -y libxslt-dev \
-    && docker-php-ext-install soap \
-    && docker-php-ext-install xsl \
-    && docker-php-ext-install xmlrpc \
-    && docker-php-ext-install wddx \
+    && docker-php-ext-install $mt soap \
+    && docker-php-ext-install $mt xsl \
+    && docker-php-ext-install $mt xmlrpc \
+    && docker-php-ext-install $mt wddx \
     && :\
     && apt-get install -y libbz2-dev \
-    && docker-php-ext-install bz2 \
+    && docker-php-ext-install $mt bz2 \
     && :\
-    && docker-php-ext-install zip \
-    && docker-php-ext-install pcntl \
-    && docker-php-ext-install pdo_mysql \
-    && docker-php-ext-install mysqli \
-    && docker-php-ext-install mbstring \
-    && docker-php-ext-install exif \
-    && docker-php-ext-install bcmath \
-    && docker-php-ext-install calendar \
-    && docker-php-ext-install sockets \
-    && docker-php-ext-install gettext \
-    && docker-php-ext-install shmop \
-    && docker-php-ext-install sysvmsg \
-    && docker-php-ext-install sysvsem \
-    && docker-php-ext-install sysvshm
-    #&& docker-php-ext-install opcache
-    #&& docker-php-ext-install pdo_firebird \
-    #&& docker-php-ext-install pdo_dblib \
-    #&& docker-php-ext-install pdo_oci \
-    #&& docker-php-ext-install pdo_odbc \
-    #&& docker-php-ext-install pdo_pgsql \
-    #&& docker-php-ext-install pgsql \
-    #&& docker-php-ext-install oci8 \
-    #&& docker-php-ext-install odbc \
-    #&& docker-php-ext-install dba \
-    #&& docker-php-ext-install interbase \
+    && docker-php-ext-install $mt zip \
+    && docker-php-ext-install $mt pcntl \
+    && docker-php-ext-install $mt pdo_mysql \
+    && docker-php-ext-install $mt mysqli \
+    && docker-php-ext-install $mt mbstring \
+    && docker-php-ext-install $mt exif \
+    && docker-php-ext-install $mt bcmath \
+    && docker-php-ext-install $mt calendar \
+    && docker-php-ext-install $mt sockets \
+    && docker-php-ext-install $mt gettext \
+    && docker-php-ext-install $mt shmop \
+    && docker-php-ext-install $mt sysvmsg \
+    && docker-php-ext-install $mt sysvsem \
+    && docker-php-ext-install $mt sysvshm
+    #&& docker-php-ext-install $mt opcache
+    #&& docker-php-ext-install $mt pdo_firebird \
+    #&& docker-php-ext-install $mt pdo_dblib \
+    #&& docker-php-ext-install $mt pdo_oci \
+    #&& docker-php-ext-install $mt pdo_odbc \
+    #&& docker-php-ext-install $mt pdo_pgsql \
+    #&& docker-php-ext-install $mt pgsql \
+    #&& docker-php-ext-install $mt oci8 \
+    #&& docker-php-ext-install $mt odbc \
+    #&& docker-php-ext-install $mt dba \
+    #&& docker-php-ext-install $mt interbase \
     #&& :\
     #&& apt-get install -y curl \
     #&& apt-get install -y libcurl3 \
     #&& apt-get install -y libcurl4-openssl-dev \
-    #&& docker-php-ext-install curl \
+    #&& docker-php-ext-install $mt curl \
     #&& :\
     #&& apt-get install -y libreadline-dev \
-    #&& docker-php-ext-install readline \
+    #&& docker-php-ext-install $mt readline \
     #&& :\
     #&& apt-get install -y libsnmp-dev \
     #&& apt-get install -y snmp \
-    #&& docker-php-ext-install snmp \
+    #&& docker-php-ext-install $mt snmp \
     #&& :\
     #&& apt-get install -y libpspell-dev \
     #&& apt-get install -y aspell-en \
-    #&& docker-php-ext-install pspell \
+    #&& docker-php-ext-install $mt pspell \
     #&& :\
     #&& apt-get install -y librecode0 \
     #&& apt-get install -y librecode-dev \
-    #&& docker-php-ext-install recode \
+    #&& docker-php-ext-install $mt recode \
     #&& :\
     #&& apt-get install -y libtidy-dev \
-    #&& docker-php-ext-install tidy \
+    #&& docker-php-ext-install $mt tidy \
     #&& :\
     #&& apt-get install -y libgmp-dev \
     #&& ln -s /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h \
-    #&& docker-php-ext-install gmp \
+    #&& docker-php-ext-install $mt gmp \
     #&& :\
     #&& apt-get install -y postgresql-client \
     #&& apt-get install -y mysql-client \
     #&& :\
     #&& apt-get install -y libc-client-dev \
     #&& docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
-    #&& docker-php-ext-install imap \
+    #&& docker-php-ext-install $mt imap \
     #&& :\
     #&& apt-get install -y libldb-dev \
     #&& apt-get install -y libldap2-dev \
     #&& docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu \
-    #&& docker-php-ext-install ldap \
+    #&& docker-php-ext-install $mt ldap \
     #&& :\
     #&& apt-get install -y libmagickwand-dev \
     #&& pecl install imagick-3.4.3 \
