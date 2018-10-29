@@ -9,7 +9,8 @@ ARG SUPPORT_MCRYPT
 ARG BUILT_IN_OPCACHE
 
 COPY ./sources.list/$SOURCE_LIST /etc/apt/sources.list.tmp
-RUN cc=$(curl 'https://ifconfig.co/country'); if [ "$cc" = "China" ]; then mv /etc/apt/sources.list.tmp /etc/apt/sources.list; fi
+RUN cc=$(curl 'https://ifconfig.co/country'); if [ "$cc" = "China" ]; then \
+    mv /etc/apt/sources.list.tmp /etc/apt/sources.list; fi
 RUN apt-get update
 
 # Composer
@@ -17,7 +18,8 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
     && php composer-setup.php \
     && php -r "unlink('composer-setup.php');" \
     && mv composer.phar /bin/composer \
-    && cc=$(curl 'https://ifconfig.co/country'); if [ "$cc" = "China" ]; then composer config -g repo.packagist composer https://packagist.phpcomposer.com; fi
+    && cc=$(curl 'https://ifconfig.co/country'); if [ "$cc" = "China" ]; then \
+    composer config -g repo.packagist composer https://packagist.phpcomposer.com; fi
 
 # Install extensions from source
 COPY ./extensions /tmp/extensions
@@ -29,7 +31,8 @@ RUN chmod +x /tmp/extensions/install.sh \
 # 1. soap requires libxml2-dev.
 # 2. xml, xmlrpc, wddx require libxml2-dev and libxslt-dev.
 # 3. Line `&& :\` do nothing just for better reading.
-RUN if echo "$PHP_VERSION" | egrep -vq "5.4"; then echo "PHP_VERSION is $PHP_VERSION"; mt="-j$(nproc)"; fi; apt-get install -y libfreetype6-dev libjpeg62-turbo-dev libpng-dev \
+RUN if echo "$PHP_VERSION" | egrep -vq "5.4"; then mt="-j$(nproc)"; fi; \
+    apt-get install -y libfreetype6-dev libjpeg62-turbo-dev libpng-dev \
     && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
     && docker-php-ext-install $mt gd \
     && :\
