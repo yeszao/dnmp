@@ -1,0 +1,24 @@
+ARG PHP_VERSION
+FROM surenkid/php53:latest
+
+ARG SOURCE_LIST
+ARG XDEBUG_VERSION
+ARG SWOOLE_VERSION
+ARG REDIS_VERSION=4.1.1
+ARG SUPPORT_MCRYPT
+ARG BUILT_IN_OPCACHE
+
+COPY ./sources.list/$SOURCE_LIST /etc/apt/sources.list
+RUN apt-get update
+
+RUN apt-get install -y net-tools iputils-ping vim
+
+# Composer
+RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
+    && php composer-setup.php \
+#   && php -r "unlink('composer-setup.php');" \
+    && mv composer.phar /bin/composer \
+    && composer config -g repo.packagist composer https://packagist.phpcomposer.com
+
+
+
