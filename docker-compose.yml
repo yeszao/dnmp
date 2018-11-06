@@ -65,7 +65,7 @@ services:
       - ./conf/php/php56.ini:/usr/local/etc/php/php.ini:ro
       - ./conf/php/php56-fpm.conf:/usr/local/etc/php-fpm.d/www.conf:rw
       - ./log/php/php56/:/var/log/dnmp/:rw
-    restart: always
+    restart: always 
     cap_add:
       - SYS_PTRACE
     networks:
@@ -122,7 +122,7 @@ services:
       - D:/htdocs/:/var/www/html/:rw
       - ./conf/php/php53.ini:/usr/local/etc/php/php.ini:ro
 #      - ./conf/php/php53-fpm.conf:/usr/local/etc/php-fpm.d/www.conf:rw
-#      - ./log/php/php53/:/var/log/dnmp/:rw
+      - ./log/php/php53/:/var/log/dnmp/:rw
     restart: always
     cap_add:
       - SYS_PTRACE
