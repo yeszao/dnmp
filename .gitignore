@@ -1,4 +1,4 @@
-.*
-!.gitignore
+.idea
+.DS_Store
 www/*
 !www/localhost/
