@@ -24,8 +24,6 @@ services:
         XDEBUG_VERSION: 2.6.1
         SWOOLE_VERSION: 4.2.1
         REDIS_VERSION: 4.1.1
-    expose:
-      - "9000"
     volumes:
       - ./www/:/var/www/html/:rw
       - ./conf/php.ini:/usr/local/etc/php/php.ini:ro
@@ -47,8 +45,6 @@ services:
         XDEBUG_VERSION: 2.5.5
         SWOOLE_VERSION: 2.0.11
         REDIS_VERSION: 4.1.1
-    expose:
-      - "9000"
     volumes:
       - ./www/:/var/www/html/:rw
       - ./conf/php.ini:/usr/local/etc/php/php.ini:ro
@@ -69,8 +65,6 @@ services:
         PHP_VERSION: 5.4
         XDEBUG_VERSION: 2.4.1
         SWOOLE_VERSION: "false"
-    expose:
-      - "9000"
     volumes:
       - ./www/:/var/www/html/:rw
       - ./conf/php.ini:/usr/local/etc/php/php.ini:ro

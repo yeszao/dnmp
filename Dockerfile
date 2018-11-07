@@ -1,22 +1,14 @@
 ARG PHP_VERSION
 FROM php:${PHP_VERSION}-fpm
 
-ARG SOURCE_LIST
 ARG XDEBUG_VERSION
 ARG SWOOLE_VERSION
 ARG REDIS_VERSION=4.1.1
-ARG SUPPORT_MCRYPT
-ARG BUILT_IN_OPCACHE
 
-COPY ./sources.list/$SOURCE_LIST /etc/apt/sources.list
+COPY ./sources.list /etc/apt/sources.list.tmp
+RUN cc=$(curl 'https://ifconfig.co/country'); if [ "$cc" = "China" ]; then \
+    mv /etc/apt/sources.list.tmp /etc/apt/sources.list; fi
 RUN apt-get update
-
-# Composer
-RUN php -r "copy('https://install.phpcomposer.com/installer', 'composer-setup.php');" \
-    && php composer-setup.php \
-    && php -r "unlink('composer-setup.php');" \
-    && mv composer.phar /bin/composer \
-    && composer config -g repo.packagist composer https://packagist.phpcomposer.com
 
 # Install extensions from source
 COPY ./extensions /tmp/extensions
@@ -59,7 +51,6 @@ RUN apt-get install -y libfreetype6-dev libjpeg62-turbo-dev libpng-dev \
     && docker-php-ext-install sysvmsg \
     && docker-php-ext-install sysvsem \
     && docker-php-ext-install sysvshm
-    #&& docker-php-ext-install opcache
     #&& docker-php-ext-install pdo_firebird \
     #&& docker-php-ext-install pdo_dblib \
     #&& docker-php-ext-install pdo_oci \
@@ -70,6 +61,10 @@ RUN apt-get install -y libfreetype6-dev libjpeg62-turbo-dev libpng-dev \
     #&& docker-php-ext-install odbc \
     #&& docker-php-ext-install dba \
     #&& docker-php-ext-install interbase \
+    #&& :\
+    #&& apt-get install -y unixodbc-dev \
+    #&& pecl install sqlsrv pdo_sqlsrv \
+    #&& docker-php-ext-enable sqlsrv pdo_sqlsrv
     #&& :\
     #&& apt-get install -y curl \
     #&& apt-get install -y libcurl3 \

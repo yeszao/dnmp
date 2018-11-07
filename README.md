@@ -28,7 +28,7 @@ DNMP项目特点：
 ├── log                     Nginx日志目录
 ├── mysql                   MySQL数据目录
 ├── www                     PHP代码目录
-└── source.list             Debian源目录
+└── source.list             Debian源文件
 ```
 结构示意图：
 
@@ -74,7 +74,7 @@ DNMP项目特点：
 再 **重启 Nginx** 生效。
 
 ## 4. 添加快捷命令
-在开发的时候，我们可能经常使用docker exec -it切换到容器中，把常用的做成命令别名是个省事的方法。
+在开发的时候，我们可能经常使用`docker exec -it`切换到容器中，把常用的做成命令别名是个省事的方法。
 
 打开~/.bashrc，加上：
 ```bash
@@ -124,16 +124,18 @@ log-error               = /var/lib/mysql/mysql.error.log
 以上是mysql.conf中的日志文件的配置。
 
 ## 6. 使用composer
-dnmp默认已经在容器中安装了composer，使用时先进入容器：
-```
-$ docker exec -it dnmp_php_1 /bin/bash
-```
-然后进入相应目录，使用composer：
-```
-# cd /var/www/html/localhost
-# composer update
-```
-因为composer依赖于PHP，所以，是必须在容器里面操作composer的。
+***我们建议在主机HOST中使用composer而不是在容器中使用。***因为：
+
+1. ***composer依赖多。***必须依赖PHP、PHP zlib扩展和git才能使用，PHP和扩展没问题，不过需要安装git，会增大容器体积。
+
+而且需要一个可登陆用户及用户home目录权限。
+
+PHP容器中肯定是安装了
+
+还有就是，在PHP容器中，默认是root，PHP执行的`www-data`用户是没有shell的，也没有home目录。
+
+而且如果有多个PHP版本，每个容器都安装一次composer和git，那是很费时费力费资源的事情。
+
 
 ## 7. phpmyadmin和phpredisadmin
 本项目默认在`docker-compose.yml`中开启了用于MySQL在线管理的*phpMyAdmin*，以及用于redis在线管理的*phpRedisAdmin*，可以根据需要修改或删除。
@@ -169,15 +171,7 @@ Redis连接信息如下：
 
 
 ## 常见问题
-1. 遇到“No releases available for package "pecl.php.net/redis”
-    > 请参考： https://github.com/yeszao/dnmp/issues/10
-
-说明：**这个问题主要是受国内网络环境影响，现在PHP7以上的版本直接采用从源码安装扩展，所以这个问题已经没有了。**
-
-2. PHP5.6错误“ibfreetype6-dev : Depends: zlib1g-dev but it is not going to be installed or libz-dev”
-    > 请参考： https://github.com/yeszao/dnmp/issues/39
-
-3. 如何在PHP代码中使用curl？
+1. 如何在PHP代码中使用curl？
 
 这里我们使用curl指的是从PHP容器curl到Nginx容器，比如Nginx中我们配置了：
 - www.site1.com
