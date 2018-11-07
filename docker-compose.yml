@@ -1,15 +1,15 @@
 version: "3"
 services:
   nginx:
-    image: nginx:alpine
+    image: nginx:${NGINX_VERSION}
     ports:
-      - "80:80"
-      - "443:443"
+      - "${NGINX_HTTP_PORT}:80"
+      - "${NGINX_HTTPS_PORT}:443"
     volumes:
-      - ./www/:/var/www/html/:rw
-      - ./conf/conf.d:/etc/nginx/conf.d/:rw
-      - ./conf/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./log/:/var/log/dnmp/:rw
+      - ${SOURCE_DIR}:/var/www/html/:rw
+      - ${NGINX_CONFD_DIR}:/etc/nginx/conf.d/:rw
+      - ${NGINX_CONF_FILE}:/etc/nginx/nginx.conf:ro
+      - ${NGINX_LOG_DIR}:/var/log/nginx/:rw
     restart: always
     networks:
       - default
@@ -18,15 +18,15 @@ services:
     build:
       context: .
       args:
-        PHP_VERSION: 7.2
-        XDEBUG_VERSION: 2.6.1
-        SWOOLE_VERSION: 4.2.1
-        REDIS_VERSION: 4.1.1
+        PHP_VERSION: ${PHP72_VERSION}
+        PHP_XDEBUG: ${PHP72_XDEBUG}
+        PHP_SWOOLE: ${PHP72_SWOOLE}
+        PHP_REDIS: ${PHP72_REDIS}
+        REPLACE_SOURCE_LIST: ${REPLACE_SOURCE_LIST}
     volumes:
-      - ./www/:/var/www/html/:rw
-      - ./conf/php.ini:/usr/local/etc/php/php.ini:ro
-      - ./conf/php-fpm.conf:/usr/local/etc/php-fpm.d/www.conf:rw
-      - ./log/:/var/log/dnmp/:rw
+      - ${SOURCE_DIR}:/var/www/html/:rw
+      - ${PHP72_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
+      - ${PHP72_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
     restart: always
     cap_add:
       - SYS_PTRACE
@@ -37,15 +37,15 @@ services:
     build:
       context: .
       args:
-        PHP_VERSION: 5.6
-        XDEBUG_VERSION: 2.5.5
-        SWOOLE_VERSION: 2.0.11
-        REDIS_VERSION: 4.1.1
+        PHP_VERSION: ${PHP56_VERSION}
+        PHP_XDEBUG: ${PHP56_XDEBUG}
+        PHP_SWOOLE: ${PHP56_SWOOLE}
+        PHP_REDIS: ${PHP56_REDIS}
+        REPLACE_SOURCE_LIST: ${REPLACE_SOURCE_LIST}
     volumes:
-      - ./www/:/var/www/html/:rw
-      - ./conf/php.ini:/usr/local/etc/php/php.ini:ro
-      - ./conf/php-fpm.conf:/usr/local/etc/php-fpm.d/www.conf:rw
-      - ./log/:/var/log/dnmp/:rw
+      - ${SOURCE_DIR}:/var/www/html/:rw
+      - ${PHP56_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
+      - ${PHP56_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
     restart: always
     cap_add:
       - SYS_PTRACE
@@ -56,14 +56,15 @@ services:
     build:
       context: .
       args:
-        PHP_VERSION: 5.4
-        XDEBUG_VERSION: 2.4.1
-        SWOOLE_VERSION: "false"
+        PHP_VERSION: ${PHP54_VERSION}
+        PHP_XDEBUG: ${PHP54_XDEBUG}
+        PHP_SWOOLE: ${PHP54_SWOOLE}
+        PHP_REDIS: ${PHP54_REDIS}
+        REPLACE_SOURCE_LIST: ${REPLACE_SOURCE_LIST}
     volumes:
-      - ./www/:/var/www/html/:rw
-      - ./conf/php.ini:/usr/local/etc/php/php.ini:ro
-      - ./conf/php-fpm.conf:/usr/local/etc/php-fpm.d/www.conf:rw
-      - ./log/:/var/log/dnmp/:rw
+      - ${SOURCE_DIR}:/var/www/html/:rw
+      - ${PHP54_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
+      - ${PHP54_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
     restart: always
     cap_add:
       - SYS_PTRACE
@@ -71,30 +72,30 @@ services:
       - default
 
   mysql:
-    image: mysql:8.0
+    image: mysql:${MYSQL_VERSION}
     ports:
-      - "3306:3306"
+      - "${MYSQL_PORT}:3306"
     volumes:
-      - ./conf/mysql.cnf:/etc/mysql/conf.d/mysql.cnf:ro
-      - ./mysql/:/var/lib/mysql/:rw
+      - ${MYSQL_CONF_FILE}:/etc/mysql/conf.d/mysql.cnf:ro
+      - ${MYSQL_DATA_DIR}:/var/lib/mysql/:rw
     restart: always
     networks:
       - default
     environment:
-      MYSQL_ROOT_PASSWORD: "123456"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
 
   redis:
-    image: redis:4.0
+    image: redis:${REDIS_VERSION}
     restart: always
     networks:
       - default
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT}:6379"
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
     ports:
-      - "8080:80"
+      - "${PHPMYADMIN_PORT}:80"
     networks:
       - default
     environment:
@@ -104,7 +105,7 @@ services:
   phpredisadmin:
     image: erikdubbelboer/phpredisadmin:latest
     ports:
-      - "8081:80"
+      - "${REDISMYADMIN_PORT}:80"
     networks:
       - default
     environment:
