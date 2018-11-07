@@ -12,9 +12,7 @@ services:
       - ./log/:/var/log/dnmp/:rw
     restart: always
     networks:
-      - net-php72
-      - net-php56
-      - net-php54
+      - default
 
   php72:
     build:
@@ -33,9 +31,7 @@ services:
     cap_add:
       - SYS_PTRACE
     networks:
-      - net-php72
-      - net-mysql
-      - net-redis
+      - default
 
   php56:
     build:
@@ -54,9 +50,7 @@ services:
     cap_add:
       - SYS_PTRACE
     networks:
-      - net-php56
-      - net-mysql
-      - net-redis
+      - default
 
   php54:
     build:
@@ -74,9 +68,7 @@ services:
     cap_add:
       - SYS_PTRACE
     networks:
-      - net-php54
-      - net-mysql
-      - net-redis
+      - default
 
   mysql:
     image: mysql:8.0
@@ -87,7 +79,7 @@ services:
       - ./mysql/:/var/lib/mysql/:rw
     restart: always
     networks:
-      - net-mysql
+      - default
     environment:
       MYSQL_ROOT_PASSWORD: "123456"
 
@@ -95,7 +87,7 @@ services:
     image: redis:4.0
     restart: always
     networks:
-      - net-redis
+      - default
     ports:
       - "6379:6379"
 
@@ -104,7 +96,7 @@ services:
     ports:
       - "8080:80"
     networks:
-      - net-mysql
+      - default
     environment:
       - PMA_HOST=mysql
       - PMA_PORT=3306
@@ -114,14 +106,10 @@ services:
     ports:
       - "8081:80"
     networks:
-      - net-redis
+      - default
     environment:
       - REDIS_1_HOST=redis
       - REDIS_1_PORT=6379
 
 networks:
-  net-php72:
-  net-php56:
-  net-php54:
-  net-mysql:
-  net-redis:
+  default:

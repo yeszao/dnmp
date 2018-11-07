@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "============================================"
-echo "The exact version of php is $PHP_VERSION"
+echo "Building extensions for $PHP_VERSION"
 echo "============================================"
 
 function getPHPVersion() {
@@ -14,10 +14,16 @@ function getPHPVersion() {
 
 version=$(getPHPVersion)
 
+# Use multicore compilation if php version greater than 5.4
+if [ ${version} -ge 50600 ]; then
+    export mc="-j$(nproc)";
+fi
+
+
 # Mcrypt was DEPRECATED in PHP 7.1.0, and REMOVED in PHP 7.2.0.
 if [ ${version} -lt 70200 ]; then
     apt-get install -y libmcrypt-dev \
-    && docker-php-ext-install mcrypt
+    && docker-php-ext-install $mc mcrypt
 fi
 
 # From PHP 5.6, we can use docker-php-ext-install to install opcache
@@ -25,7 +31,7 @@ if [ ${version} -lt 50600 ]; then
     cd /tmp/extensions \
     && mkdir zendopcache \
     && tar -xf zendopcache-7.0.5.tgz -C zendopcache --strip-components=1 \
-    && ( cd zendopcache && phpize && ./configure && make && make install ) \
+    && ( cd zendopcache && phpize && ./configure && make $mc && make install ) \
     && docker-php-ext-enable opcache
 
 else
@@ -36,7 +42,7 @@ if [ "$REDIS_VERSION" != "false" ]; then
     cd /tmp/extensions \
     && mkdir redis \
     && tar -xf redis-${REDIS_VERSION}.tgz -C redis --strip-components=1 \
-    && ( cd redis && phpize && ./configure && make && make install ) \
+    && ( cd redis && phpize && ./configure && make $mc && make install ) \
     && docker-php-ext-enable redis
 fi
 
@@ -45,7 +51,7 @@ if [ "$XDEBUG_VERSION" != "false" ]; then
     cd /tmp/extensions \
     && mkdir xdebug \
     && tar -xf xdebug-${XDEBUG_VERSION}.tgz -C xdebug --strip-components=1 \
-    && ( cd xdebug && phpize && ./configure && make && make install ) \
+    && ( cd xdebug && phpize && ./configure && make $mc && make install ) \
     && docker-php-ext-enable xdebug
 fi
 
@@ -54,6 +60,6 @@ if [ "$SWOOLE_VERSION" != "false" ]; then
     cd /tmp/extensions \
     && mkdir swoole \
     && tar -xf swoole-${SWOOLE_VERSION}.tgz -C swoole --strip-components=1 \
-    && ( cd swoole && phpize && ./configure && make && make install ) \
+    && ( cd swoole && phpize && ./configure && make $mc && make install ) \
     && docker-php-ext-enable swoole
 fi
