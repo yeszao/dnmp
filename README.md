@@ -45,10 +45,10 @@ DNMP项目特点：
     ```
     $ sudo gpasswd -a ${USER} docker
     ```
-4. 修改环境配置文件`env.default`为`.env`，启动：
+4. 拷贝环境配置文件`env.default`为`.env`，启动：
     ```
     $ cd dnmp
-    $ cp env.default .env
+    $ cp env.default .env   # Windows系统请用copy命令，或者用编辑器打开后另存为.env
     $ docker-compose up
     ```
 5. 访问在浏览器中访问：
@@ -71,7 +71,7 @@ $ docker-compose build          # 重建全部服务
 
 切换PHP仅需修改相应站点 Nginx 配置的`fastcgi_pass`选项，
 
-例如，示例的**localhost**用的是PHP5.4，Nginx 配置：
+例如，示例的 [http://localhost](http://localhost) 用的是PHP5.4，Nginx 配置：
 ```
     fastcgi_pass   php54:9000;
 ```
@@ -80,6 +80,9 @@ $ docker-compose build          # 重建全部服务
     fastcgi_pass   php72:9000;
 ```
 再 **重启 Nginx** 生效。
+```bash
+$ docker exec -it dnmp_nginx_1 nginx -s reload
+```
 
 ## 4. 添加快捷命令
 在开发的时候，我们可能经常使用`docker exec -it`切换到容器中，把常用的做成命令别名是个省事的方法。
