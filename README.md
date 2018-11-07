@@ -45,9 +45,10 @@ DNMP项目特点：
     ```
     $ sudo gpasswd -a ${USER} docker
     ```
-4. 启动：
+4. 修改环境配置文件`env.default`为`.env`，启动：
     ```
     $ cd dnmp
+    $ cp env.default .env
     $ docker-compose up
     ```
 5. 访问在浏览器中访问：
@@ -56,6 +57,13 @@ DNMP项目特点：
  - [https://localhost](https://localhost)：自定义证书*https*站点，访问时浏览器会有安全提示，忽略提示访问即可
 
 两个站点使用同一PHP代码：`./www/localhost/index.php`。
+
+要修改端口、日志文件位置、以及是否替换source.list文件等，请修改.env文件，然后重新构建：
+```bash
+$ docker-compose build php54    # 重建单个服务
+$ docker-compose build          # 重建全部服务
+
+```
 
 
 ## 3. 切换PHP版本？
@@ -93,9 +101,9 @@ Log文件生成的位置依赖于conf下各log配置的值。
 ### 5.1 Nginx日志
 Nginx日志是我们用得最多的日志，所以我们单独放在根目录`log`下。
 
-`log`会目录映射Nginx容器的`/var/log/dnmp`目录，所以在Nginx配置文件中，需要输出log的位置，我们需要配置到`/var/log/dnmp`目录，如：
+`log`会目录映射Nginx容器的`/var/log/nginx`目录，所以在Nginx配置文件中，需要输出log的位置，我们需要配置到`/var/log/nginx`目录，如：
 ```
-error_log  /var/log/dnmp/nginx.localhost.error.log  warn;
+error_log  /var/log/nginx/nginx.localhost.error.log  warn;
 ```
 
 
@@ -111,7 +119,7 @@ error_log  /var/log/dnmp/nginx.localhost.error.log  warn;
     ```
 2. 主机上打开并修改PHP-FPM的配置文件`conf/php-fpm.conf`，找到如下一行，删除注释，并改值为：
     ```
-    php_admin_value[error_log] = /var/log/dnmp/php-fpm.error.log
+    php_admin_value[error_log] = /var/log/php/php-fpm.error.log
     ```
 3. 重启PHP-FPM容器。
 
@@ -181,7 +189,7 @@ Redis连接信息如下：
 
 首先，找到Nginx容器的IP地址，命令：
 ```
-$ docker network inspect dnmp_net-php54
+$ docker network inspect dnmp_default
 ...
     "Containers": {
         ...{

@@ -3,8 +3,8 @@ services:
   nginx:
     image: nginx:${NGINX_VERSION}
     ports:
-      - "${NGINX_HTTP_PORT}:80"
-      - "${NGINX_HTTPS_PORT}:443"
+      - "${NGINX_HTTP_HOST_PORT}:80"
+      - "${NGINX_HTTPS_HOST_PORT}:443"
     volumes:
       - ${SOURCE_DIR}:/var/www/html/:rw
       - ${NGINX_CONFD_DIR}:/etc/nginx/conf.d/:rw
@@ -74,7 +74,7 @@ services:
   mysql:
     image: mysql:${MYSQL_VERSION}
     ports:
-      - "${MYSQL_PORT}:3306"
+      - "${MYSQL_HOST_PORT}:3306"
     volumes:
       - ${MYSQL_CONF_FILE}:/etc/mysql/conf.d/mysql.cnf:ro
       - ${MYSQL_DATA_DIR}:/var/lib/mysql/:rw
@@ -90,12 +90,12 @@ services:
     networks:
       - default
     ports:
-      - "${REDIS_PORT}:6379"
+      - "${REDIS_HOST_PORT}:6379"
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
     ports:
-      - "${PHPMYADMIN_PORT}:80"
+      - "${PHPMYADMIN_HOST_PORT}:80"
     networks:
       - default
     environment:
@@ -105,7 +105,7 @@ services:
   phpredisadmin:
     image: erikdubbelboer/phpredisadmin:latest
     ports:
-      - "${REDISMYADMIN_PORT}:80"
+      - "${REDISMYADMIN_HOST_PORT}:80"
     networks:
       - default
     environment:
