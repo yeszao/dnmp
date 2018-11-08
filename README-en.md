@@ -30,7 +30,7 @@ Docker deploying Nginx MySQL PHP7/PHP5.6/PHP5.4 in one key, support full feature
 4. Start docker containers:
     ```
     $ cd dnmp
-    $ cp env.default .env       # Use copy command on Windows
+    $ cp env.sample .env       # Use copy command on Windows
     $ docker-compose up
     ```
     You may need use `sudo` before this command in Linux.

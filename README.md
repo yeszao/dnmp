@@ -66,10 +66,10 @@ DNMP项目特点：
     ```
     $ sudo gpasswd -a ${USER} docker
     ```
-4. 拷贝环境配置文件`env.default`为`.env`，启动：
+4. 拷贝环境配置文件`env.sample`为`.env`，启动：
     ```
     $ cd dnmp
-    $ cp env.default .env   # Windows系统请用copy命令，或者用编辑器打开后另存为.env
+    $ cp env.sample .env   # Windows系统请用copy命令，或者用编辑器打开后另存为.env
     $ docker-compose up
     ```
 5. 访问在浏览器中访问：
