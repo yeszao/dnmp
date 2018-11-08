@@ -1,5 +1,5 @@
 # dnmp
-Docker deploying Nginx MySQL PHP7 in one key, support full feature functions.
+Docker deploying Nginx MySQL PHP7/PHP5.6/PHP5.4 in one key, support full feature functions.
 
 ![Demo Image](./dnmp.png)
 
@@ -22,9 +22,14 @@ Docker deploying Nginx MySQL PHP7 in one key, support full feature functions.
     ```
     $ git clone https://github.com/yeszao/dnmp.git
     ```
+3. Add current user to group `docker`：
+    ```
+    $ sudo gpasswd -a ${USER} docker
+    ```
 4. Start docker containers:
     ```
     $ cd dnmp
+    $ cp env.default .env       # Use copy command on Windows
     $ docker-compose up
     ```
     You may need use `sudo` before this command in Linux.
@@ -32,56 +37,27 @@ Docker deploying Nginx MySQL PHP7 in one key, support full feature functions.
 
 ![Demo Image](./snapshot.png)
 
-The index file is located in `./www/site1/`.
+The index file is located at `./www/localhost/index.php`.
 
-## 3. Other PHP version?
-Default, we start LATEST PHP version by using:
+
+## 3.Multiple php version
+Default, we create 3 php container, they are PHP7.2, PHP5.6 and PHP5.4,
+
+We can change easy by modify Nginx configuration `fastcgi_pass`.
+
+For example, [http://localhost](http://localhost) use PHP5.4, Nginx `fastcgi_pass` is:
 ```
-$ docker-compose up
+    fastcgi_pass   php54:9000;
 ```
-we can also start PHP5.4 or PHP5.6 by using:
+To use PHP7.2, change it:
 ```
-$ docker-compose -f docker-compose54.yml up
-$ docker-compose -f docker-compose56.yml up
+    fastcgi_pass   php72:9000;
 ```
-We need not change any other files, such as nginx config file or php.ini, everything will work fine in current environment (except code compatibility error).
-
-> Notice: We can only start one php version, for they using same port. We must STOP the running project then START the other one.
-
-## 4. HTTPS and HTTP/2
-Default demo include 2 sites:
-* http://www.site1.com (same with http://localhost)
-* https://www.site2.com
-
-To preview them, add 2 lines to your hosts file (at `/etc/hosts` on Linux and `C:\Windows\System32\drivers\etc\hosts` on Windows):
-```
-127.0.0.1 www.site1.com
-127.0.0.1 www.site2.com
-```
-Then you can visit from browser.
-
-
-## 5. Use log
-We can identify log directory in nginx / php / php-fpm / mysql config file.
-To display the log file in host, we should config them to `/var/log/dnmp`.
-
-But, there are some differences:
-
-### 5.1 Nginx log
-Nginx will auto generate all log files.
-
-### 5.2 PHP-FPM log
-To use `php-fpm` log, you must create log file manually(in host):
+Then reload nginx:
 ```bash
-$ touch log/php.fpm.error.log
-$ chmod a+w log/php.fpm.error.log
+$ docker exec -it dnmp_nginx_1 nginx -s reload
 ```
-### 5.3 MySQL log
-Same as `php-fpm`, log file must be created manually(in host):
-```bash
-$ touch log/mysql.slow.log
-$ chmod a+w log/mysql.slow.log
-```
+Done.
 
 ## 6. License
 MIT

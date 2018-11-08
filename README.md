@@ -1,5 +1,7 @@
 DNMP（Docker + Nginx + MySQL + PHP7/5 + Redis）是一款全功能的**LNMP一键安装程序**。
 
+**[[ENGLISH README]](README-en.md)**
+
 DNMP项目特点：
 1. `100%`开源
 2. `100%`遵循Docker标准
@@ -13,8 +15,27 @@ DNMP项目特点：
 10. 实际项目中应用，确保`100%`可用
 11. 一次配置，**Windows、Linux、MacOs**皆可用
 
-## 1.项目结构
-目录说明：
+
+# 目录
+- [1.目录结构](#1目录结构)
+- [2.快速使用](#2快速使用)
+- [3.切换PHP版本](#3切换php版本)
+- [4.添加快捷命令](#4添加快捷命令)
+- [5.使用Log](#5使用log)
+    - [5.1 Nginx日志](#51-nginx日志)
+    - [5.2 PHP-FPM日志](#52-php-fpm日志)
+    - [5.3 MySQL日志](#53-mysql日志)
+- [6.使用composer](#6使用composer)
+- [7.数据库管理](#7数据库管理)
+    - [7.1 phpMyAdmin](#71-phpmyadmin)
+    - [7.2 phpRedisAdmin](#72-phpredisadmin)
+- [8.在正式环境中安全使用](#8在正式环境中安全使用)
+- [9.常见问题](#9常见问题)
+    - [9.1 如何在PHP代码中使用curl？](#91-如何在php代码中使用curl)
+
+
+## 1.目录结构
+
 ```
 /
 ├── conf                    配置文件目录
@@ -35,7 +56,7 @@ DNMP项目特点：
 ![Demo Image](./dnmp.png)
 
 
-## 2. 快速使用
+## 2.快速使用
 1. 本地安装`git`、`docker`和`docker-compose`。
 2. `clone`项目：
     ```
@@ -66,7 +87,7 @@ $ docker-compose build          # 重建全部服务
 ```
 
 
-## 3. 切换PHP版本？
+## 3.切换PHP版本
 默认情况下，我们同时创建 **PHP5.4、PHP5.6和PHP7.2** 三个PHP版本的容器，
 
 切换PHP仅需修改相应站点 Nginx 配置的`fastcgi_pass`选项，
@@ -84,7 +105,7 @@ $ docker-compose build          # 重建全部服务
 $ docker exec -it dnmp_nginx_1 nginx -s reload
 ```
 
-## 4. 添加快捷命令
+## 4.添加快捷命令
 在开发的时候，我们可能经常使用`docker exec -it`切换到容器中，把常用的做成命令别名是个省事的方法。
 
 打开~/.bashrc，加上：
@@ -97,7 +118,7 @@ alias dmysql='docker exec -it dnmp_mysql_1 /bin/bash'
 alias dredis='docker exec -it dnmp_redis_1 /bin/bash'
 ```
 
-## 5. 使用Log
+## 5.使用Log
 
 Log文件生成的位置依赖于conf下各log配置的值。
 
@@ -110,15 +131,25 @@ error_log  /var/log/nginx/nginx.localhost.error.log  warn;
 ```
 
 
-### 5.1 PHP-FPM日志
+### 5.2 PHP-FPM日志
 大部分情况下，PHP-FPM的日志都会输出到Nginx的日志中，所以不需要额外配置。
 
-如果确实需要，可按一下步骤开启。
+另外，建议直接在PHP中打开错误日志：
+```php
+error_reporting(E_ALL);
+ini_set('error_reporting', 'on');
+ini_set('display_errors', 'on');
+```
 
-1. 在主机中创建日志文件并修改权限：
+如果确实需要，可按一下步骤开启（在容器中）。
+
+1. 进入容器，创建日志文件并修改权限：
     ```bash
-    $ touch log/php-fpm.error.log
-    $ chmod a+w log/php-fpm.error.log
+    $ docker exec -it dnmp_php_1 /bin/bash
+    $ mkdir /var/log/php
+    $ cd /var/log/php
+    $ touch php-fpm.error.log
+    $ chmod a+w php-fpm.error.log
     ```
 2. 主机上打开并修改PHP-FPM的配置文件`conf/php-fpm.conf`，找到如下一行，删除注释，并改值为：
     ```
@@ -126,7 +157,7 @@ error_log  /var/log/nginx/nginx.localhost.error.log  warn;
     ```
 3. 重启PHP-FPM容器。
 
-### 5.2 MySQL日志
+### 5.3 MySQL日志
 因为MySQL容器中的MySQL使用的是`mysql`用户启动，它无法自行在`/var/log`下的增加日志文件。所以，我们把MySQL的日志放在与data一样的目录，即项目的`mysql`目录下，对应容器中的`/var/lib/mysql/`目录。
 ```bash
 slow-query-log-file     = /var/lib/mysql/mysql.slow.log
@@ -134,7 +165,7 @@ log-error               = /var/lib/mysql/mysql.error.log
 ```
 以上是mysql.conf中的日志文件的配置。
 
-## 6. 使用composer
+## 6.使用composer
 ***我们建议在主机HOST中使用composer而不是在容器中使用。***因为：
 
 1. ***composer依赖多。***必须依赖PHP、PHP zlib扩展和git才能使用，PHP和扩展没问题，不过需要安装git，会增大容器体积。
@@ -148,7 +179,7 @@ PHP容器中肯定是安装了
 而且如果有多个PHP版本，每个容器都安装一次composer和git，那是很费时费力费资源的事情。
 
 
-## 7. phpmyadmin和phpredisadmin
+## 7.数据库管理
 本项目默认在`docker-compose.yml`中开启了用于MySQL在线管理的*phpMyAdmin*，以及用于redis在线管理的*phpRedisAdmin*，可以根据需要修改或删除。
 
 ### 7.1 phpMyAdmin
@@ -174,15 +205,15 @@ Redis连接信息如下：
 - port: `6379`
 
 
-## 8 在正式环境中安全使用
+## 8.在正式环境中安全使用
 要在正式环境中使用，请：
 1. 在php.ini中关闭XDebug调试
 2. 增强MySQL数据库访问的安全策略
 3. 增强redis访问的安全策略
 
 
-## 常见问题
-1. 如何在PHP代码中使用curl？
+## 9.常见问题
+### 9.1 如何在PHP代码中使用curl？
 
 这里我们使用curl指的是从PHP容器curl到Nginx容器，比如Nginx中我们配置了：
 - www.site1.com
