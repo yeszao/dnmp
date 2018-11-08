@@ -59,5 +59,5 @@ $ docker exec -it dnmp_nginx_1 nginx -s reload
 ```
 Done.
 
-## 6. License
+## 4. License
 MIT
