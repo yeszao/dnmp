@@ -214,34 +214,7 @@ Redis连接信息如下：
 
 ## 9.常见问题
 ### 9.1 如何在PHP代码中使用curl？
-
-这里我们使用curl指的是从PHP容器curl到Nginx容器，比如Nginx中我们配置了：
-- www.site1.com
-- www.site2.com
-
-在site1的PHP代码中，我们要从site1 curl site2服务器，方法如下。
-
-首先，找到Nginx容器的IP地址，命令：
-```
-$ docker network inspect dnmp_default
-...
-    "Containers": {
-        ...{
-            "Name": "nginx",
-            ...
-            "IPv4Address": "172.27.0.3/16",
-            ...
-        },
-```
-这个命令会显示连接到该网络的所有容器，容器nginx的`IPv4Address`就是nginx的IP地址。
-修改docker-compose.yml，在php54服务下加上：
-```
-  php54:
-    ...
-    extra_hosts:
-      - "www.site2.com:172.27.0.3"
-```
-这样就可以在www.site1.com中curl site2了。
+参考这个issue：https://github.com/yeszao/dnmp/issues/91
 
 ## License
 MIT
