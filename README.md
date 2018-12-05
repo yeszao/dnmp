@@ -115,7 +115,7 @@ alias dphp72='docker exec -it dnmp_php72_1 /bin/bash'
 alias dphp56='docker exec -it dnmp_php56_1 /bin/bash'
 alias dphp54='docker exec -it dnmp_php54_1 /bin/bash'
 alias dmysql='docker exec -it dnmp_mysql_1 /bin/bash'
-alias dredis='docker exec -it dnmp_redis_1 /bin/bash'
+alias dredis='docker exec -it dnmp_redis_1 /bin/sh'
 ```
 
 ## 5.使用Log
