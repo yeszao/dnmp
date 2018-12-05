@@ -214,7 +214,7 @@ Redis连接信息如下：
 
 ## 9.常见问题
 ### 9.1 如何在PHP代码中使用curl？
-参考这个issue：https://github.com/yeszao/dnmp/issues/91
+参考这个issue：[https://github.com/yeszao/dnmp/issues/91](https://github.com/yeszao/dnmp/issues/91)
 
 ## License
 MIT
