@@ -86,14 +86,15 @@ services:
 
   redis:
     image: redis:${REDIS_VERSION}
-    restart: always
+    ports:
+      - "${REDIS_HOST_PORT}:6379"
     volumes:
       - ${REDIS_CONF_FILE}:/etc/redis.conf:ro
+    restart: always
     entrypoint: ["redis-server", "/etc/redis.conf"]
     networks:
       - default
-    ports:
-      - "${REDIS_HOST_PORT}:6379"
+    
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
