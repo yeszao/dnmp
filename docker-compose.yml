@@ -87,6 +87,9 @@ services:
   redis:
     image: redis:${REDIS_VERSION}
     restart: always
+    volumes:
+      - ${REDIS_CONF_FILE}:/etc/redis.conf:ro
+    entrypoint: ["redis-server", "/etc/redis.conf"]
     networks:
       - default
     ports:
