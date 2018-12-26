@@ -29,13 +29,6 @@ RUN apt install -y libfreetype6-dev libjpeg62-turbo-dev libpng-dev \
     && apt install -y libicu-dev \
     && docker-php-ext-install $mc intl \
     && :\
-    && apt install -y libxml2-dev \
-    && apt install -y libxslt-dev \
-    && docker-php-ext-install $mc soap \
-    && docker-php-ext-install $mc xsl \
-    && docker-php-ext-install $mc xmlrpc \
-    && docker-php-ext-install $mc wddx \
-    && :\
     && apt install -y libbz2-dev \
     && docker-php-ext-install $mc bz2 \
     && :\
@@ -44,15 +37,15 @@ RUN apt install -y libfreetype6-dev libjpeg62-turbo-dev libpng-dev \
     && docker-php-ext-install $mc pdo_mysql \
     && docker-php-ext-install $mc mysqli \
     && docker-php-ext-install $mc mbstring \
-    && docker-php-ext-install $mc exif \
-    && docker-php-ext-install $mc bcmath \
-    && docker-php-ext-install $mc calendar \
-    && docker-php-ext-install $mc sockets \
-    && docker-php-ext-install $mc gettext \
-    && docker-php-ext-install $mc shmop \
-    && docker-php-ext-install $mc sysvmsg \
-    && docker-php-ext-install $mc sysvsem \
-    && docker-php-ext-install $mc sysvshm
+    && docker-php-ext-install $mc exif
+#    && docker-php-ext-install $mc bcmath \
+#    && docker-php-ext-install $mc calendar \
+#    && docker-php-ext-install $mc sockets \
+#    && docker-php-ext-install $mc gettext \
+#    && docker-php-ext-install $mc shmop \
+#    && docker-php-ext-install $mc sysvmsg \
+#    && docker-php-ext-install $mc sysvsem \
+#    && docker-php-ext-install $mc sysvshm \
 #    && docker-php-ext-install $mc pdo_firebird \
 #    && docker-php-ext-install $mc pdo_dblib \
 #    && docker-php-ext-install $mc pdo_oci \
@@ -63,6 +56,13 @@ RUN apt install -y libfreetype6-dev libjpeg62-turbo-dev libpng-dev \
 #    && docker-php-ext-install $mc odbc \
 #    && docker-php-ext-install $mc dba \
 #    && docker-php-ext-install $mc interbase \
+#    && :\
+#    && apt install -y libxml2-dev \
+#    && apt install -y libxslt-dev \
+#    && docker-php-ext-install $mc soap \
+#    && docker-php-ext-install $mc xsl \
+#    && docker-php-ext-install $mc xmlrpc \
+#    && docker-php-ext-install $mc wddx \
 #    && :\
 #    && apt install -y unixodbc-dev \
 #    && pecl install sqlsrv pdo_sqlsrv \
