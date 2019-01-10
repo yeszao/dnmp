@@ -166,18 +166,48 @@ log-error               = /var/lib/mysql/mysql.error.log
 以上是mysql.conf中的日志文件的配置。
 
 ## 6.使用composer
-***我们建议在主机HOST中使用composer而不是在容器中使用。***因为：
+**我们建议在主机HOST中使用composer，避免PHP容器变得庞大**。
+1. 在主机创建一个目录，用以保存composer的配置和缓存文件：
+    ```
+    mkdir ~/dnmp/composer
+    ```
+2. 打开主机的 `~/.bashrc` 或者 `~/.zshrc` 文件，加上：
+    ```
+    composer () {
+        tty=
+        tty -s && tty=--tty
+        docker run \
+            $tty \
+            --interactive \
+            --rm \
+            --user $(id -u):$(id -g) \
+            --volume ~/dnmp/composer:/tmp \
+            --volume /etc/passwd:/etc/passwd:ro \
+            --volume /etc/group:/etc/group:ro \
+            --volume $(pwd):/app \
+            composer "$@"
+    }
 
-1. ***composer依赖多。***必须依赖PHP、PHP zlib扩展和git才能使用，PHP和扩展没问题，不过需要安装git，会增大容器体积。
+    ```
+3. 在主机的任何目录下就能用composer了：
+    ```
+    cd ~/dnmp/www/
+    composer create-project yeszao/fastphp project --no-dev
+    ```
+4. （可选）如果提示需要依赖，用`--ignore-platform-reqs --no-scripts`关闭依赖检测。
+5. （可选）第一次使用 composer 会在 ~/dnmp/composer 目录下生成一个config.json文件，可以在这个文件中指定国内仓库，例如：
+    ```
+    {
+        "config": {},
+        "repositories": {
+            "packagist": {
+                "type": "composer",
+                "url": "https://packagist.laravel-china.org"
+            }
+        }
+    }
 
-而且需要一个可登陆用户及用户home目录权限。
-
-PHP容器中肯定是安装了
-
-还有就是，在PHP容器中，默认是root，PHP执行的`www-data`用户是没有shell的，也没有home目录。
-
-而且如果有多个PHP版本，每个容器都安装一次composer和git，那是很费时费力费资源的事情。
-
+    ```
 
 ## 7.数据库管理
 本项目默认在`docker-compose.yml`中开启了用于MySQL在线管理的*phpMyAdmin*，以及用于redis在线管理的*phpRedisAdmin*，可以根据需要修改或删除。
