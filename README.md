@@ -189,13 +189,17 @@ log-error               = /var/lib/mysql/mysql.error.log
     }
 
     ```
-3. 在主机的任何目录下就能用composer了：
+3. 让文件起效：
+    ```
+    source ~/.bashrc
+    ```
+4. 在主机的任何目录下就能用composer了：
     ```
     cd ~/dnmp/www/
     composer create-project yeszao/fastphp project --no-dev
     ```
-4. （可选）如果提示需要依赖，用`--ignore-platform-reqs --no-scripts`关闭依赖检测。
-5. （可选）第一次使用 composer 会在 ~/dnmp/composer 目录下生成一个config.json文件，可以在这个文件中指定国内仓库，例如：
+5. （可选）如果提示需要依赖，用`--ignore-platform-reqs --no-scripts`关闭依赖检测。
+6. （可选）第一次使用 composer 会在 ~/dnmp/composer 目录下生成一个config.json文件，可以在这个文件中指定国内仓库，例如：
     ```
     {
         "config": {},
