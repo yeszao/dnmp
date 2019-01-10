@@ -60,5 +60,39 @@ $ docker exec -it dnmp_nginx_1 nginx -s reload
 ```
 Done.
 
-## 4. License
+## 4.Use composer
+We will always use composer in host.
+
+On host, Create a folder for saving composer config file and cache:
+```
+mkdir ~/dnmp/composer
+```
+Open ~/.bashrc, add:
+```
+composer () {
+    tty=
+    tty -s && tty=--tty
+    docker run \
+        $tty \
+        --interactive \
+        --rm \
+        --user $(id -u):$(id -g) \
+        --volume ~/dnmp/composer:/tmp \
+        --volume /etc/passwd:/etc/passwd:ro \
+        --volume /etc/group:/etc/group:ro \
+        --volume $(pwd):/app \
+        composer "$@"
+}
+```
+Make this script affect:
+```
+source ~/.bashrc
+```
+Thats all, use composer:
+```
+cd ~/dnmp/www/
+composer create-project yeszao/fastphp project --no-dev
+```
+
+## License
 MIT
