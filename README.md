@@ -72,6 +72,7 @@ DNMP项目特点：
     $ cp env.sample .env   # Windows系统请用copy命令，或者用编辑器打开后另存为.env
     $ docker-compose up
     ```
+    注意：Windows安装360安全卫士的同学，请先将其退出，不然安装过程中可能Docker创建账号过程可能被拦截，导致启动时文件共享失败；
 5. 访问在浏览器中访问：
 
  - [http://localhost](http://localhost)： 默认*http*站点
