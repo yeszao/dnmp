@@ -11,6 +11,7 @@ RUN if [ "${REPLACE_SOURCE_LIST}" = "true" ]; then \
     mv /etc/apt/sources.list.tmp /etc/apt/sources.list; else \
     rm -rf /etc/apt/sources.list.tmp; fi
 RUN apt update
+RUN apt install -y libssl-dev
 
 # Install extensions from source
 COPY ./extensions /tmp/extensions

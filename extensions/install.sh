@@ -60,6 +60,6 @@ fi
 if [ "${PHP_SWOOLE}" != "false" ]; then
     mkdir swoole \
     && tar -xf swoole-${PHP_SWOOLE}.tgz -C swoole --strip-components=1 \
-    && ( cd swoole && phpize && ./configure && make $mc && make install ) \
+    && ( cd swoole && phpize && ./configure --enable-openssl && make $mc && make install ) \
     && docker-php-ext-enable swoole
 fi
