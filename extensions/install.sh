@@ -1,257 +1,222 @@
-#!/bin/bash
+#!/bin/sh
 
 echo
 echo "============================================"
-echo "PHP version       : ${PHP_VERSION}"
-echo "Extra Extensions  : ${PHP_EXTENSIONS}"
+echo "Install extensions from   : install.sh"
+echo "PHP version               : ${PHP_VERSION}"
+echo "Extra Extensions          : ${PHP_EXTENSIONS}"
+echo "Multicore Compilation     : ${MC}"
+echo "Work directory            : ${PWD}"
 echo "============================================"
 echo
 
 
-EXTENSIONS=(${PHP_EXTENSIONS//,/ })
-export EXTENSIONS
-echo "export ${EXTENSIONS[*]}"
-
-
-if [ "${REPLACE_SOURCE_LIST}" = "true" ]; then
-    cp /tmp/sources.list /etc/apt/sources.list;
+if [ "${ALPINE_REPOSITORIES}" != "" ]; then
+    sed -i "s/dl-cdn.alpinelinux.org/${ALPINE_REPOSITORIES}/g" /etc/apk/repositories
 fi
 
 
-if [ ! "${PHP_EXTENSIONS}" = "" ]; then
-    echo "↓---------- Update source list ----------↓"
-    apt-get update
+if [ "${PHP_EXTENSIONS}" != "" ]; then
+    echo "---------- Install general dependencies ----------"
+    apk add --no-cache autoconf g++ libtool make
 fi
 
-
-cd /tmp/extensions
-if [ -f "${MORE_EXTENSION_INSTALLER}" ]; then
-    . ./${MORE_EXTENSION_INSTALLER}
+if [ -z "${EXTENSIONS##*,pdo_mysql,*}" ]; then
+    echo "---------- Install pdo_mysql ----------"
+    docker-php-ext-install -j$(nproc) pdo_mysql
 fi
 
+if [ -z "${EXTENSIONS##*,zip,*}" ]; then
+	docker-php-ext-install -j$(nproc) zip
+fi
 
-if [[ " ${EXTENSIONS[@]} " =~ " gd " ]]; then
-    apt-get install -y libfreetype6-dev libjpeg62-turbo-dev libpng-dev \
+if [ -z "${EXTENSIONS##*,pcntl,*}" ]; then
+	docker-php-ext-install -j$(nproc) pcntl
+fi
+
+if [ -z "${EXTENSIONS##*,mysqli,*}" ]; then
+	docker-php-ext-install -j$(nproc) mysqli
+fi
+
+if [ -z "${EXTENSIONS##*,mbstring,*}" ]; then
+	docker-php-ext-install -j$(nproc) mbstring
+fi
+
+if [ -z "${EXTENSIONS##*,exif,*}" ]; then
+	docker-php-ext-install -j$(nproc) exif
+fi
+
+if [ -z "${EXTENSIONS##*,bcmath,*}" ]; then
+	docker-php-ext-install -j$(nproc) bcmath
+fi
+
+if [ -z "${EXTENSIONS##*,calendar,*}" ]; then
+	docker-php-ext-install -j$(nproc) calendar
+fi
+
+if [ -z "${EXTENSIONS##*,sockets,*}" ]; then
+	docker-php-ext-install -j$(nproc) sockets
+fi
+
+if [ -z "${EXTENSIONS##*,gettext,*}" ]; then
+	docker-php-ext-install -j$(nproc) gettext
+fi
+
+if [ -z "${EXTENSIONS##*,shmop,*}" ]; then
+	docker-php-ext-install -j$(nproc) shmop
+fi
+
+if [ -z "${EXTENSIONS##*,sysvmsg,*}" ]; then
+	docker-php-ext-install -j$(nproc) sysvmsg
+fi
+
+if [ -z "${EXTENSIONS##*,sysvsem,*}" ]; then
+	docker-php-ext-install -j$(nproc) sysvsem
+fi
+
+if [ -z "${EXTENSIONS##*,sysvshm,*}" ]; then
+	docker-php-ext-install -j$(nproc) sysvshm
+fi
+
+if [ -z "${EXTENSIONS##*,pdo_firebird,*}" ]; then
+	docker-php-ext-install -j$(nproc) pdo_firebird
+fi
+
+if [ -z "${EXTENSIONS##*,pdo_dblib,*}" ]; then
+	docker-php-ext-install -j$(nproc) pdo_dblib
+fi
+
+if [ -z "${EXTENSIONS##*,pdo_oci,*}" ]; then
+	docker-php-ext-install -j$(nproc) pdo_oci
+fi
+
+if [ -z "${EXTENSIONS##*,pdo_odbc,*}" ]; then
+	docker-php-ext-install -j$(nproc) pdo_odbc
+fi
+
+if [ -z "${EXTENSIONS##*,pdo_pgsql,*}" ]; then
+	docker-php-ext-install -j$(nproc) pdo_pgsql
+fi
+
+if [ -z "${EXTENSIONS##*,pgsql,*}" ]; then
+	docker-php-ext-install -j$(nproc) pgsql
+fi
+
+if [ -z "${EXTENSIONS##*,oci8,*}" ]; then
+	docker-php-ext-install -j$(nproc) oci8
+fi
+
+if [ -z "${EXTENSIONS##*,odbc,*}" ]; then
+	docker-php-ext-install -j$(nproc) odbc
+fi
+
+if [ -z "${EXTENSIONS##*,dba,*}" ]; then
+	docker-php-ext-install -j$(nproc) dba
+fi
+
+if [ -z "${EXTENSIONS##*,interbase,*}" ]; then
+    echo "Alpine linux do not support interbase/firebird!!!"
+	#docker-php-ext-install -j$(nproc) interbase
+fi
+
+if [ -z "${EXTENSIONS##*,gd,*}" ]; then
+    apk add --no-cache freetype-dev libjpeg-turbo-dev libpng-dev \
     && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
-    && docker-php-ext-install $mc gd
+    && docker-php-ext-install -j$(nproc) gd
 fi
 
-if [[ " ${EXTENSIONS[@]} " =~ " pdo_mysql " ]]; then
-    echo "↓---------- Install pdo_mysql ----------↓"
-    docker-php-ext-install $mc pdo_mysql
+if [ -z "${EXTENSIONS##*,intl,*}" ]; then
+    apk add --no-cache icu-dev
+    docker-php-ext-install -j$(nproc) intl
 fi
 
-if [[ " ${EXTENSIONS[@]} " =~ " intl " ]]; then
-    apt-get install -y libicu-dev
-    docker-php-ext-install $mc intl
+if [ -z "${EXTENSIONS##*,bz2,*}" ]; then
+    apk add --no-cache bzip2-dev
+    docker-php-ext-install -j$(nproc) bz2
 fi
 
-if [[ " ${EXTENSIONS[@]} " =~ " bz2 " ]]; then
-    apt-get install -y libbz2-dev
-    docker-php-ext-install $mc bz2
+if [ -z "${EXTENSIONS##*,soap,*}" ]; then
+	apk add --no-cache libxml2-dev
+	docker-php-ext-install -j$(nproc) soap
 fi
 
-if [[ " ${EXTENSIONS[@]} " =~ " zip " ]]; then
-	docker-php-ext-install $mc zip
+if [ -z "${EXTENSIONS##*,xsl,*}" ]; then
+	apk add --no-cache libxml2-dev
+	apk add --no-cache libxslt-dev
+	docker-php-ext-install -j$(nproc) xsl
 fi
 
-if [[ " ${EXTENSIONS[@]} " =~ " pcntl " ]]; then
-	docker-php-ext-install $mc pcntl
+if [ -z "${EXTENSIONS##*,xmlrpc,*}" ]; then
+	apk add --no-cache libxml2-dev
+	apk add --no-cache libxslt-dev
+	docker-php-ext-install -j$(nproc) xmlrpc
 fi
 
-if [[ " ${EXTENSIONS[@]} " =~ " mysqli " ]]; then
-	docker-php-ext-install $mc mysqli
+if [ -z "${EXTENSIONS##*,wddx,*}" ]; then
+	apk add --no-cache libxml2-dev
+	apk add --no-cache libxslt-dev
+	docker-php-ext-install -j$(nproc) wddx
 fi
 
-if [[ " ${EXTENSIONS[@]} " =~ " mbstring " ]]; then
-	docker-php-ext-install $mc mbstring
+if [ -z "${EXTENSIONS##*,curl,*}" ]; then
+	apk add --no-cache curl
+	apk add --no-cache curl-dev
+	docker-php-ext-install -j$(nproc) curl
 fi
 
-if [[ " ${EXTENSIONS[@]} " =~ " exif " ]]; then
-	docker-php-ext-install $mc exif
+if [ -z "${EXTENSIONS##*,readline,*}" ]; then
+	apk add --no-cache readline-dev
+	apk add --no-cache libedit-dev
+	docker-php-ext-install -j$(nproc) readline
 fi
 
-if [[ " ${EXTENSIONS[@]} " =~ " bcmath " ]]; then
-	docker-php-ext-install $mc bcmath
+if [ -z "${EXTENSIONS##*,snmp,*}" ]; then
+	apk add --no-cache net-snmp-dev
+	docker-php-ext-install -j$(nproc) snmp
 fi
 
-if [[ " ${EXTENSIONS[@]} " =~ " calendar " ]]; then
-	docker-php-ext-install $mc calendar
+if [ -z "${EXTENSIONS##*,pspell,*}" ]; then
+	apk add --no-cache aspell-dev
+	apk add --no-cache aspell-en
+	docker-php-ext-install -j$(nproc) pspell
 fi
 
-if [[ " ${EXTENSIONS[@]} " =~ " sockets " ]]; then
-	docker-php-ext-install $mc sockets
+if [ -z "${EXTENSIONS##*,recode,*}" ]; then
+	apk add --no-cache recode-dev
+	docker-php-ext-install -j$(nproc) recode
 fi
 
-if [[ " ${EXTENSIONS[@]} " =~ " gettext " ]]; then
-	docker-php-ext-install $mc gettext
+if [ -z "${EXTENSIONS##*,tidy,*}" ]; then
+	apk add --no-cache tidyhtml-dev=5.2.0-r1 --repository http://${ALPINE_REPOSITORIES}/alpine/v3.6/community
+	docker-php-ext-install -j$(nproc) tidy
 fi
 
-if [[ " ${EXTENSIONS[@]} " =~ " shmop " ]]; then
-	docker-php-ext-install $mc shmop
+if [ -z "${EXTENSIONS##*,gmp,*}" ]; then
+	apk add --no-cache gmp-dev
+	docker-php-ext-install -j$(nproc) gmp
 fi
 
-if [[ " ${EXTENSIONS[@]} " =~ " sysvmsg " ]]; then
-	docker-php-ext-install $mc sysvmsg
+if [ -z "${EXTENSIONS##*,imap,*}" ]; then
+	apk add --no-cache imap-dev
+    docker-php-ext-configure imap --with-imap --with-imap-ssl
+	docker-php-ext-install -j$(nproc) imap
 fi
 
-if [[ " ${EXTENSIONS[@]} " =~ " sysvsem " ]]; then
-	docker-php-ext-install $mc sysvsem
+if [ -z "${EXTENSIONS##*,ldap,*}" ]; then
+	apk add --no-cache ldb-dev
+	apk add --no-cache openldap-dev
+	docker-php-ext-install -j$(nproc) ldap
 fi
 
-if [[ " ${EXTENSIONS[@]} " =~ " sysvshm " ]]; then
-	docker-php-ext-install $mc sysvshm
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " pdo_firebird " ]]; then
-	docker-php-ext-install $mc pdo_firebird
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " pdo_dblib " ]]; then
-	docker-php-ext-install $mc pdo_dblib
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " pdo_oci " ]]; then
-	docker-php-ext-install $mc pdo_oci
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " pdo_odbc " ]]; then
-	docker-php-ext-install $mc pdo_odbc
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " pdo_pgsql " ]]; then
-	docker-php-ext-install $mc pdo_pgsql
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " pgsql " ]]; then
-	docker-php-ext-install $mc pgsql
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " oci8 " ]]; then
-	docker-php-ext-install $mc oci8
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " odbc " ]]; then
-	docker-php-ext-install $mc odbc
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " dba " ]]; then
-	docker-php-ext-install $mc dba
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " interbase " ]]; then
-	docker-php-ext-install $mc interbase
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " soap " ]]; then
-	apt-get install -y libxml2-dev
-	docker-php-ext-install $mc soap
-fi
-
-
-if [[ " ${EXTENSIONS[@]} " =~ " xsl " ]]; then
-	apt-get install -y libxml2-dev
-	apt-get install -y libxslt-dev
-	docker-php-ext-install $mc xsl
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " xmlrpc " ]]; then
-	apt-get install -y libxml2-dev
-	apt-get install -y libxslt-dev
-	docker-php-ext-install $mc xmlrpc
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " wddx " ]]; then
-	apt-get install -y libxml2-dev
-	apt-get install -y libxslt-dev
-	docker-php-ext-install $mc wddx
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " curl " ]]; then
-	apt-get install -y curl
-	apt-get install -y libcurl3
-	apt-get install -y libcurl4-openssl-dev
-	docker-php-ext-install $mc curl
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " readline " ]]; then
-	apt-get install -y libreadline-dev
-	docker-php-ext-install $mc readline
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " snmp " ]]; then
-	apt-get install -y libsnmp-dev
-	apt-get install -y snmp
-	docker-php-ext-install $mc snmp
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " pspell " ]]; then
-	apt-get install -y libpspell-dev
-	apt-get install -y aspell-en
-	docker-php-ext-install $mc pspell
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " recode " ]]; then
-	apt-get install -y librecode0
-	apt-get install -y librecode-dev
-	docker-php-ext-install $mc recode
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " tidy " ]]; then
-	apt-get install -y libtidy-dev
-	docker-php-ext-install $mc tidy
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " gmp " ]]; then
-	apt-get install -y libgmp-dev
-    ln -s /usr/include/x86_64-linux-gnu/gmp.h /usr/include/gmp.h
-	docker-php-ext-install $mc gmp
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " postgresql-client " ]]; then
-	apt-get install -y postgresql-client
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " mysql-client " ]]; then
-	apt-get install -y mysql-client
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " imap " ]]; then
-	apt-get install -y libc-client-dev
-    docker-php-ext-configure imap --with-kerberos --with-imap-ssl
-	docker-php-ext-install $mc imap
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " ldap " ]]; then
-	apt-get install -y libldb-dev
-	apt-get install -y libldap2-dev
-    docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu
-	docker-php-ext-install $mc ldap
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " imagick " ]]; then
-	apt-get install -y libmagickwand-dev
-    pecl install imagick-3.4.3
+if [ -z "${EXTENSIONS##*,imagick,*}" ]; then
+	apk add --no-cache file-dev
+	apk add --no-cache imagemagick-dev
+    printf "\n" | pecl install imagick-3.4.4
     docker-php-ext-enable imagick
 fi
 
-if [[ " ${EXTENSIONS[@]} " =~ " memcached " ]]; then
-	apt-get install -y libmemcached-dev zlib1g-dev
-    pecl install memcached-2.2.0
-    docker-php-ext-enable memcached
-fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " sqlsrv " ]]; then
-	apt-get install -y unixodbc-dev
-    pecl install sqlsrv
+if [ -z "${EXTENSIONS##*,sqlsrv,*}" ]; then
+	apk add --no-cache unixodbc-dev
+    printf "\n" | pecl install sqlsrv
     docker-php-ext-enable sqlsrv
 fi
-
-if [[ " ${EXTENSIONS[@]} " =~ " pdo_sqlsrv " ]]; then
-	apt-get install -y unixodbc-dev
-    pecl install pdo_sqlsrv
-    docker-php-ext-enable pdo_sqlsrv
-fi
-
-rm -rf /tmp/sources.list
-rm -rf /tmp/extensions

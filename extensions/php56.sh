@@ -1,54 +1,62 @@
-#!/bin/bash
+#!/bin/sh
 
 echo
 echo "============================================"
-echo "More Extensions from: ${MORE_EXTENSION_INSTALLER}"
+echo "Install extensions from   : php72.sh"
+echo "PHP version               : ${PHP_VERSION}"
+echo "Extra Extensions          : ${PHP_EXTENSIONS}"
+echo "Multicore Compilation     : -j$(nproc)"
+echo "Work directory            : ${PWD}"
 echo "============================================"
 echo
 
 
-export mc="-j$(nproc)";
-echo "Multicore Compilation is ${mc}"
-
-
-# Mcrypt was DEPRECATED in PHP 7.1.0, and REMOVED in PHP 7.2.0.
-if [[ " ${EXTENSIONS[@]} " =~ " mcrypt " ]]; then
-    echo "↓---------- Install mcrypt ----------↓"
-    apt install -y libmcrypt-dev \
-    && docker-php-ext-install $mc mcrypt
+if [ -z "${EXTENSIONS##*,mcrypt,*}" ]; then
+    echo "---------- Install mcrypt ----------"
+    apk add --no-cache libmcrypt-dev \
+    && docker-php-ext-install -j$(nproc) mcrypt
 fi
 
 
-# From PHP 5.6, we can use docker-php-ext-install to install opcache
-if [[ " ${EXTENSIONS[@]} " =~ " opcache " ]]; then
-    echo "↓---------- Install opcache ----------↓"
+if [ -z "${EXTENSIONS##*,opcache,*}" ]; then
+    echo "---------- Install opcache ----------"
     docker-php-ext-install opcache
 fi
 
 
-if [[ " ${EXTENSIONS[@]} " =~ " opcache " ]]; then
-    echo "↓---------- Install redis ----------↓"
+if [ -z "${EXTENSIONS##*,redis,*}" ]; then
+    echo "---------- Install redis ----------"
     mkdir redis \
     && tar -xf redis-4.1.1.tgz -C redis --strip-components=1 \
-    && ( cd redis && phpize && ./configure && make $mc && make install ) \
+    && ( cd redis && phpize && ./configure && make -j$(nproc) && make install ) \
     && docker-php-ext-enable redis
 fi
 
 
-if [[ " ${EXTENSIONS[@]} " =~ " xdebug " ]]; then
-    echo "↓---------- Install xdebug ----------↓"
+if [ -z "${EXTENSIONS##*,memcached,*}" ]; then
+	apk add --no-cache libmemcached-dev zlib-dev
+    printf "\n" | pecl install memcached-2.2.0
+    docker-php-ext-enable memcached
+fi
+
+
+if [ -z "${EXTENSIONS##*,xdebug,*}" ]; then
+    echo "---------- Install xdebug ----------"
     mkdir xdebug \
     && tar -xf xdebug-2.5.5.tgz -C xdebug --strip-components=1 \
-    && ( cd xdebug && phpize && ./configure && make $mc && make install ) \
+    && ( cd xdebug && phpize && ./configure && make -j$(nproc) && make install ) \
     && docker-php-ext-enable xdebug
 fi
 
 
-# swoole require PHP version 5.5 or later.
-if [[ " ${EXTENSIONS[@]} " =~ " swoole " ]]; then
-    echo "↓---------- Install swoole ----------↓"
+if [ -z "${EXTENSIONS##*,swoole,*}" ]; then
+    echo "---------- Install swoole ----------"
     mkdir swoole \
     && tar -xf swoole-2.0.11.tgz -C swoole --strip-components=1 \
-    && ( cd swoole && phpize && ./configure && make $mc && make install ) \
+    && ( cd swoole && phpize && ./configure && make -j$(nproc) && make install ) \
     && docker-php-ext-enable swoole
+fi
+
+if [ -z "${EXTENSIONS##*,pdo_sqlsrv,*}" ]; then
+	echo "pdo_sqlsrv requires PHP >= 7.1.0, installed version is ${PHP_VERSION}"
 fi
