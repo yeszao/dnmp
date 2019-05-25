@@ -19,10 +19,9 @@ services:
       context: .
       args:
         PHP_VERSION: ${PHP72_VERSION}
-        PHP_XDEBUG: ${PHP72_XDEBUG}
-        PHP_SWOOLE: ${PHP72_SWOOLE}
-        PHP_REDIS: ${PHP72_REDIS}
         REPLACE_SOURCE_LIST: ${REPLACE_SOURCE_LIST}
+        PHP_EXTENSIONS: ${PHP72_EXTENSIONS}
+        MORE_EXTENSION_INSTALLER: php72.sh
     volumes:
       - ${SOURCE_DIR}:/var/www/html/:rw
       - ${PHP72_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
@@ -39,10 +38,9 @@ services:
       context: .
       args:
         PHP_VERSION: ${PHP56_VERSION}
-        PHP_XDEBUG: ${PHP56_XDEBUG}
-        PHP_SWOOLE: ${PHP56_SWOOLE}
-        PHP_REDIS: ${PHP56_REDIS}
         REPLACE_SOURCE_LIST: ${REPLACE_SOURCE_LIST}
+        PHP_EXTENSIONS: ${PHP56_EXTENSIONS}
+        MORE_EXTENSION_INSTALLER: php56.sh
     volumes:
       - ${SOURCE_DIR}:/var/www/html/:rw
       - ${PHP56_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
@@ -59,10 +57,9 @@ services:
       context: .
       args:
         PHP_VERSION: ${PHP54_VERSION}
-        PHP_XDEBUG: ${PHP54_XDEBUG}
-        PHP_SWOOLE: ${PHP54_SWOOLE}
-        PHP_REDIS: ${PHP54_REDIS}
         REPLACE_SOURCE_LIST: ${REPLACE_SOURCE_LIST}
+        PHP_EXTENSIONS: ${PHP54_EXTENSIONS}
+        MORE_EXTENSION_INSTALLER: php54.sh
     volumes:
       - ${SOURCE_DIR}:/var/www/html/:rw
       - ${PHP54_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
