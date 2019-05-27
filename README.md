@@ -15,6 +15,7 @@ DNMP项目特点：
 10. 实际项目中应用，确保`100%`可用
 11. 一次配置，**Windows、Linux、MacOs**皆可用
 
+**说明：已删除PHP5.4**
 
 # 目录
 - [1.目录结构](#1目录结构)
@@ -250,6 +251,11 @@ Redis连接信息如下：
 ## 9.常见问题
 ### 9.1 如何在PHP代码中使用curl？
 参考这个issue：[https://github.com/yeszao/dnmp/issues/91](https://github.com/yeszao/dnmp/issues/91)
+
+## TODO list
+- [ ] Show php log
+- [ ] Add php 7.3
+- [ ] Update install.sh
 
 ## License
 MIT
