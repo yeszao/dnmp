@@ -2,7 +2,7 @@
 
 echo
 echo "============================================"
-echo "Install extensions from   : php72.sh"
+echo "Install extensions from   : ${MORE_EXTENSION_INSTALLER}"
 echo "PHP version               : ${PHP_VERSION}"
 echo "Extra Extensions          : ${PHP_EXTENSIONS}"
 echo "Multicore Compilation     : ${MC}"
@@ -55,7 +55,7 @@ if [ -z "${EXTENSIONS##*,swoole,*}" ]; then
     echo "---------- Install swoole ----------"
     mkdir swoole \
     && tar -xf swoole-2.0.11.tgz -C swoole --strip-components=1 \
-    && ( cd swoole && phpize && ./configure && make ${MC} && make install ) \
+    && ( cd swoole && phpize && ./configure --enable-openssl && make ${MC} && make install ) \
     && docker-php-ext-enable swoole
 fi
 

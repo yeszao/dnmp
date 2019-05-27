@@ -18,7 +18,7 @@ fi
 
 if [ "${PHP_EXTENSIONS}" != "" ]; then
     echo "---------- Install general dependencies ----------"
-    apk add --no-cache autoconf g++ libtool make openssl-dev libxml2-dev
+    apk add --no-cache autoconf g++ libtool make openssl-dev libxml2-dev linux-headers
 fi
 
 if [ -z "${EXTENSIONS##*,pdo_mysql,*}" ]; then
