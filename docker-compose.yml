@@ -22,7 +22,6 @@ services:
         ALPINE_REPOSITORIES: ${ALPINE_REPOSITORIES}
         PHP_EXTENSIONS: ${PHP72_EXTENSIONS}
         MORE_EXTENSION_INSTALLER: php72.sh
-        MULTICORE_COMPILATION: "true"
     volumes:
       - ${SOURCE_DIR}:/var/www/html/:rw
       - ${PHP72_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
@@ -42,7 +41,6 @@ services:
         ALPINE_REPOSITORIES: ${ALPINE_REPOSITORIES}
         PHP_EXTENSIONS: ${PHP56_EXTENSIONS}
         MORE_EXTENSION_INSTALLER: php56.sh
-        MULTICORE_COMPILATION: "true"
     volumes:
       - ${SOURCE_DIR}:/var/www/html/:rw
       - ${PHP56_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
