@@ -34,6 +34,7 @@ fi
 
 
 if [ -z "${EXTENSIONS##*,memcached,*}" ]; then
+    echo "---------- Install memcached ----------"
 	apk add --no-cache libmemcached-dev zlib-dev
     printf "\n" | pecl install memcached-2.2.0
     docker-php-ext-enable memcached
@@ -58,5 +59,6 @@ if [ -z "${EXTENSIONS##*,swoole,*}" ]; then
 fi
 
 if [ -z "${EXTENSIONS##*,pdo_sqlsrv,*}" ]; then
+    echo "---------- Install pdo_sqlsrv ----------"
 	echo "pdo_sqlsrv requires PHP >= 7.1.0, installed version is ${PHP_VERSION}"
 fi
