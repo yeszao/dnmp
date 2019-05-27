@@ -18,9 +18,10 @@ if [ -z "${EXTENSIONS##*,mcrypt,*}" ]; then
 fi
 
 
-if [ -z "${EXTENSIONS##*,opcache,*}" ]; then
-    echo "---------- Install opcache ----------"
-    docker-php-ext-install opcache
+if [ -z "${EXTENSIONS##*,sodium,*}" ]; then
+    echo "---------- Install sodium ----------"
+    apk add --no-cache libsodium-dev
+	docker-php-ext-install ${MC} sodium
 fi
 
 

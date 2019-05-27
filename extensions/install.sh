@@ -18,7 +18,7 @@ fi
 
 if [ "${PHP_EXTENSIONS}" != "" ]; then
     echo "---------- Install general dependencies ----------"
-    apk add --no-cache autoconf g++ libtool make
+    apk add --no-cache autoconf g++ libtool make openssl-dev libxml2-dev
 fi
 
 if [ -z "${EXTENSIONS##*,pdo_mysql,*}" ]; then
@@ -59,6 +59,16 @@ fi
 if [ -z "${EXTENSIONS##*,calendar,*}" ]; then
     echo "---------- Install calendar ----------"
 	docker-php-ext-install ${MC} calendar
+fi
+
+if [ -z "${EXTENSIONS##*,zend_test,*}" ]; then
+    echo "---------- Install zend_test ----------"
+	docker-php-ext-install ${MC} zend_test
+fi
+
+if [ -z "${EXTENSIONS##*,opcache,*}" ]; then
+    echo "---------- Install opcache ----------"
+    docker-php-ext-install opcache
 fi
 
 if [ -z "${EXTENSIONS##*,sockets,*}" ]; then
@@ -163,27 +173,23 @@ fi
 
 if [ -z "${EXTENSIONS##*,soap,*}" ]; then
     echo "---------- Install soap ----------"
-	apk add --no-cache libxml2-dev
 	docker-php-ext-install ${MC} soap
 fi
 
 if [ -z "${EXTENSIONS##*,xsl,*}" ]; then
     echo "---------- Install xsl ----------"
-	apk add --no-cache libxml2-dev
 	apk add --no-cache libxslt-dev
 	docker-php-ext-install ${MC} xsl
 fi
 
 if [ -z "${EXTENSIONS##*,xmlrpc,*}" ]; then
     echo "---------- Install xmlrpc ----------"
-	apk add --no-cache libxml2-dev
 	apk add --no-cache libxslt-dev
 	docker-php-ext-install ${MC} xmlrpc
 fi
 
 if [ -z "${EXTENSIONS##*,wddx,*}" ]; then
     echo "---------- Install wddx ----------"
-	apk add --no-cache libxml2-dev
 	apk add --no-cache libxslt-dev
 	docker-php-ext-install ${MC} wddx
 fi
