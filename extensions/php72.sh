@@ -62,3 +62,10 @@ if [ -z "${EXTENSIONS##*,pdo_sqlsrv,*}" ]; then
     pecl install pdo_sqlsrv
     docker-php-ext-enable pdo_sqlsrv
 fi
+
+if [ -z "${EXTENSIONS##*,sqlsrv,*}" ]; then
+    echo "---------- Install sqlsrv ----------"
+	apk add --no-cache unixodbc-dev
+    printf "\n" | pecl install sqlsrv
+    docker-php-ext-enable sqlsrv
+fi

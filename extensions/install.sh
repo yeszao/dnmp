@@ -254,10 +254,3 @@ if [ -z "${EXTENSIONS##*,imagick,*}" ]; then
     printf "\n" | pecl install imagick-3.4.4
     docker-php-ext-enable imagick
 fi
-
-if [ -z "${EXTENSIONS##*,sqlsrv,*}" ]; then
-    echo "---------- Install sqlsrv ----------"
-	apk add --no-cache unixodbc-dev
-    printf "\n" | pecl install sqlsrv
-    docker-php-ext-enable sqlsrv
-fi
