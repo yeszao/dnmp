@@ -10,8 +10,10 @@ COPY ./extensions /tmp/extensions
 WORKDIR /tmp/extensions
 
 ENV EXTENSIONS=",${PHP_EXTENSIONS},"
+ENV MC="-j$(nproc)"
 
-RUN chmod +x install.sh \
+RUN export MC="-j$(nproc)" \
+    && chmod +x install.sh \
     && chmod +x "${MORE_EXTENSION_INSTALLER}" \
     && sh install.sh \
     && sh "${MORE_EXTENSION_INSTALLER}" \
