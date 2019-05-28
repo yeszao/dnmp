@@ -18,7 +18,7 @@ fi
 
 if [ "${PHP_EXTENSIONS}" != "" ]; then
     echo "---------- Install general dependencies ----------"
-    apk add --no-cache autoconf g++ libtool make openssl-dev libxml2-dev linux-headers
+    apk add --no-cache autoconf g++ libtool make curl-dev libxml2-dev linux-headers
 fi
 
 if [ -z "${EXTENSIONS##*,pdo_mysql,*}" ]; then
@@ -196,8 +196,6 @@ fi
 
 if [ -z "${EXTENSIONS##*,curl,*}" ]; then
     echo "---------- Install curl ----------"
-	apk add --no-cache curl
-	apk add --no-cache curl-dev
 	docker-php-ext-install ${MC} curl
 fi
 
