@@ -5,17 +5,15 @@ DNMP（Docker + Nginx + MySQL + PHP7/5 + Redis）是一款全功能的**LNMP一�
 DNMP项目特点：
 1. `100%`开源
 2. `100%`遵循Docker标准
-3. 支持**多版本PHP**共存，可任意切换（PHP5.4、PHP5.6、PHP7.2)
+3. 支持**多版本PHP**共存，可任意切换（~~PHP5.4、~~PHP5.6、PHP7.2)
 4. 支持绑定**任意多个域名**
 5. 支持**HTTPS和HTTP/2**
 6. **PHP源代码、MySQL数据、配置文件、日志文件**都可在Host中直接修改查看
 7. 内置**完整PHP扩展安装**命令
-8. 默认安装`pdo_mysql`、`redis`、`xdebug`、`swoole`等常用热门扩展，拿来即用
+8. 默认支持`pdo_mysql`、`redis`、`xdebug`、`swoole`等常用热门扩展，根据环境灵活配置
 9. 带有phpmyadmin和phpredisadmin数据库在线管理程序
 10. 实际项目中应用，确保`100%`可用
 11. 一次配置，**Windows、Linux、MacOs**皆可用
-
-**说明：已删除PHP5.4**
 
 # 目录
 - [1.目录结构](#1目录结构)
@@ -39,18 +37,19 @@ DNMP项目特点：
 
 ```
 /
-├── conf                    配置文件目录
-│   ├── conf.d              Nginx用户站点配置目录
-│   ├── nginx.conf          Nginx默认配置文件
-│   ├── mysql.cnf           MySQL用户配置文件
-│   ├── php-fpm.conf        PHP-FPM配置文件（部分会覆盖php.ini配置）
-│   └── php.ini             PHP默认配置文件
-├── Dockerfile              PHP镜像构建文件
-├── extensions              PHP扩展源码包
-├── log                     Nginx日志目录
-├── mysql                   MySQL数据目录
-├── www                     PHP代码目录
-└── source.list             Debian源文件
+├── conf                        配置文件目录
+│   ├── conf.d                  Nginx用户站点配置目录
+│   ├── nginx.conf              Nginx默认配置文件
+│   ├── mysql.cnf               MySQL用户配置文件
+│   ├── php-fpm.conf            PHP-FPM配置文件（部分会覆盖php.ini配置）
+│   └── php.ini                 PHP默认配置文件
+├── Dockerfile                  PHP镜像构建文件
+├── extensions                  PHP扩展源码包
+├── log                         日志目录
+├── mysql                       MySQL数据目录
+├── docker-compose-sample.yml   Docker 服务配置示例文件
+├── env.smaple                  环境配置示例文件
+└── www                         PHP代码目录
 ```
 结构示意图：
 
@@ -67,10 +66,11 @@ DNMP项目特点：
     ```
     $ sudo gpasswd -a ${USER} docker
     ```
-4. 拷贝环境配置文件`env.sample`为`.env`，启动：
+4. 拷贝并命名配置文件（Windows系统请用copy命令），启动：
     ```
     $ cd dnmp
-    $ cp env.sample .env   # Windows系统请用copy命令，或者用编辑器打开后另存为.env
+    $ cp env.sample .env
+    $ cp docker-compose-sample.yml docker-compose.yml
     $ docker-compose up
     ```
     注意：Windows安装360安全卫士的同学，请先将其退出，不然安装过程中可能Docker创建账号过程可能被拦截，导致启动时文件共享失败；
@@ -81,7 +81,7 @@ DNMP项目特点：
 
 两个站点使用同一PHP代码：`./www/localhost/index.php`。
 
-要修改端口、日志文件位置、以及是否替换source.list文件等，请修改.env文件，然后重新构建：
+要修改端口、日志文件位置等，请修改**.env**文件，然后重新构建：
 ```bash
 $ docker-compose build php54    # 重建单个服务
 $ docker-compose build          # 重建全部服务
