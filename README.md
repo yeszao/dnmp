@@ -83,7 +83,7 @@ DNMP项目特点：
 
 要修改端口、日志文件位置等，请修改**.env**文件，然后重新构建：
 ```bash
-$ docker-compose build php54    # 重建单个服务
+$ docker-compose build php72    # 重建单个服务
 $ docker-compose build          # 重建全部服务
 
 ```
@@ -96,11 +96,11 @@ $ docker-compose build          # 重建全部服务
 
 例如，示例的 [http://localhost](http://localhost) 用的是PHP5.4，Nginx 配置：
 ```
-    fastcgi_pass   php54:9000;
+    fastcgi_pass   php72:9000;
 ```
 要改用PHP7.2，修改为：
 ```
-    fastcgi_pass   php72:9000;
+    fastcgi_pass   php56:9000;
 ```
 再 **重启 Nginx** 生效。
 ```bash
@@ -113,9 +113,8 @@ $ docker exec -it dnmp_nginx_1 nginx -s reload
 打开~/.bashrc，加上：
 ```bash
 alias dnginx='docker exec -it dnmp_nginx_1 /bin/sh'
-alias dphp72='docker exec -it dnmp_php72_1 /bin/bash'
-alias dphp56='docker exec -it dnmp_php56_1 /bin/bash'
-alias dphp54='docker exec -it dnmp_php54_1 /bin/bash'
+alias dphp72='docker exec -it dnmp_php72_1 /bin/sh'
+alias dphp56='docker exec -it dnmp_php56_1 /bin/sh'
 alias dmysql='docker exec -it dnmp_mysql_1 /bin/bash'
 alias dredis='docker exec -it dnmp_redis_1 /bin/sh'
 ```
