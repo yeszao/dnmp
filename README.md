@@ -96,11 +96,11 @@ $ docker-compose build          # 重建全部服务
 
 切换PHP仅需修改相应站点 Nginx 配置的`fastcgi_pass`选项，
 
-例如，示例的 [http://localhost](http://localhost) 用的是PHP5.4，Nginx 配置：
+例如，示例的 [http://localhost](http://localhost) 用的是PHP7.2，Nginx 配置：
 ```
     fastcgi_pass   php72:9000;
 ```
-要改用PHP7.2，修改为：
+要改用PHP5.6，修改为：
 ```
     fastcgi_pass   php56:9000;
 ```
