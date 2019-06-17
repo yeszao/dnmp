@@ -113,11 +113,17 @@ $ docker exec -it dnmp_nginx_1 nginx -s reload
 ```
 ### 3.2 安装PHP扩展
 PHP的很多功能都是通过扩展实现，而安装扩展是一个略费时间的过程，
-所以，除PHP内置扩展外，在env.sample文件中我们仅默认安装少量扩展，
-如果要安装更多扩展，请修改如下的配置，增加需要的PHP扩展：
+所以，除PHP内置扩展外，在`env.sample`文件中我们仅默认安装少量扩展，
+如果要安装更多扩展，请打开你的`.env`文件修改如下的PHP配置，
+增加需要的PHP扩展：
 ```bash
 PHP72_EXTENSIONS=pdo_mysql,opcache,redis       # PHP 7.2要安装的扩展列表，英文逗号隔开
 PHP56_EXTENSIONS=opcache,redis                 # PHP 5.6要安装的扩展列表，英文逗号隔开
+```
+然后重新build PHP镜像。
+```bash
+docker-compose build php72
+docker-compose up -d
 ```
 可用的扩展请看同文件的`PHP extensions`注释块说明。
 
