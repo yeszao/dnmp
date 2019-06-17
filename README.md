@@ -251,11 +251,6 @@ Redis连接信息如下：
 ### 9.1 如何在PHP代码中使用curl？
 参考这个issue：[https://github.com/yeszao/dnmp/issues/91](https://github.com/yeszao/dnmp/issues/91)
 
-## TODO list
-- [ ] Show php log
-- [ ] Add php 7.3
-- [ ] Update install.sh
-
 ## License
 MIT
 
