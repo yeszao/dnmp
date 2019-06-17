@@ -20,7 +20,9 @@ DNMP项目特点：
 # 目录
 - [1.目录结构](#1目录结构)
 - [2.快速使用](#2快速使用)
-- [3.切换PHP版本](#3切换php版本)
+- [3.PHP和扩展](#3PHP和扩展)
+    - [3.1 Nginx日志](#31-切换Nginx使用的PHP版本)
+    - [3.2 安装PHP扩展](#32-安装PHP扩展)
 - [4.添加快捷命令](#4添加快捷命令)
 - [5.使用Log](#5使用log)
     - [5.1 Nginx日志](#51-nginx日志)
@@ -91,8 +93,8 @@ $ docker-compose build          # 重建全部服务
 ```
 
 
-## 3.PHP配置
-### 3.1 Nginx切换PHP版本
+## 3.PHP和扩展
+### 3.1 切换Nginx使用的PHP版本
 默认情况下，我们同时创建 **PHP5.6和PHP7.2** 2个PHP版本的容器，
 
 切换PHP仅需修改相应站点 Nginx 配置的`fastcgi_pass`选项，
@@ -109,7 +111,7 @@ $ docker-compose build          # 重建全部服务
 ```bash
 $ docker exec -it dnmp_nginx_1 nginx -s reload
 ```
-### 3.2 PHP扩展安装
+### 3.2 安装PHP扩展
 PHP的很多功能都是通过扩展实现，而安装扩展是一个略费时间的过程，
 所以，除PHP内置扩展外，在env.sample文件中我们仅默认安装少量扩展，
 如果要安装更多扩展，请修改如下的配置，增加需要的PHP扩展：
