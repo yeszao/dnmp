@@ -16,6 +16,11 @@ if [ -z "${EXTENSIONS##*,mcrypt,*}" ]; then
 fi
 
 
+if [ -z "${EXTENSIONS##*,mysql,*}" ]; then
+    echo "---------- mysql was REMOVED from PHP 7.0.0 ----------"
+fi
+
+
 if [ -z "${EXTENSIONS##*,sodium,*}" ]; then
     echo "---------- Install sodium ----------"
     echo "Sodium is bundled with PHP from PHP 7.2.0 "
