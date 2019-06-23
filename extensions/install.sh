@@ -123,12 +123,14 @@ fi
 
 if [ -z "${EXTENSIONS##*,pdo_pgsql,*}" ]; then
     echo "---------- Install pdo_pgsql ----------"
-	docker-php-ext-install ${MC} pdo_pgsql
+    apk --no-cache add postgresql-dev \
+    && docker-php-ext-install ${MC} pdo_pgsql
 fi
 
 if [ -z "${EXTENSIONS##*,pgsql,*}" ]; then
     echo "---------- Install pgsql ----------"
-	docker-php-ext-install ${MC} pgsql
+    apk --no-cache add postgresql-dev \
+    && docker-php-ext-install ${MC} pgsql
 fi
 
 if [ -z "${EXTENSIONS##*,oci8,*}" ]; then
