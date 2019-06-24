@@ -122,11 +122,40 @@ PHP72_EXTENSIONS=pdo_mysql,opcache,redis       # PHP 7.2要安装的扩展列表
 PHP56_EXTENSIONS=opcache,redis                 # PHP 5.6要安装的扩展列表，英文逗号隔开
 ```
 然后重新build PHP镜像。
-```bash
-docker-compose build php72
-docker-compose up -d
-```
+    ```bash
+    docker-compose build php72
+    docker-compose up -d
+    ```
 可用的扩展请看同文件的`PHP extensions`注释块说明。
+
+### 3.3 在Host使用php命令（php-cli）
+1. 打开主机的 `~/.bashrc` 或者 `~/.zshrc` 文件，加上：
+```bash
+php () {
+    tty=
+    tty -s && tty=--tty
+    docker run \
+        $tty \
+        --interactive \
+        --rm \
+        --volume $PWD:/var/www/html:rw \
+        --workdir /var/www/html \
+        dnmp_php72 php "$@"
+}
+```
+2. 让文件起效：
+```
+source ~/.bashrc
+```
+3. 然后就可以在主机中执行php命令了：
+```bash
+~ php -v
+PHP 7.2.13 (cli) (built: Dec 21 2018 02:22:47) ( NTS )
+Copyright (c) 1997-2018 The PHP Group
+Zend Engine v3.2.0, Copyright (c) 1998-2018 Zend Technologies
+    with Zend OPcache v7.2.13, Copyright (c) 1999-2018, by Zend Technologies
+    with Xdebug v2.6.1, Copyright (c) 2002-2018, by Derick Rethans
+```
 
 ## 4.添加快捷命令
 在开发的时候，我们可能经常使用`docker exec -it`切换到容器中，把常用的做成命令别名是个省事的方法。
