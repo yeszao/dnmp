@@ -23,6 +23,7 @@ DNMP项目特点：
 - [3.PHP和扩展](#3PHP和扩展)
     - [3.1 切换Nginx使用的PHP版本](#31-切换Nginx使用的PHP版本)
     - [3.2 安装PHP扩展](#32-安装PHP扩展)
+    - [3.3 在Host使用php命令（php-cli）](33-在Host使用php命令php-cli)
 - [4.添加快捷命令](#4添加快捷命令)
 - [5.使用Log](#5使用log)
     - [5.1 Nginx日志](#51-nginx日志)
