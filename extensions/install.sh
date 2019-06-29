@@ -266,4 +266,4 @@ if [ -z "${EXTENSIONS##*,yaf,*}" ]; then
     printf "\n" | pecl install yaf
     docker-php-ext-enable yaf
 fi
->>>>>>> c67d1503bfed7d97af4354e2d36f6997dea09338
+

@@ -35,6 +35,27 @@ if [ -z "${EXTENSIONS##*,redis,*}" ]; then
     && docker-php-ext-enable redis
 fi
 
+if [ "$RABBITMQ_VERSION" != "false" ]; then
+    echo "start_RABBITMQ"
+    cd /tmp/extensions \
+    && mkdir rabbitmq-c \
+    && echo "rabbifdfsdfsd2" \
+    && tar -xf rabbitmq-${RABBITMQ_VERSION}.tgz -C rabbitmq-c --strip-components=1 \
+    && cd rabbitmq-c \
+    && (mkdir build && cd build && cmake .. && cmake --build . && cmake -DCMAKE_INSTALL_PREFIX=/usr/local/rabbitmq-c .. && cmake --build . --target install) \
+    && (cd /usr/local/rabbitmq-c/lib/x86_64-linux-gnu && cp -r ./* ../) \
+    && echo "end_RABBITMQ"
+fi
+
+if [ "$AMQP_VERSION" != "false" ]; then
+    cd /tmp/extensions \
+    && echo "start_AMQP" \
+    && mkdir amqp \
+    && tar -xf amqp-${AMQP_VERSION}.tgz -C amqp --strip-components=1 \
+    && ( cd amqp && phpize && ./configure --with-php-config=/usr/local/bin/php-config --with-amqp --with-librabbitmq-dir=/usr/local/rabbitmq-c && make && make install ) \
+    && echo "end_AMQP" \
+    && docker-php-ext-enable amqp
+fi
 
 if [ -z "${EXTENSIONS##*,memcached,*}" ]; then
     echo "---------- Install memcached ----------"
