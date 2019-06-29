@@ -1,5 +1,6 @@
-.*
-!.gitignore
-www/
-!www/site1/
-!www/site2/
+.idea
+.DS_Store
+.env
+docker-compose.yml
+www/*
+!www/localhost/
