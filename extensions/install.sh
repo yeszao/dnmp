@@ -18,7 +18,7 @@ fi
 
 if [ "${PHP_EXTENSIONS}" != "" ]; then
     echo "---------- Install general dependencies ----------"
-    apk add --no-cache autoconf g++ libtool make curl-dev libxml2-dev linux-headers
+    apk add --no-cache autoconf g++ libtool make curl-dev libxml2-dev linux-headers cmake re2c rabbitmq-c-dev
 fi
 
 if [ -z "${EXTENSIONS##*,pdo_mysql,*}" ]; then

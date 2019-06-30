@@ -5,6 +5,8 @@ ARG PHP_EXTENSIONS
 ARG MORE_EXTENSION_INSTALLER
 ARG ALPINE_REPOSITORIES
 
+
+
 COPY ./extensions /tmp/extensions
 WORKDIR /tmp/extensions
 
