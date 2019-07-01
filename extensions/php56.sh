@@ -30,6 +30,13 @@ if [ -z "${EXTENSIONS##*,sodium,*}" ]; then
 	docker-php-ext-install ${MC} sodium
 fi
 
+if [ -z "${EXTENSIONS##*,amqp,*}" ]; then
+    echo "---------- Install amqp ----------"
+    apk add --no-cache rabbitmq-c-dev
+    cd /tmp/extensions
+    pecl install amqp-1.9.4.tgz
+    docker-php-ext-enable amqp
+fi
 
 if [ -z "${EXTENSIONS##*,redis,*}" ]; then
     echo "---------- Install redis ----------"
