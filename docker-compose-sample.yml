@@ -75,7 +75,18 @@ services:
     entrypoint: ["redis-server", "/etc/redis.conf"]
     networks:
       - default
-    
+
+  rabbitmq:
+    image: rabbitmq:${RABBITMQ_VERSION}
+    restart: always
+    networks:
+          - default
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER="${RABBITMQ_DEFAULT_USER}"
+      - RABBITMQ_DEFAULT_PASS="${RABBITMQ_DEFAULT_PASS}"
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
