@@ -108,5 +108,44 @@ services:
       - REDIS_1_HOST=redis
       - REDIS_1_PORT=6379
 
+  elasticsearch:
+    image: elasticsearch:7.1.1
+    container_name: elasticsearch7.1.1
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    hostname: elasticsearch
+    restart: always
+    ports:
+      - 9200:9200
+      - 9300:9300
+  kibana:
+    image: kibana:7.1.1
+    container_name: kibana7.1.1
+    environment:
+      - elasticsearch.hosts=http://elasticsearch:9200
+    hostname: kibana
+    depends_on:
+      - elasticsearch
+    restart: always
+    ports:
+      - "5601:5601"
+  logstash:
+    image: logstash:7.1.1
+    container_name: logstash7.1.1
+    hostname: logstash
+    restart: always
+    depends_on:
+      - elasticsearch
+    ports:
+      - 9600:9600
+      - 5044:5044
+
+volumes:
+  esdata:
+    driver: local
+
 networks:
   default:
