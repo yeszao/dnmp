@@ -82,8 +82,8 @@ services:
     networks:
           - default
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "${RABBITMQ_HOST_PORT_C}:5672"
+      - "${RABBITMQ_HOST_PORT_S}:15672"
     environment:
       - RABBITMQ_DEFAULT_USER="${RABBITMQ_DEFAULT_USER}"
       - RABBITMQ_DEFAULT_PASS="${RABBITMQ_DEFAULT_PASS}"
@@ -107,6 +107,47 @@ services:
     environment:
       - REDIS_1_HOST=redis
       - REDIS_1_PORT=6379
+
+  elasticsearch:
+    image: elasticsearch:${ELASTICSEARCH_VERSION}
+    container_name: elasticsearch${ELASTICSEARCH_VERSION}
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - ${ELASTICSEARCH_DATA_DIR}:/usr/share/elasticsearch/data
+    hostname: elasticsearch
+    restart: always
+    ports:
+      - "${ELASTICSEARCH_HOST_PORT_C}:9200"
+      - "${ELASTICSEARCH_HOST_PORT_S}:9300"
+
+  kibana:
+    image: kibana:${KIBANA_VERSION}
+    container_name: kibana${KIBANA_VERSION}
+    environment:
+      - elasticsearch.hosts=http://elasticsearch:9200
+    hostname: kibana
+    depends_on:
+      - elasticsearch
+    restart: always
+    ports:
+      - "${KIBANA_HOST}:5601"
+
+  logstash:
+    image: logstash:${LOGSTASH_VERSION}
+    container_name: logstash${LOGSTASH_VERSION}
+    hostname: logstash
+    restart: always
+    depends_on:
+      - elasticsearch
+    ports:
+      - "${LOGSTASH_HOST_PORT_C}:9600"
+      - "${LOGSTASH_HOST_PORT_S}:5044"
+
+volumes:
+  esdata:
+    driver: local
 
 networks:
   default:
