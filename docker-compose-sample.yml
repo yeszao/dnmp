@@ -108,6 +108,32 @@ services:
       - REDIS_1_HOST=redis
       - REDIS_1_PORT=6379
 
+  mongodb:
+    image: mongo:${MONGODB_VERSION}
+    environment:
+        MONGO_INITDB_ROOT_USERNAME: "${MONGODB_INITDB_ROOT_USERNAME}"
+        MONGO_INITDB_ROOT_PASSWORD: "${MONGODB_INITDB_ROOT_PASSWORD}"
+    volumes:
+      - ${MONGODB_DATA_DIR}:/data/db:rw
+      - ${MONGODB_DATA_DIR}/mongo_key:/mongo:rw
+    ports:
+       - "${MONGODB_HOST_PORT}:27017"
+    networks:
+       - default
+    command:
+       --auth
+
+  adminmongo:
+    image: mrvautin/adminmongo
+    ports:
+      - "${ADMINMONGO_HOST_PORT}:1234"
+    environment:
+      - HOST=0.0.0.0
+      - DB_HOST=mongodb
+      - DB_PORT=27017
+    networks:
+      - default
+
   elasticsearch:
     image: elasticsearch:${ELASTICSEARCH_VERSION}
     container_name: elasticsearch${ELASTICSEARCH_VERSION}
