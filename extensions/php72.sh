@@ -32,6 +32,12 @@ if [ -z "${EXTENSIONS##*,mongodb,*}" ]; then
     docker-php-ext-enable mongodb
 fi
 
+if [ -z "${EXTENSIONS##*,yaf,*}" ]; then
+    echo "---------- Install yaf ----------"
+    pecl install yaf
+    docker-php-ext-enable yaf
+fi
+
 if [ -z "${EXTENSIONS##*,amqp,*}" ]; then
     echo "---------- Install amqp ----------"
     apk add --no-cache rabbitmq-c-dev

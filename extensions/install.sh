@@ -261,8 +261,3 @@ if [ -z "${EXTENSIONS##*,imagick,*}" ]; then
     docker-php-ext-enable imagick
 fi
 
-if [ -z "${EXTENSIONS##*,yaf,*}" ]; then
-    echo "---------- Install yaf ----------"
-    printf "\n" | pecl install yaf
-    docker-php-ext-enable yaf
-fi

@@ -78,6 +78,14 @@ if [ -z "${EXTENSIONS##*,swoole,*}" ]; then
     && docker-php-ext-enable swoole
 fi
 
+if [ -z "${EXTENSIONS##*,yaf,*}" ]; then
+    echo "---------- Install yaf ----------"
+    mkdir yaf \
+    && tar -xf yaf-2.3.5.tgz -C yaf --strip-components=1 \
+    && ( cd yaf && phpize && ./configure && make ${MC} && make install ) \
+    && docker-php-ext-enable yaf
+fi
+
 if [ -z "${EXTENSIONS##*,pdo_sqlsrv,*}" ]; then
     echo "---------- Install pdo_sqlsrv ----------"
 	echo "pdo_sqlsrv requires PHP >= 7.1.0, installed version is ${PHP_VERSION}"
