@@ -63,7 +63,7 @@ DNMP项目特点：
 
 
 ## 2.快速使用
-1. 本地安装`git`、`docker`和`docker-compose`。
+1. 本地安装`git`、`docker`和`docker-compose`(**1.7.0+**)。
 2. `clone`项目：
     ```
     $ git clone https://github.com/yeszao/dnmp.git
