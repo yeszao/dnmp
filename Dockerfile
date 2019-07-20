@@ -16,8 +16,7 @@ RUN export MC="-j$(nproc)" \
     && chmod +x "${MORE_EXTENSION_INSTALLER}" \
     && sh install.sh \
     && sh "${MORE_EXTENSION_INSTALLER}" \
-    && rm -rf /tmp/extensions \
-    && apk add --no-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing gnu-libiconv
+    && rm -rf /tmp/extensions
 
 ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so php
 
