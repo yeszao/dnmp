@@ -37,6 +37,7 @@ DNMP项目特点：
 - [9.常见问题](#9常见问题)
     - [9.1 如何在PHP代码中使用curl？](#91-如何在php代码中使用curl)
     - [9.2 Docker使用cron定时任务](#92-Docker使用cron定时任务)
+    - [9.3 Docker容器同步时间](#93-Docker容器同步时间)
 
 
 ## 1.目录结构
@@ -304,6 +305,14 @@ Redis连接信息如下：
 
 ### 9.2 Docker使用cron定时任务
 [Docker使用cron定时任务](https://www.awaimai.com/2615.html)
+
+### 9.3 Docker容器同步时间
+如果不需要跟宿主机同步时间,删除docker-compose.yml中的即可
+
+```
+      - ${LOCALTIME_DIR}:/etc/localtime:ro
+      - ${TIMEZONE_DIR}:/etc/timezone:ro
+```
 
 ## License
 MIT
