@@ -95,6 +95,38 @@ $ docker-compose build          # 重建全部服务
 
 ```
 
+6. 如需启动单个服务：
+``` bash
+# 服务选项：nginx、php72、php56、mysql、mongo、redis、phpmyadmin、phpredisadmin、elasticsearch、adminmongo、rabbitmq、kibana
+
+# 创建并且启动容器
+$ docker-compose up 服务1 服务2 ...
+# 创建并且启动所有容器
+$ docker-compose up
+
+# 创建并且已后台运行的方式启动容器
+$ docker-compose up -d 服务1 服务2 ...
+
+# 启动服务
+$ docker-compose start 服务1 服务2 ...
+
+# 停止服务
+$ docker-compose stop 服务1 服务2 ...
+
+# 重启服务
+$ docker-compose restart 服务1 服务2 ...
+
+# 构建或者重新构建服务
+$ docker-compose build 服务1 服务2 ...
+
+# 删除并且停止容器
+$ docker-compose rm 服务1 服务2 ...
+
+# 停止并删除容器，网络，图像和挂载卷
+$ docker-compose down 服务1 服务2 ...
+```
+ 
+ 
 
 ## 3.PHP和扩展
 ### 3.1 切换Nginx使用的PHP版本
