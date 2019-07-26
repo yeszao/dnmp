@@ -1,9 +1,16 @@
 ARG PHP_VERSION
 FROM php:${PHP_VERSION}-fpm-alpine
 
+ARG TZ
 ARG PHP_EXTENSIONS
 ARG MORE_EXTENSION_INSTALLER
 ARG ALPINE_REPOSITORIES
+
+
+RUN apk --no-cache add tzdata \
+    && cp "/usr/share/zoneinfo/$TZ" /etc/localtime
+    && "$TZ" > /etc/timezone
+
 
 COPY ./extensions /tmp/extensions
 WORKDIR /tmp/extensions
