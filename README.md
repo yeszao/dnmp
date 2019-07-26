@@ -315,13 +315,8 @@ Redis连接信息如下：
 ### 9.2 Docker使用cron定时任务
 [Docker使用cron定时任务](https://www.awaimai.com/2615.html)
 
-### 9.3 Docker容器同步时间
-如果不需要跟宿主机同步时间,删除docker-compose.yml中的即可
-
-```
-      - ${LOCALTIME_DIR}:/etc/localtime:ro
-      - ${TIMEZONE_DIR}:/etc/timezone:ro
-```
+### 9.3 Docker容器时间
+容器时间在.env文件中配置`TZ`变量，所有支持的时区请看[时区列表·维基百科](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)或者[PHP所支持的时区列表·PHP官网](https://www.php.net/manual/zh/timezones.php)。
 
 ## License
 MIT
