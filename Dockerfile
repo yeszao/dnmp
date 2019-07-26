@@ -9,7 +9,7 @@ ARG ALPINE_REPOSITORIES
 
 RUN apk --no-cache add tzdata \
     && cp "/usr/share/zoneinfo/$TZ" /etc/localtime
-    && "$TZ" > /etc/timezone
+    && echo "$TZ" > /etc/timezone
 
 
 COPY ./extensions /tmp/extensions
