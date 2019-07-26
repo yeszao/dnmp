@@ -11,11 +11,6 @@ echo "============================================"
 echo
 
 
-if [ "${ALPINE_REPOSITORIES}" != "" ]; then
-    sed -i "s/dl-cdn.alpinelinux.org/${ALPINE_REPOSITORIES}/g" /etc/apk/repositories
-fi
-
-
 if [ "${PHP_EXTENSIONS}" != "" ]; then
     echo "---------- Install general dependencies ----------"
     apk add --no-cache autoconf g++ libtool make curl-dev libxml2-dev linux-headers --repository http://dl-3.alpinelinux.org/alpine/edge/testing gnu-libiconv
