@@ -105,6 +105,7 @@ services:
     environment:
       - PMA_HOST=mysql
       - PMA_PORT=3306
+      - TZ=$TZ
 
   phpredisadmin:
     image: erikdubbelboer/phpredisadmin:latest
@@ -115,7 +116,8 @@ services:
     environment:
       - REDIS_1_HOST=redis
       - REDIS_1_PORT=6379
-
+      - TZ=$TZ
+      
   mongodb:
     image: mongo:${MONGODB_VERSION}
     environment:
