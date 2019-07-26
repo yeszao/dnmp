@@ -77,56 +77,33 @@ DNMP项目特点：
     ```
     $ cd dnmp
     $ cp env.sample .env
-    $ cp docker-compose-sample.yml docker-compose.yml
+    $ cp docker-compose-simple.yml docker-compose.yml
     $ docker-compose up
     ```
-    注意：Windows安装360安全卫士的同学，请先将其退出，不然安装过程中可能Docker创建账号过程可能被拦截，导致启动时文件共享失败；
-5. 访问在浏览器中访问：
+    > 这里我们使用 docker-compose-simple.yml 文件内的服务，是简单版本，只包含Nginx、PHP7.2和MySQL8 `3`个服务。如需更多服务，比如Redis、PHP5.6、MongoDB，ElasticSearch等，请参考 docker-compose-full.yml 文件内的服务列表，把需要的拷贝到 docker-compose.yml 文件在`up`即可。
 
- - [http://localhost](http://localhost)： 默认*http*站点
- - [https://localhost](https://localhost)：自定义证书*https*站点，访问时浏览器会有安全提示，忽略提示访问即可
+    > 注意：Windows安装360安全卫士的同学，请先将其退出，不然安装过程中可能Docker创建账号过程可能被拦截，导致启动时文件共享失败。
 
-两个站点使用同一PHP代码：`./www/localhost/index.php`。
+5. 访问在浏览器中访问：`http://localhost`，PHP代码：`./www/localhost/index.php`文件。
 
-要修改端口、日志文件位置等，请修改**.env**文件，然后重新构建：
+
+6. 如需管理服务，请在命令后面加上服务器名称，dnmp支持的服务名有：`nginx`、`php72`、`php56`、`mysql`、`mongo`、`redis`、`phpmyadmin`、`phpredisadmin`、`elasticsearch`、`adminmongo`、`rabbitmq`、`kibana`
 ```bash
-$ docker-compose build php72    # 重建单个服务
-$ docker-compose build          # 重建全部服务
+$ docker-compose up                         # 创建并且启动所有容器
+$ docker-compose up 服务1 服务2 ...         # 创建并且启动指定的多个容器
+$ docker-compose up -d 服务1 服务2 ...      # 创建并且已后台运行的方式启动多个容器
 
+
+$ docker-compose start 服务1 服务2 ...      # 启动服务
+$ docker-compose stop 服务1 服务2 ...       # 停止服务
+$ docker-compose restart 服务1 服务2 ...    # 重启服务
+$ docker-compose build 服务1 服务2 ...      # 构建或者重新构建服务
+
+
+$ docker-compose rm 服务1 服务2 ...         # 删除并且停止容器
+$ docker-compose down 服务1 服务2 ...       # 停止并删除容器，网络，图像和挂载卷
 ```
 
-6. 如需启动单个服务：
-``` bash
-# 服务选项：nginx、php72、php56、mysql、mongo、redis、phpmyadmin、phpredisadmin、elasticsearch、adminmongo、rabbitmq、kibana
-
-# 创建并且启动容器
-$ docker-compose up 服务1 服务2 ...
-# 创建并且启动所有容器
-$ docker-compose up
-
-# 创建并且已后台运行的方式启动容器
-$ docker-compose up -d 服务1 服务2 ...
-
-# 启动服务
-$ docker-compose start 服务1 服务2 ...
-
-# 停止服务
-$ docker-compose stop 服务1 服务2 ...
-
-# 重启服务
-$ docker-compose restart 服务1 服务2 ...
-
-# 构建或者重新构建服务
-$ docker-compose build 服务1 服务2 ...
-
-# 删除并且停止容器
-$ docker-compose rm 服务1 服务2 ...
-
-# 停止并删除容器，网络，图像和挂载卷
-$ docker-compose down 服务1 服务2 ...
-```
- 
- 
 
 ## 3.PHP和扩展
 ### 3.1 切换Nginx使用的PHP版本
