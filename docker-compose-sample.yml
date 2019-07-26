@@ -145,7 +145,6 @@ services:
 
   elasticsearch:
     image: elasticsearch:${ELASTICSEARCH_VERSION}
-    container_name: elasticsearch${ELASTICSEARCH_VERSION}
     environment:
       - TZ=$TZ
       - discovery.type=single-node
@@ -160,7 +159,6 @@ services:
 
   kibana:
     image: kibana:${KIBANA_VERSION}
-    container_name: kibana${KIBANA_VERSION}
     environment:
       TZ: "$TZ"
       elasticsearch.hosts: http://elasticsearch:9200
@@ -173,7 +171,6 @@ services:
 
   logstash:
     image: logstash:${LOGSTASH_VERSION}
-    container_name: logstash${LOGSTASH_VERSION}
     hostname: logstash
     restart: always
     depends_on:
