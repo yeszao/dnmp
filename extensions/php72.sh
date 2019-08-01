@@ -35,8 +35,10 @@ fi
 
 if [ -z "${EXTENSIONS##*,mongodb,*}" ]; then
     echo "---------- Install mongodb ----------"
-    pecl install mongodb
-    docker-php-ext-enable mongodb
+    mkdir mongodb \
+    && tar -xf mongodb-1.5.5.tgz -C mongodb --strip-components=1 \
+    && ( cd mongodb && phpize && ./configure  && make ${MC} && make install ) \
+    && docker-php-ext-enable  mongodb
 fi
 
 if [ -z "${EXTENSIONS##*,yaf,*}" ]; then
