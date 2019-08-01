@@ -20,6 +20,13 @@ if [ -z "${EXTENSIONS##*,mysql,*}" ]; then
     echo "---------- mysql was REMOVED from PHP 7.0.0 ----------"
 fi
 
+if [ -z "${EXTENSIONS##*,event,*}" ]; then
+    echo "---------- Install event ----------"
+    mkdir event \
+    && tar -xf event-2.5.3.tgz -C event --strip-components=1 \
+    && ( cd event && phpize && ./configure  && make ${MC} && make install ) \
+    && docker-php-ext-enable --ini-name event.ini event
+fi
 
 if [ -z "${EXTENSIONS##*,sodium,*}" ]; then
     echo "---------- Install sodium ----------"
