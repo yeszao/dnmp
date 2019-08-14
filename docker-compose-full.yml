@@ -16,6 +16,24 @@ services:
     networks:
       - default
 
+  ##Openresty与nginx只能二选一
+  ##Openresty and nginx can only choose one from the other
+  openresty:
+    image:  openresty/openresty:${OPENRESTY_VERSION}
+    ports:
+      - "${OPENRESTY_HTTP_HOST_PORT}:80"
+      - "${OPENRESTY_HTTPS_HOST_PORT}:443"
+    volumes:
+      - ${SOURCE_DIR}:/var/www/html/:rw
+      - ${OPENRESTY_CONFD_DIR}:/etc/nginx/conf.d/:ro
+      - ${OPENRESTY_CONF_FILE}:/usr/local/openresty/nginx/conf/nginx.conf:ro
+      - ${OPENRESTY_CONF_FASTCGIPARAMS_FILE}:/usr/local/openresty/nginx/conf/fastcgi_params:ro
+      - ${OPENRESTY_LOG_DIR}:/var/log/nginx/:rw
+    environment:
+      TZ: "$TZ"
+    networks:
+      - default
+
   php72:
     build:
       context: .
