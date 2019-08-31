@@ -47,6 +47,18 @@ if [ -z "${EXTENSIONS##*,yaf,*}" ]; then
     docker-php-ext-enable yaf
 fi
 
+if [ -z "${EXTENSIONS##*,yac,*}" ]; then
+    echo "---------- Install yac ----------"
+    printf "\n" | pecl install yac-2.0.2
+    docker-php-ext-enable yac
+fi
+
+if [ -z "${EXTENSIONS##*,yaconf,*}" ]; then
+    echo "---------- Install yaconf ----------"
+    printf "\n" | pecl install yaconf
+    docker-php-ext-enable yaconf
+fi
+
 if [ -z "${EXTENSIONS##*,amqp,*}" ]; then
     echo "---------- Install amqp ----------"
     apk add --no-cache rabbitmq-c-dev
@@ -54,6 +66,37 @@ if [ -z "${EXTENSIONS##*,amqp,*}" ]; then
     pecl install amqp-1.9.4.tgz
     docker-php-ext-enable amqp
 fi
+
+if [ -z "${EXTENSIONS##*,rar,*}" ]; then
+    echo "---------- Install rar ----------"
+    printf "\n" | pecl install rar
+    docker-php-ext-enable rar
+fi
+
+if [ -z "${EXTENSIONS##*,ast,*}" ]; then
+    echo "---------- Install ast ----------"
+    printf "\n" | pecl install ast
+    docker-php-ext-enable ast
+fi
+
+if [ -z "${EXTENSIONS##*,msgpack,*}" ]; then
+    echo "---------- Install msgpack ----------"
+    printf "\n" | pecl install msgpack
+    docker-php-ext-enable msgpack
+fi
+
+if [ -z "${EXTENSIONS##*,igbinary,*}" ]; then
+    echo "---------- Install igbinary ----------"
+    printf "\n" | pecl install igbinary
+    docker-php-ext-enable igbinary
+fi
+
+if [ -z "${EXTENSIONS##*,seaslog,*}" ]; then
+    echo "---------- Install seaslog ----------"
+    printf "\n" | pecl install seaslog
+    docker-php-ext-enable seaslog
+fi
+
 
 if [ -z "${EXTENSIONS##*,redis,*}" ]; then
     echo "---------- Install redis ----------"
