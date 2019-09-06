@@ -1,3 +1,4 @@
 log/
 mysql/
 www/
+conf/conf.d/certs/
