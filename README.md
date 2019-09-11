@@ -318,6 +318,17 @@ Redis连接信息如下：
 ### 9.3 Docker容器时间
 容器时间在.env文件中配置`TZ`变量，所有支持的时区请看[时区列表·维基百科](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)或者[PHP所支持的时区列表·PHP官网](https://www.php.net/manual/zh/timezones.php)。
 
+### 9.4 Mysql5.7版本与mysql8.0版本切换问题
+mysql8.0采用了default_authentication_plugin=mysql_native_password加密方式,8.0以前版本是用caching_sha2_password,所以如果用5.7版本的,切换到conf目录,
+修改mysql.conf配置文件
+```sh
+[mysqld]
+default_authentication_plugin=mysql_native_password
+```
+然后在 mysql 下执行以下命令来修改密码：
+```bash
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '新密码';
+```
 ## License
 MIT
 
