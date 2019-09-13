@@ -101,6 +101,15 @@ services:
     networks:
       - default
 
+  memcached:
+    image: memcached:${MEMCACHED_VERSION}
+    ports:
+      - "${MEMCACHED_HOST_PORT}:11211"
+    environment:
+       MEMCACHED_CACHE_SIZE: "${MEMCACHED_CACHE_SIZE}"
+    networks:
+      - default
+
   rabbitmq:
     image: rabbitmq:${RABBITMQ_VERSION}
     restart: always
