@@ -13,7 +13,7 @@ echo
 
 if [ "${PHP_EXTENSIONS}" != "" ]; then
     echo "---------- Install general dependencies ----------"
-    apk add --no-cache autoconf g++ libtool make curl-dev libxml2-dev linux-headers --repository http://dl-3.alpinelinux.org/alpine/edge/testing gnu-libiconv
+    apk add --no-cache autoconf g++ libtool make curl-dev libxml2-dev libevent-dev linux-headers --repository http://dl-3.alpinelinux.org/alpine/edge/testing gnu-libiconv
 fi
 
 if [ -z "${EXTENSIONS##*,pdo_mysql,*}" ]; then
@@ -256,3 +256,52 @@ if [ -z "${EXTENSIONS##*,imagick,*}" ]; then
     docker-php-ext-enable imagick
 fi
 
+if [ -z "${EXTENSIONS##*,rar,*}" ]; then
+    echo "---------- Install rar ----------"
+    printf "\n" | pecl install rar
+    docker-php-ext-enable rar
+fi
+
+if [ -z "${EXTENSIONS##*,ast,*}" ]; then
+    echo "---------- Install ast ----------"
+    printf "\n" | pecl install ast
+    docker-php-ext-enable ast
+fi
+
+if [ -z "${EXTENSIONS##*,msgpack,*}" ]; then
+    echo "---------- Install msgpack ----------"
+    printf "\n" | pecl install msgpack
+    docker-php-ext-enable msgpack
+fi
+
+if [ -z "${EXTENSIONS##*,igbinary,*}" ]; then
+    echo "---------- Install igbinary ----------"
+    printf "\n" | pecl install igbinary
+    docker-php-ext-enable igbinary
+fi
+
+
+if [ -z "${EXTENSIONS##*,yac,*}" ]; then
+    echo "---------- Install yac ----------"
+    printf "\n" | pecl install yac-2.0.2
+    docker-php-ext-enable yac
+fi
+
+if [ -z "${EXTENSIONS##*,yaconf,*}" ]; then
+    echo "---------- Install yaconf ----------"
+    printf "\n" | pecl install yaconf
+    docker-php-ext-enable yaconf
+fi
+
+if [ -z "${EXTENSIONS##*,seaslog,*}" ]; then
+    echo "---------- Install seaslog ----------"
+    printf "\n" | pecl install seaslog
+    docker-php-ext-enable seaslog
+fi
+
+if [ -z "${EXTENSIONS##*,varnish,*}" ]; then
+    echo "---------- Install varnish ----------"
+	apk add --no-cache varnish
+    printf "\n" | pecl install varnish
+    docker-php-ext-enable varnish
+fi

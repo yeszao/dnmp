@@ -20,6 +20,13 @@ if [ -z "${EXTENSIONS##*,mysql,*}" ]; then
     echo "---------- mysql was REMOVED from PHP 7.0.0 ----------"
 fi
 
+if [ -z "${EXTENSIONS##*,event,*}" ]; then
+    echo "---------- Install event ----------"
+    mkdir event \
+    && tar -xf event-2.5.3.tgz -C event --strip-components=1 \
+    && ( cd event && phpize && ./configure  && make ${MC} && make install ) \
+    && docker-php-ext-enable --ini-name event.ini event
+fi
 
 if [ -z "${EXTENSIONS##*,sodium,*}" ]; then
     echo "---------- Install sodium ----------"
@@ -28,8 +35,10 @@ fi
 
 if [ -z "${EXTENSIONS##*,mongodb,*}" ]; then
     echo "---------- Install mongodb ----------"
-    pecl install mongodb
-    docker-php-ext-enable mongodb
+    mkdir mongodb \
+    && tar -xf mongodb-1.5.5.tgz -C mongodb --strip-components=1 \
+    && ( cd mongodb && phpize && ./configure  && make ${MC} && make install ) \
+    && docker-php-ext-enable  mongodb
 fi
 
 if [ -z "${EXTENSIONS##*,yaf,*}" ]; then
@@ -45,6 +54,7 @@ if [ -z "${EXTENSIONS##*,amqp,*}" ]; then
     pecl install amqp-1.9.4.tgz
     docker-php-ext-enable amqp
 fi
+
 
 if [ -z "${EXTENSIONS##*,redis,*}" ]; then
     echo "---------- Install redis ----------"
@@ -75,7 +85,7 @@ fi
 if [ -z "${EXTENSIONS##*,swoole,*}" ]; then
     echo "---------- Install swoole ----------"
     mkdir swoole \
-    && tar -xf swoole-4.2.1.tgz -C swoole --strip-components=1 \
+    && tar -xf swoole-4.4.2.tgz -C swoole --strip-components=1 \
     && ( cd swoole && phpize && ./configure --enable-openssl && make ${MC} && make install ) \
     && docker-php-ext-enable swoole
 fi
