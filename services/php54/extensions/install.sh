@@ -12,11 +12,15 @@ echo "============================================"
 echo
 
 
+if [ "${CONTAINER_PACKAGE_URL}" != "" ]; then
+    sed -i "s/httpredir.debian.org/${CONTAINER_PACKAGE_URL}/g" /etc/apt/sources.list
+    sed -i "s/security.debian.org/${CONTAINER_PACKAGE_URL}\/debian-security/g" /etc/apt/sources.list
+fi
+
+
 if [ "${PHP_EXTENSIONS}" != "" ]; then
-    echo "↓---------- Update source list ----------↓"
-    sed -i "s/httpredir.debian.org/${CONTAINER_PACKAGE_URL}/g" /etc/apt/sources.list \
-    && sed -i "s/security.debian.org/${CONTAINER_PACKAGE_URL}\/debian-security/g" /etc/apt/sources.list \
-    && apt-get update
+    echo "---------- Update source list ----------"
+    apt-get update
 fi
 
 
