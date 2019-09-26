@@ -47,7 +47,6 @@ services:
         PHP_VERSION: php:${PHP_VERSION}-fpm-alpine
         CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
         PHP_EXTENSIONS: ${PHP_EXTENSIONS}
-        MORE_EXTENSION_INSTALLER: php72.sh
         TZ: "$TZ"
     volumes:
       - ${SOURCE_DIR}:/www/:rw
