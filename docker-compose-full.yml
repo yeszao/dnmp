@@ -92,18 +92,18 @@ services:
       MYSQL_ROOT_PASSWORD: "${MYSQL5_ROOT_PASSWORD}"
       TZ: "$TZ"
 
-  mysql8:
-    image: mysql:${MYSQL8_VERSION}
+  mysql:
+    image: mysql:${MYSQL_VERSION}
     ports:
-      - "${MYSQL8_HOST_PORT}:3306"
+      - "${MYSQL_HOST_PORT}:3306"
     volumes:
-      - ${MYSQL8_CONF_FILE}:/etc/mysql/conf.d/mysql.cnf:ro
-      - ${MYSQL8_DATA_DIR}:/var/lib/mysql/:rw
+      - ${MYSQL_CONF_FILE}:/etc/mysql/conf.d/mysql.cnf:ro
+      - ${MYSQL_DATA_DIR}:/var/lib/mysql/:rw
     restart: always
     networks:
       - default
     environment:
-      MYSQL_ROOT_PASSWORD: "${MYSQL8_ROOT_PASSWORD}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
       TZ: "$TZ"
 
   redis:
