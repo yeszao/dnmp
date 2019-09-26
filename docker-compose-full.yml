@@ -195,7 +195,6 @@ services:
       context: .
       args:
         ELASTICSEARCH_VERSION: ${ELASTICSEARCH_VERSION}
-        ELASTICSEARCH_EXTENSIONS: ${ELASTICSEARCH_EXTENSIONS}
     environment:
       - TZ=$TZ
       - discovery.type=single-node
