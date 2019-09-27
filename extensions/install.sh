@@ -13,7 +13,7 @@ echo
 
 if [ "${PHP_EXTENSIONS}" != "" ]; then
     echo "---------- Install general dependencies ----------"
-    apk add --no-cache autoconf g++ libtool make curl-dev libxml2-dev libevent-dev linux-headers --repository http://dl-3.alpinelinux.org/alpine/edge/testing gnu-libiconv
+    apk add --no-cache autoconf g++ libtool make curl-dev libxml2-dev libevent-dev linux-headers --repository http://dl-3.alpinelinux.org/alpine/edge/community gnu-libiconv
 fi
 
 if [ -z "${EXTENSIONS##*,pdo_mysql,*}" ]; then
