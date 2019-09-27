@@ -9,7 +9,7 @@ port                    = 3306
 sql_mode                = ""
 
 default-storage-engine  = InnoDB
-default-authentication-plugin   = mysql_native_password
+default-authentication-plugin   = caching_sha2_password
 character-set-server    = utf8mb4
 collation-server        = utf8mb4_unicode_ci
 init_connect            = 'SET NAMES utf8mb4'
