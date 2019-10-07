@@ -16,7 +16,7 @@ RUN if [ "${CONTAINER_PACKAGE_URL}" != "" ]; then \
 
 
 RUN if [ "${PHP_EXTENSIONS}" != "" ]; then \
-        apk add --no-cache autoconf g++ libtool make curl-dev libxml2-dev libevent-dev linux-headers; \
+        apk add --no-cache autoconf g++ libtool make curl-dev linux-headers; \
     fi
 
 

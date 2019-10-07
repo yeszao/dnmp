@@ -17,6 +17,19 @@ echo
 export EXTENSIONS=",${PHP_EXTENSIONS},"
 
 
+#
+# Check if current php version is greater than or equal to
+# specific version.
+#
+# For example, to check if current php is greater than or
+# equal to PHP 7.0:
+#
+# isPhpVersionGreaterOrEqual 7 0
+#
+# Param 1: Specific PHP Major version
+# Param 2: Specific PHP Minor version
+# Return : 1 if greater than or equal to, 0 if less than
+#
 isPhpVersionGreaterOrEqual()
  {
     local PHP_MAJOR_VERSION=$(php -r "echo PHP_MAJOR_VERSION;")
@@ -27,6 +40,28 @@ isPhpVersionGreaterOrEqual()
     else
         return 0;
     fi
+}
+
+
+#
+# Install extension from package file(.tgz),
+# For example:
+#
+# installExtensionFromTgz redis-4.1.1
+#
+# Param 1: Package name with version
+# Param 2: enable options
+#
+installExtensionFromTgz()
+{
+    tgzName=$1
+    extensionName="${tgzName%%-*}"
+
+    mkdir ${extensionName}
+    tar -xf ${tgzName}.tgz -C ${extensionName} --strip-components=1
+    ( cd ${extensionName} && phpize && ./configure && make ${MC} && make install )
+
+    docker-php-ext-enable ${extensionName} $2
 }
 
 
@@ -178,24 +213,25 @@ fi
 
 if [[ -z "${EXTENSIONS##*,soap,*}" ]]; then
     echo "---------- Install soap ----------"
+    apk add --no-cache libxml2-dev
 	docker-php-ext-install ${MC} soap
 fi
 
 if [[ -z "${EXTENSIONS##*,xsl,*}" ]]; then
     echo "---------- Install xsl ----------"
-	apk add --no-cache libxslt-dev
+	apk add --no-cache libxml2-dev libxslt-dev
 	docker-php-ext-install ${MC} xsl
 fi
 
 if [[ -z "${EXTENSIONS##*,xmlrpc,*}" ]]; then
     echo "---------- Install xmlrpc ----------"
-	apk add --no-cache libxslt-dev
+	apk add --no-cache libxml2-dev libxslt-dev
 	docker-php-ext-install ${MC} xmlrpc
 fi
 
 if [[ -z "${EXTENSIONS##*,wddx,*}" ]]; then
     echo "---------- Install wddx ----------"
-	apk add --no-cache libxslt-dev
+	apk add --no-cache libxml2-dev libxslt-dev
 	docker-php-ext-install ${MC} wddx
 fi
 
@@ -356,9 +392,7 @@ if [[ -z "${EXTENSIONS##*,mysql,*}" ]]; then
     isPhpVersionGreaterOrEqual 7 0
 
     if [[ "$?" = "1" ]]; then
-        echo
         echo "---------- mysql was REMOVED from PHP 7.0.0 ----------"
-        echo
     else
         echo "---------- Install mysql ----------"
         docker-php-ext-install ${MC} mysql
@@ -381,14 +415,12 @@ fi
 if [[ -z "${EXTENSIONS##*,amqp,*}" ]]; then
     echo "---------- Install amqp ----------"
     apk add --no-cache rabbitmq-c-dev
-    printf "\n" | pecl install amqp-1.9.4.tgz
-    docker-php-ext-enable amqp
+    installExtensionFromTgz amqp-1.9.4
 fi
 
 if [[ -z "${EXTENSIONS##*,redis,*}" ]]; then
     echo "---------- Install redis ----------"
-    printf "\n" | pecl install redis-4.1.1.tgz
-    docker-php-ext-enable redis
+    installExtensionFromTgz redis-4.1.1
 fi
 
 if [[ -z "${EXTENSIONS##*,memcached,*}" ]]; then
@@ -410,16 +442,15 @@ if [[ -z "${EXTENSIONS##*,xdebug,*}" ]]; then
     isPhpVersionGreaterOrEqual 7 0
 
     if [[ "$?" = "1" ]]; then
-        printf "\n" | pecl install xdebug-2.6.1.tgz
+        installExtensionFromTgz xdebug-2.6.1
     else
-        printf "\n" | pecl install xdebug-2.5.5.tgz
+        installExtensionFromTgz xdebug-2.5.5
     fi
-
-    docker-php-ext-enable xdebug
 fi
 
 if [[ -z "${EXTENSIONS##*,event,*}" ]]; then
     echo "---------- Install event ----------"
+    apk add --no-cache libevent-dev
     export is_sockets_installed=$(php -r "echo extension_loaded('sockets');")
 
     if [[ "${is_sockets_installed}" = "" ]]; then
@@ -428,14 +459,12 @@ if [[ -z "${EXTENSIONS##*,event,*}" ]]; then
     fi
 
     echo "---------- Install event again ----------"
-    printf "\n" | pecl install event-2.5.3.tgz
-    docker-php-ext-enable --ini-name event.ini event
+    installExtensionFromTgz event-2.5.3  "--ini-name event.ini"
 fi
 
 if [[ -z "${EXTENSIONS##*,mongodb,*}" ]]; then
     echo "---------- Install mongodb ----------"
-    printf "\n" | pecl install mongodb-1.5.5.tgz
-    docker-php-ext-enable  mongodb
+    installExtensionFromTgz mongodb-1.5.5
 fi
 
 if [[ -z "${EXTENSIONS##*,yaf,*}" ]]; then
@@ -444,28 +473,22 @@ if [[ -z "${EXTENSIONS##*,yaf,*}" ]]; then
 
     if [[ "$?" = "1" ]]; then
         printf "\n" | pecl install yaf
+        docker-php-ext-enable yaf
     else
-        # install by pecl may cause error:
-        # can't create directory 'configs/.libs': No such file or directory
-        mkdir yaf
-        tar -xf yaf-2.3.5.tgz -C yaf --strip-components=1
-        ( cd yaf && phpize && ./configure && make ${MC} && make install )
+        installExtensionFromTgz yaf-2.3.5
     fi
-
-    docker-php-ext-enable yaf
 fi
+
 
 if [[ -z "${EXTENSIONS##*,swoole,*}" ]]; then
     echo "---------- Install swoole ----------"
     isPhpVersionGreaterOrEqual 7 0
 
     if [[ "$?" = "1" ]]; then
-        printf "\n" | pecl install swoole-4.4.2.tgz
+        installExtensionFromTgz swoole-4.4.2
     else
-        printf "\n" | pecl install swoole-2.0.11.tgz
+        installExtensionFromTgz swoole-2.0.11
     fi
-
-    docker-php-ext-enable swoole
 fi
 
 if [[ -z "${EXTENSIONS##*,zip,*}" ]]; then
