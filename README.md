@@ -160,8 +160,8 @@ php () {
         $tty \
         --interactive \
         --rm \
-        --volume $PWD:/var/www/html:rw \
-        --workdir /var/www/html \
+        --volume $PWD:/www:rw \
+        --workdir /www \
         dnmp_php php "$@"
 }
 ```
