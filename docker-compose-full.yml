@@ -192,9 +192,10 @@ services:
 
   elasticsearch:
     build:
-      context: .
+      context: ./services/elasticsearch
       args:
         ELASTICSEARCH_VERSION: ${ELASTICSEARCH_VERSION}
+        ELASTICSEARCH_PLUGINS: ${ELASTICSEARCH_PLUGINS}
     environment:
       - TZ=$TZ
       - discovery.type=single-node
