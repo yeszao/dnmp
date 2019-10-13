@@ -25,7 +25,6 @@ composer () {
         --rm \
         --user www-data:www-data \
         --volume ~/dnmp/services/php/composer:/tmp/composer \
-        -e "COMPOSER_HOME=/tmp/composer"
         --volume $(pwd):/app \
         --workdir /app \
         dnmp_php composer "$@"
@@ -52,7 +51,6 @@ composer54 () {
         --rm \
         --user www-data:www-data \
         --volume ~/dnmp/services/php/composer:/tmp/composer \
-        -e "COMPOSER_HOME=/tmp/composer"
         --volume $(pwd):/app \
         --workdir /app \
         dnmp_php54 composer "$@"

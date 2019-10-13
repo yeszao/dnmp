@@ -34,8 +34,7 @@ ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so php
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-RUN apk update && \
-    apk add sudo
+# Change Composer Home
+ENV COMPOSER_HOME="/tmp/composer"
 
 WORKDIR /www
