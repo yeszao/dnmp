@@ -1,0 +1,55 @@
+# dnmp alias
+alias dnginx='docker exec -it dnmp_nginx_1 /bin/sh'
+alias dphp='docker exec -it dnmp_php_1 /bin/sh'
+alias dphp54='docker exec -it dnmp_php54_1 /bin/sh'
+alias dmysql='docker exec -it dnmp_mysql_1 /bin/bash'
+
+php () {
+    tty=
+    tty -s && tty=--tty
+    docker run \
+        $tty \
+        --interactive \
+        --rm \
+        --volume $PWD:/www:rw \
+        --workdir /www \
+        dnmp_php php "$@"
+}
+
+composer () {
+    tty=
+    tty -s && tty=--tty
+    docker run \
+        $tty \
+        --interactive \
+        --rm \
+        --volume ~/dnmp/services/php/composer:/home/www-data/.composer \
+        --volume $(pwd):/app \
+        --workdir /app \
+        dnmp_php sudo -u www-data composer "$@"
+}
+
+php54 () {
+    tty=
+    tty -s && tty=--tty
+    docker run \
+        $tty \
+        --interactive \
+        --rm \
+        --volume $PWD:/www:rw \
+        --workdir /www \
+        dnmp_php54 php "$@"
+}
+
+composer54 () {
+    tty=
+    tty -s && tty=--tty
+    docker run \
+        $tty \
+        --interactive \
+        --rm \
+        --volume ~/dnmp/services/php/composer:/home/www-data/.composer \
+        --volume $(pwd):/app \
+        --workdir /app \
+        dnmp_php54 sudo -u www-data composer "$@"
+}
