@@ -23,10 +23,12 @@ composer () {
         $tty \
         --interactive \
         --rm \
-        --volume ~/dnmp/services/php/composer:/home/www-data/.composer \
+        --user www-data:www-data \
+        --volume ~/dnmp/services/php/composer:/tmp/composer \
+        -e "COMPOSER_HOME=/tmp/composer"
         --volume $(pwd):/app \
         --workdir /app \
-        dnmp_php sudo -u www-data composer "$@"
+        dnmp_php composer "$@"
 }
 
 php54 () {
@@ -48,8 +50,10 @@ composer54 () {
         $tty \
         --interactive \
         --rm \
-        --volume ~/dnmp/services/php/composer:/home/www-data/.composer \
+        --user www-data:www-data \
+        --volume ~/dnmp/services/php/composer:/tmp/composer \
+        -e "COMPOSER_HOME=/tmp/composer"
         --volume $(pwd):/app \
         --workdir /app \
-        dnmp_php54 sudo -u www-data composer "$@"
+        dnmp_php54 composer "$@"
 }
