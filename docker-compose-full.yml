@@ -1,12 +1,18 @@
 version: "3"
 services:
   nginx:
-    image: nginx:${NGINX_VERSION}
+    build:
+      context: ./services/nginx
+      args:
+        NGINX_VERSION: ${NGINX_VERSION}
+        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
+        NGINX_INSTALL_APPS: ${NGINX_INSTALL_APPS}
     ports:
       - "${NGINX_HTTP_HOST_PORT}:80"
       - "${NGINX_HTTPS_HOST_PORT}:443"
     volumes:
-      - ${SOURCE_DIR}:/var/www/html/:rw
+      - ${SOURCE_DIR}:/www/:rw
+      - ${NGINX_SSL_CERTIFICATE_DIR}:/ssl:rw
       - ${NGINX_CONFD_DIR}:/etc/nginx/conf.d/:rw
       - ${NGINX_CONF_FILE}:/etc/nginx/nginx.conf:ro
       - ${NGINX_LOG_DIR}:/var/log/nginx/:rw
@@ -24,7 +30,7 @@ services:
       - "${OPENRESTY_HTTP_HOST_PORT}:80"
       - "${OPENRESTY_HTTPS_HOST_PORT}:443"
     volumes:
-      - ${SOURCE_DIR}:/var/www/html/:rw
+      - ${SOURCE_DIR}:/www/:rw
       - ${OPENRESTY_CONFD_DIR}:/etc/nginx/conf.d/:ro
       - ${OPENRESTY_CONF_FILE}:/usr/local/openresty/nginx/conf/nginx.conf:ro
       - ${OPENRESTY_CONF_FASTCGIPARAMS_FILE}:/usr/local/openresty/nginx/conf/fastcgi_params:ro
@@ -34,20 +40,19 @@ services:
     networks:
       - default
 
-  php72:
+  php:
     build:
-      context: .
+      context: ./services/php
       args:
-        PHP_VERSION: ${PHP72_VERSION}
-        ALPINE_REPOSITORIES: ${ALPINE_REPOSITORIES}
-        PHP_EXTENSIONS: ${PHP72_EXTENSIONS}
-        MORE_EXTENSION_INSTALLER: php72.sh
+        PHP_VERSION: php:${PHP_VERSION}-fpm-alpine
+        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
+        PHP_EXTENSIONS: ${PHP_EXTENSIONS}
         TZ: "$TZ"
     volumes:
-      - ${SOURCE_DIR}:/var/www/html/:rw
-      - ${PHP72_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
-      - ${PHP72_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
-      - ${PHP72_LOG_DIR}:/var/log/php
+      - ${SOURCE_DIR}:/www/:rw
+      - ${PHP_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
+      - ${PHP_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
+      - ${PHP_LOG_DIR}:/var/log/php
     restart: always
     cap_add:
       - SYS_PTRACE
@@ -56,15 +61,14 @@ services:
 
   php56:
     build:
-      context: .
+      context: ./services/php
       args:
-        PHP_VERSION: ${PHP56_VERSION}
-        ALPINE_REPOSITORIES: ${ALPINE_REPOSITORIES}
+        PHP_VERSION: php:${PHP56_VERSION}-fpm-alpine
+        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
         PHP_EXTENSIONS: ${PHP56_EXTENSIONS}
-        MORE_EXTENSION_INSTALLER: php56.sh
         TZ: "$TZ"
     volumes:
-      - ${SOURCE_DIR}:/var/www/html/:rw
+      - ${SOURCE_DIR}:/www/:rw
       - ${PHP56_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
       - ${PHP56_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
       - ${PHP56_LOG_DIR}:/var/log/php
@@ -73,6 +77,39 @@ services:
       - SYS_PTRACE
     networks:
       - default
+
+  php54:
+    build:
+      context: ./services/php54
+      args:
+        PHP_VERSION: php:${PHP54_VERSION}-fpm
+        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
+        PHP_EXTENSIONS: ${PHP54_EXTENSIONS}
+        TZ: "$TZ"
+    volumes:
+      - ${SOURCE_DIR}:/www/:rw
+      - ${PHP54_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
+      - ${PHP54_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
+      - ${PHP54_LOG_DIR}:/var/log/php
+    restart: always
+    cap_add:
+      - SYS_PTRACE
+    networks:
+      - default
+
+  mysql5:
+    image: mysql:${MYSQL5_VERSION}
+    ports:
+      - "${MYSQL5_HOST_PORT}:3306"
+    volumes:
+      - ${MYSQL5_CONF_FILE}:/etc/mysql/conf.d/mysql.cnf:ro
+      - ${MYSQL5_DATA_DIR}:/var/lib/mysql/:rw
+    restart: always
+    networks:
+      - default
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL5_ROOT_PASSWORD}"
+      TZ: "$TZ"
 
   mysql:
     image: mysql:${MYSQL_VERSION}
@@ -173,13 +210,18 @@ services:
       - default
 
   elasticsearch:
-    image: elasticsearch:${ELASTICSEARCH_VERSION}
+    build:
+      context: ./services/elasticsearch
+      args:
+        ELASTICSEARCH_VERSION: ${ELASTICSEARCH_VERSION}
+        ELASTICSEARCH_PLUGINS: ${ELASTICSEARCH_PLUGINS}
     environment:
       - TZ=$TZ
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     volumes:
       - ${ELASTICSEARCH_DATA_DIR}:/usr/share/elasticsearch/data
+      - ${ELASTICSEARCH_CONF_FILE}:/usr/share/elasticsearch/elasticsearch.yml
     hostname: elasticsearch
     restart: always
     ports:

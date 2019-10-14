@@ -1,0 +1,29 @@
+[client]
+port                    = 3306
+default-character-set   = utf8mb4
+
+
+[mysqld]
+user                    = mysql
+port                    = 3306
+sql_mode                = NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES
+
+default-storage-engine  = InnoDB
+default-authentication-plugin   = mysql_native_password
+character-set-server    = utf8mb4
+collation-server        = utf8mb4_unicode_ci
+init_connect            = 'SET NAMES utf8mb4'
+
+disable-log-bin
+skip-character-set-client-handshake
+explicit_defaults_for_timestamp
+
+slow_query_log
+long_query_time         = 3
+slow-query-log-file     = /var/lib/mysql/mysql.slow.log
+log-error               = /var/lib/mysql/mysql.error.log
+
+default-time-zone       = '+8:00'
+
+[mysql]
+default-character-set   = utf8mb4
