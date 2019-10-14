@@ -24,6 +24,7 @@ composer () {
         --interactive \
         --rm \
         --user www-data:www-data \
+        --volume ~/dnmp/services/php/composer:/tmp/composer \
         --volume $(pwd):/app \
         --workdir /app \
         dnmp_php composer "$@"
@@ -49,6 +50,7 @@ composer54 () {
         --interactive \
         --rm \
         --user www-data:www-data \
+        --volume ~/dnmp/services/php/composer:/tmp/composer \
         --volume $(pwd):/app \
         --workdir /app \
         dnmp_php54 composer "$@"
