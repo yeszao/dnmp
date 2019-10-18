@@ -98,7 +98,7 @@ DNMP项目特点：
     > 注意：Windows安装360安全卫士的同学，请先将其退出，不然安装过程中可能Docker创建账号过程可能被拦截，导致启动时文件共享失败。
 5. 在浏览器中访问：`http://localhost`或`https://localhost`(自签名HTTPS演示)就能看到效果。
     > 演示PHP代码在文件`./www/localhost/index.php`，里面包含了连接mysql服务器和redis服务器的代码，实际使用时可参考此代码。
-6. 如需管理服务，请在命令后面加上服务器名称，dnmp支持的服务名有：`nginx`、`php`、`php54`、`mysql`、`mongo`、`redis`、`phpmyadmin`、`phpredisadmin`、`elasticsearch`、`adminmongo`、`rabbitmq`、`kibana`
+6. 如需管理服务，请在命令后面加上服务器名称，dnmp支持的服务名有：`nginx`、`php`、`php54`、`mysql`、`mongodb`、`redis`、`phpmyadmin`、`phpredisadmin`、`elasticsearch`、`adminmongo`、`rabbitmq`、`kibana`
 ```bash
 $ docker-compose up                         # 创建并且启动所有容器
 $ docker-compose up 服务1 服务2 ...         # 创建并且启动指定的多个容器
