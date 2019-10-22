@@ -51,6 +51,8 @@ services:
         PHP_EXTENSIONS: ${PHP_EXTENSIONS}
         TZ: "$TZ"
     container_name: php
+    expose:
+      - 9501
     volumes:
       - ${SOURCE_DIR}:/www/:rw
       - ${PHP_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
@@ -71,6 +73,8 @@ services:
         PHP_EXTENSIONS: ${PHP56_EXTENSIONS}
         TZ: "$TZ"
     container_name: php56
+    expose:
+      - 9501
     volumes:
       - ${SOURCE_DIR}:/www/:rw
       - ${PHP56_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro

@@ -32,6 +32,8 @@ services:
         PHP_EXTENSIONS: ${PHP_EXTENSIONS}
         TZ: "$TZ"
     container_name: php
+    expose:
+      - 9501
     volumes:
       - ${SOURCE_DIR}:/www/:rw
       - ${PHP_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
