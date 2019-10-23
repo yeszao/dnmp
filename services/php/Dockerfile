@@ -6,9 +6,12 @@ ARG PHP_EXTENSIONS
 ARG CONTAINER_PACKAGE_URL
 
 
+COPY --from=composer /usr/bin/composer /usr/bin/composer
 COPY ./extensions /tmp/extensions
 WORKDIR /tmp/extensions
 
+# php alpine image's www-data user uid & gid are 82, change them to 1000 (primary user)
+RUN apk add shadow && usermod -u 1000 www-data && groupmod -g 1000 www-data
 
 RUN if [ "${CONTAINER_PACKAGE_URL}" != "" ]; then \
         sed -i "s/dl-cdn.alpinelinux.org/${CONTAINER_PACKAGE_URL}/g" /etc/apk/repositories; \
