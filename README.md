@@ -147,7 +147,7 @@ PHP54_EXTENSIONS=opcache,redis                 # PHP 5.4要安装的扩展列表
     ```bash
     docker-compose build php
     ```
-可用的扩展请看同文件的`PHP extensions`注释块说明。
+可用的扩展请看同文件的`env.sample`注释块说明。
 
 ### 3.3 Host中使用php命令行（php-cli）
 1. 打开主机的 `~/.bashrc` 或者 `~/.zshrc` 文件，加上：
