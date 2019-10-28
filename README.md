@@ -146,7 +146,6 @@ PHP54_EXTENSIONS=opcache,redis                 # PHP 5.4要安装的扩展列表
 然后重新build PHP镜像。
     ```bash
     docker-compose build php
-    docker-compose up -d
     ```
 可用的扩展请看同文件的`PHP extensions`注释块说明。
 
