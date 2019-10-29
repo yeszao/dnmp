@@ -420,7 +420,12 @@ fi
 
 if [[ -z "${EXTENSIONS##*,redis,*}" ]]; then
     echo "---------- Install redis ----------"
-    installExtensionFromTgz redis-4.1.1
+    installExtensionFromTgz redis-5.0.2
+fi
+
+if [[ -z "${EXTENSIONS##*,apcu,*}" ]]; then
+    echo "---------- Install redis ----------"
+    installExtensionFromTgz apcu-5.1.17
 fi
 
 if [[ -z "${EXTENSIONS##*,memcached,*}" ]]; then

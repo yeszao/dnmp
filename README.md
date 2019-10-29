@@ -211,6 +211,17 @@ Zend Engine v3.2.0, Copyright (c) 1998-2018 Zend Technologies
 
     ```
 
+**php容器内执行composer**
+1. 如果composer对php版本有依赖，并且composer已安装在php容器内，也可使用如下命令
+
+```bash
+docker run --rm --interactive --tty \
+    --volume $PWD:/www \
+    --user 1000:1000 \
+    dnmp_php \
+    composer install
+```
+    
 ## 4.管理命令
 ### 4.1 服务器启动和构建命令
 如需管理服务，请在命令后面加上服务器名称，例如：
