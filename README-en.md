@@ -30,11 +30,10 @@ Docker deploying Nginx MySQL PHP7/PHP5.6/PHP5.4 in one key, support full feature
     ```
     $ cd dnmp
     $ cp env.sample .env
-    $ cp docker-compose-sample.yml docker-compose.yml
+    $ cp docker-compose.sample.yml docker-compose.yml
     $ docker-compose up
     ```
-    You may need use `sudo` before this command in Linux.
-5. Go to your browser and type `localhost`, you will see:
+5. Go to your browser and type `http://localhost`, you will see:
 
 ![Demo Image](./snapshot.png)
 
@@ -56,7 +55,7 @@ To use PHP7, change it:
 ```
 Then reload nginx:
 ```bash
-$ docker exec -it dnmp_nginx_1 nginx -s reload
+$ docker exec -it nginx nginx -s reload
 ```
 Done.
 
