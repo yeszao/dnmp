@@ -132,8 +132,9 @@ $ docker-compose down 服务1 服务2 ...       # 停止并删除容器，网络
 ```
 再 **重启 Nginx** 生效。
 ```bash
-$ docker exec -it dnmp_nginx_1 nginx -s reload
+$ docker exec -it nginx nginx -s reload
 ```
+注意，这里有两个`nginx`，第一个是容器名，第二个是容器中的`nginx`程序。
 ### 3.2 安装PHP扩展
 PHP的很多功能都是通过扩展实现，而安装扩展是一个略费时间的过程，
 所以，除PHP内置扩展外，在`env.sample`文件中我们仅默认安装少量扩展，
@@ -228,13 +229,25 @@ Zend Engine v3.2.0, Copyright (c) 1998-2018 Zend Technologies
 ## 4.添加快捷命令
 在开发的时候，我们可能经常使用`docker exec -it`切换到容器中，把常用的做成命令别名是个省事的方法。
 
-打开~/.bashrc，加上：
+首先，在主机中查看可用的容器：
 ```bash
-alias dnginx='docker exec -it dnmp_nginx_1 /bin/sh'
-alias dphp72='docker exec -it dnmp_php_1 /bin/sh'
-alias dphp54='docker exec -it dnmp_php54_1 /bin/sh'
-alias dmysql='docker exec -it dnmp_mysql_1 /bin/bash'
-alias dredis='docker exec -it dnmp_redis_1 /bin/sh'
+$ docker ps           # 查看所有运行中的容器
+$ docker ps -a        # 所有容器
+```
+输出的`NAMES`那一列就是容器的名称，如果使用默认配置，那么名称就是`nginx`、`php`、`php56`、`mysql`等。
+
+然后，打开`~/.bashrc`或者`~/.zshrc`文件，加上：
+```bash
+alias dnginx='docker exec -it nginx /bin/sh'
+alias dphp='docker exec -it php /bin/sh'
+alias dphp56='docker exec -it php56 /bin/sh'
+alias dphp54='docker exec -it php54 /bin/sh'
+alias dmysql='docker exec -it mysql /bin/bash'
+alias dredis='docker exec -it redis /bin/sh'
+```
+下次进入容器就非常快捷了，如进入php容器：
+```bash
+$ dphp
 ```
 
 ## 5.使用Log
@@ -264,7 +277,7 @@ ini_set('display_errors', 'on');
 
 1. 进入容器，创建日志文件并修改权限：
     ```bash
-    $ docker exec -it dnmp_php_1 /bin/bash
+    $ docker exec -it php /bin/sh
     $ mkdir /var/log/php
     $ cd /var/log/php
     $ touch php-fpm.error.log
