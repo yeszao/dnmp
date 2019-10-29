@@ -177,6 +177,9 @@ services:
 #    container_name: phpmyadmin
 #    ports:
 #      - "${PHPMYADMIN_HOST_PORT}:80"
+#    volumes:
+#      - ${PHPMYADMIN_USER_CONF_FILE}:/etc/phpmyadmin/config.user.inc.php:ro
+#      - ${PHPMYADMIN_PHP_CONF_FILE}:/usr/local/etc/php/conf.d/php-phpmyadmin.ini:ro
 #    networks:
 #      - default
 #    environment:
