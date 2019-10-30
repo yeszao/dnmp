@@ -35,5 +35,9 @@ RUN apk --no-cache add tzdata \
 RUN apk add gnu-libiconv --no-cache --repository http://${CONTAINER_PACKAGE_URL}/alpine/edge/community/ --allow-untrusted
 ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so php
 
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Change Composer Home
+ENV COMPOSER_HOME="/tmp/composer"
 
 WORKDIR /www

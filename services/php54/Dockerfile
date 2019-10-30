@@ -13,4 +13,10 @@ RUN chmod +x install.sh \
     && sh install.sh \
     && rm -rf /tmp/extensions
 
+
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Change Composer Home
+ENV COMPOSER_HOME="/tmp/composer"
+
 WORKDIR /www
