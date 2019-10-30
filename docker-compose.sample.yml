@@ -41,7 +41,7 @@ services:
       - ${PHP_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
       - ${PHP_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
       - ${PHP_LOG_DIR}:/var/log/php
-      - ${COMPOSER_HOME}:/tmp/composer
+      - ${DATA_DIR}/composer:/tmp/composer
     restart: always
     cap_add:
       - SYS_PTRACE
@@ -64,7 +64,7 @@ services:
 #      - ${PHP56_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
 #      - ${PHP56_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
 #      - ${PHP56_LOG_DIR}:/var/log/php
-#      - ${COMPOSER56_HOME}:/tmp/composer
+#      - ${DATA_DIR}/composer:/tmp/composer
 #    restart: always
 #    cap_add:
 #      - SYS_PTRACE
@@ -85,7 +85,7 @@ services:
 #      - ${PHP54_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
 #      - ${PHP54_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
 #      - ${PHP54_LOG_DIR}:/var/log/php
-#      - ${COMPOSER54_HOME}:/tmp/composer
+#      - ${DATA_DIR}/composer:/tmp/composer
 #    restart: always
 #    cap_add:
 #      - SYS_PTRACE
@@ -99,7 +99,7 @@ services:
       - "${MYSQL_HOST_PORT}:3306"
     volumes:
       - ${MYSQL_CONF_FILE}:/etc/mysql/conf.d/mysql.cnf:ro
-      - ${MYSQL_DATA_DIR}:/var/lib/mysql/:rw
+      - ${DATA_DIR}/mysql:/var/lib/mysql/:rw
     restart: always
     networks:
       - default
@@ -114,7 +114,7 @@ services:
 #      - "${MYSQL5_HOST_PORT}:3306"
 #    volumes:
 #      - ${MYSQL5_CONF_FILE}:/etc/mysql/conf.d/mysql.cnf:ro
-#      - ${MYSQL5_DATA_DIR}:/var/lib/mysql/:rw
+#      - ${DATA_DIR}/mysql5:/var/lib/mysql/:rw
 #    restart: always
 #    networks:
 #      - default
@@ -212,7 +212,7 @@ services:
 #        MONGO_INITDB_ROOT_PASSWORD: "${MONGODB_INITDB_ROOT_PASSWORD}"
 #        TZ: "$TZ"
 #    volumes:
-#      - ${MONGODB_DATA_DIR}:/data/db:rw
+#      - ${DATA_DIR}/mongo:/data/db:rw
 #      - ${MONGODB_DATA_DIR}/mongo_key:/mongo:rw
 #    ports:
 #       - "${MONGODB_HOST_PORT}:27017"
@@ -245,7 +245,7 @@ services:
 #      - discovery.type=single-node
 #      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
 #    volumes:
-#      - ${ELASTICSEARCH_DATA_DIR}:/usr/share/elasticsearch/data
+#      - ${DATA_DIR}/esdata:/usr/share/elasticsearch/data
 #      - ${ELASTICSEARCH_CONF_FILE}:/usr/share/elasticsearch/elasticsearch.yml
 #    hostname: elasticsearch
 #    restart: always
