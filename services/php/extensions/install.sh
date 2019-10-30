@@ -14,6 +14,11 @@ echo "============================================"
 echo
 
 
+if [ "${PHP_EXTENSIONS}" != "" ]; then
+    apk add --no-cache autoconf g++ libtool make curl-dev gettext-dev linux-headers
+fi
+
+
 export EXTENSIONS=",${PHP_EXTENSIONS},"
 
 

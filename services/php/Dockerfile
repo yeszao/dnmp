@@ -6,24 +6,14 @@ ARG PHP_EXTENSIONS
 ARG CONTAINER_PACKAGE_URL
 
 
-COPY --from=composer /usr/bin/composer /usr/bin/composer
+RUN sed -i "s/dl-cdn.alpinelinux.org/${CONTAINER_PACKAGE_URL}/g" /etc/apk/repositories
+
+
 COPY ./extensions /tmp/extensions
 WORKDIR /tmp/extensions
-
-# php alpine image's www-data user uid & gid are 82, change them to 1000 (primary user)
-RUN apk add shadow && usermod -u 1000 www-data && groupmod -g 1000 www-data
-
-RUN if [ "${CONTAINER_PACKAGE_URL}" != "" ]; then \
-        sed -i "s/dl-cdn.alpinelinux.org/${CONTAINER_PACKAGE_URL}/g" /etc/apk/repositories; \
-    fi
-
-
-RUN if [ "${PHP_EXTENSIONS}" != "" ]; then \
-        apk add --no-cache autoconf g++ libtool make curl-dev gettext-dev linux-headers; \
-    fi
-
-
-RUN chmod +x install.sh && sh install.sh && rm -rf /tmp/extensions
+RUN chmod +x install.sh \
+    && sh install.sh \
+    && rm -rf /tmp/extensions
 
 
 RUN apk --no-cache add tzdata \
@@ -35,9 +25,17 @@ RUN apk --no-cache add tzdata \
 RUN apk add gnu-libiconv --no-cache --repository http://${CONTAINER_PACKAGE_URL}/alpine/edge/community/ --allow-untrusted
 ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so php
 
-# Install Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-# Change Composer Home
-ENV COMPOSER_HOME="/tmp/composer"
+
+# Install composer and change it's cache home
+RUN curl -o /usr/bin/composer https://mirrors.aliyun.com/composer/composer.phar \
+    && chmod +x /usr/bin/composer
+ENV COMPOSER_HOME=/tmp/composer
+
+
+# php image's www-data user uid & gid are 82, change them to 1000 (primary user)
+RUN apk --no-cache add shadow && usermod -u 1000 www-data && groupmod -g 1000 www-data
+# Use www-data to run the first process
+USER www-data
+
 
 WORKDIR /www
