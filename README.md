@@ -130,75 +130,43 @@ PHP_EXTENSIONS=pdo_mysql,opcache,redis       # PHP 要安装的扩展列表，�
 PHP54_EXTENSIONS=opcache,redis                 # PHP 5.4要安装的扩展列表，英文逗号隔开
 ```
 然后重新build PHP镜像。
-    ```bash
-    docker-compose build php
-    ```
+```bash
+docker-compose build php
+```
 可用的扩展请看同文件的`env.sample`注释块说明。
 
 ### 3.3 Host中使用php命令行（php-cli）
-1. 打开主机的 `~/.bashrc` 或者 `~/.zshrc` 文件，加上：
-```bash
-php () {
-    tty=
-    tty -s && tty=--tty
-    docker run \
-        $tty \
-        --interactive \
-        --rm \
-        --volume $PWD:/www:rw \
-        --workdir /www \
-        dnmp_php php "$@"
-}
-```
-2. 让文件起效：
-```
-source ~/.bashrc
-```
-3. 然后就可以在主机中执行php命令了：
-```bash
-~ php -v
-PHP 7.2.13 (cli) (built: Dec 21 2018 02:22:47) ( NTS )
-Copyright (c) 1997-2018 The PHP Group
-Zend Engine v3.2.0, Copyright (c) 1998-2018 Zend Technologies
-    with Zend OPcache v7.2.13, Copyright (c) 1999-2018, by Zend Technologies
-    with Xdebug v2.6.1, Copyright (c) 2002-2018, by Derick Rethans
-```
-### 3.4 使用composer
-**我们建议在主机HOST中使用composer，避免PHP容器变得庞大**。
-1. 在主机创建一个目录，用以保存composer的配置和缓存文件：
-    ```
-    mkdir ~/dnmp/composer
-    ```
-2. 打开主机的 `~/.bashrc` 或者 `~/.zshrc` 文件，加上：
-    ```
-    composer () {
-        tty=
-        tty -s && tty=--tty
-        docker run \
-            $tty \
-            --interactive \
-            --rm \
-            --user $(id -u):$(id -g) \
-            --volume ~/dnmp/composer:/tmp \
-            --volume /etc/passwd:/etc/passwd:ro \
-            --volume /etc/group:/etc/group:ro \
-            --volume $(pwd):/app \
-            composer "$@"
-    }
 
+1. 参考[bash.alias.sample](bash.alias.sample)示例文件，将对应 php cli 函数拷贝到主机的 `~/.bashrc`文件。
+2. 让文件起效：
+    ```bash
+    source ~/.bashrc
     ```
+3. 然后就可以在主机中执行php命令了：
+    ```bash
+    ~ php -v
+    PHP 7.2.13 (cli) (built: Dec 21 2018 02:22:47) ( NTS )
+    Copyright (c) 1997-2018 The PHP Group
+    Zend Engine v3.2.0, Copyright (c) 1998-2018 Zend Technologies
+        with Zend OPcache v7.2.13, Copyright (c) 1999-2018, by Zend Technologies
+        with Xdebug v2.6.1, Copyright (c) 2002-2018, by Derick Rethans
+    ```
+### 3.4 使用composer
+**方法1：主机中使用composer命令**
+1. 确定composer缓存的路径。比如，我的dnmp下载在`~/dnmp`目录，那composer的缓存路径就是`~/dnmp/data/composer`。
+2. 参考[bash.alias.sample](bash.alias.sample)示例文件，将对应 php composer 函数拷贝到主机的 `~/.bashrc`文件。
+    > 这里需要注意的是，示例文件中的`~/dnmp/data/composer`目录需是第一步确定的目录。
 3. 让文件起效：
-    ```
+    ```bash
     source ~/.bashrc
     ```
 4. 在主机的任何目录下就能用composer了：
-    ```
+    ```bash
     cd ~/dnmp/www/
     composer create-project yeszao/fastphp project --no-dev
     ```
-5. （可选）如果提示需要依赖，用`--ignore-platform-reqs --no-scripts`关闭依赖检测。
-6. （可选）第一次使用 composer 会在 ~/dnmp/composer 目录下生成一个config.json文件，可以在这个文件中指定国内仓库，例如：
-    ```
+5. （可选）第一次使用 composer 会在 `~/dnmp/data/composer` 目录下生成一个**config.json**文件，可以在这个文件中指定国内仓库，例如：
+    ```json
     {
         "config": {},
         "repositories": {
@@ -210,16 +178,13 @@ Zend Engine v3.2.0, Copyright (c) 1998-2018 Zend Technologies
     }
 
     ```
+**方法二：容器内使用composer命令**
 
-**php容器内执行composer**
-1. 如果composer对php版本有依赖，并且composer已安装在php容器内，也可使用如下命令
-
+还有另外一种方式，就是进入容器，再执行`composer`命令，以PHP7容器为例：
 ```bash
-docker run --rm --interactive --tty \
-    --volume $PWD:/www \
-    --user 1000:1000 \
-    dnmp_php \
-    composer install
+docker exec -it php /bin/sh
+cd /www/localhost
+composer update
 ```
     
 ## 4.管理命令
@@ -242,7 +207,7 @@ $ docker-compose down                       # 停止并删除容器，网络，�
 ```
 
 ### 4.2 添加快捷命令
-在开发的时候，我们可能经常使用`docker exec -it`切换到容器中，把常用的做成命令别名是个省事的方法。
+在开发的时候，我们可能经常使用`docker exec -it`进入到容器中，把常用的做成命令别名是个省事的方法。
 
 首先，在主机中查看可用的容器：
 ```bash

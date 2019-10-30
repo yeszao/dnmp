@@ -1,0 +1,91 @@
+# dnmp alias
+alias dnginx='docker exec -it nginx /bin/sh'
+alias dphp='docker exec -it php /bin/sh'
+alias dphp56='docker exec -it php56 /bin/sh'
+alias dphp54='docker exec -it php54 /bin/sh'
+alias dmysql='docker exec -it mysql /bin/bash'
+alias dredis='docker exec -it redis /bin/sh'
+
+# php7 cli
+php () {
+    tty=
+    tty -s && tty=--tty
+    docker run \
+        $tty \
+        --interactive \
+        --rm \
+        --volume $PWD:/www:rw \
+        --workdir /www \
+        dnmp_php php "$@"
+}
+
+# php5.6 cli
+php56 () {
+    tty=
+    tty -s && tty=--tty
+    docker run \
+        $tty \
+        --interactive \
+        --rm \
+        --volume $PWD:/www:rw \
+        --workdir /www \
+        dnmp_php56 php "$@"
+}
+
+# php5.4 cli
+php54 () {
+    tty=
+    tty -s && tty=--tty
+    docker run \
+        $tty \
+        --interactive \
+        --rm \
+        --volume $PWD:/www:rw \
+        --workdir /www \
+        dnmp_php54 php "$@"
+}
+
+# php7 composer
+composer () {
+    tty=
+    tty -s && tty=--tty
+    docker run \
+        $tty \
+        --interactive \
+        --rm \
+        --user www-data:www-data \
+        --volume ~/dnmp/data/composer:/tmp/composer \
+        --volume $(pwd):/app \
+        --workdir /app \
+        dnmp_php composer "$@"
+}
+
+# php5.6 composer
+composer56 () {
+    tty=
+    tty -s && tty=--tty
+    docker run \
+        $tty \
+        --interactive \
+        --rm \
+        --user www-data:www-data \
+        --volume ~/dnmp/data/composer:/tmp/composer \
+        --volume $(pwd):/app \
+        --workdir /app \
+        dnmp_php56 composer "$@"
+}
+
+# php5.4 composer
+composer54 () {
+    tty=
+    tty -s && tty=--tty
+    docker run \
+        $tty \
+        --interactive \
+        --rm \
+        --user www-data:www-data \
+        --volume ~/dnmp/data/composer:/tmp/composer \
+        --volume $(pwd):/app \
+        --workdir /app \
+        dnmp_php54 composer "$@"
+}
