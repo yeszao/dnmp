@@ -230,6 +230,12 @@ alias dredis='docker exec -it redis /bin/sh'
 $ dphp
 ```
 
+### 4.3 查看docker网络
+```sh
+ifconfig docker0
+```
+用于填写`extra_hosts`容器访问宿主机的`hosts`地址
+
 ## 5.使用Log
 
 Log文件生成的位置依赖于conf下各log配置的值。
