@@ -503,13 +503,9 @@ fi
 
 if [[ -z "${EXTENSIONS##*,zip,*}" ]]; then
     echo "---------- Install zip ----------"
-    isPhpVersionGreaterOrEqual 7 3
-
     # Fix: https://github.com/docker-library/php/issues/797
-    if [[ "$?" = "1" ]]; then
-        apk add --no-cache libzip-dev
-        docker-php-ext-configure zip --with-libzip=/usr/include
-    fi
+    apk add --no-cache libzip-dev
+    docker-php-ext-configure zip --with-libzip=/usr/include
 
 	docker-php-ext-install ${MC} zip
 fi
