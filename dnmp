@@ -1,0 +1,67 @@
+#!/bin/bash
+#
+DNMP_DIR=$(cd `dirname $(readlink -f $0)`; pwd)
+
+source ${DNMP_DIR}/.env
+
+SOURCE_ABS_DIR=$(cd ${DNMP_DIR}/${SOURCE_DIR}; pwd)
+
+phpRun () {
+    tty=
+    tty -s && tty=--tty
+    docker run \
+        $tty \
+        --interactive \
+        --rm \
+        --volume $PWD:/www:rw \
+        --workdir /www \
+        dnmp_php php "$@"
+}
+
+phpExec () {
+    docker exec \
+            -it \
+            -w ${PWD/${SOURCE_ABS_DIR}/\/www} \
+            php php "$@"
+}
+
+php () {
+    if [[ $PWD =~ "${SOURCE_ABS_DIR}" ]]; then
+        phpExec "$@"
+    else
+        phpRun "$@"
+    fi
+}
+
+# php7 composer
+composer () {
+    tty=
+    tty -s && tty=--tty
+    docker run \
+        $tty \
+        --interactive \
+        --rm \
+        --user www-data:www-data \
+        --volume ${DNMP_DIR}/data/composer:/tmp/composer \
+        --volume $(pwd):/app \
+        --workdir /app \
+        dnmp_php composer "$@"
+}
+
+    
+while :; do 
+    [ -z "$1" ] && break;
+    case "$1" in
+        php)
+            shift 1
+            php "$@"; exit 0
+            ;;
+        composer)
+            shift 1
+            composer "$@"; exit 0
+            ;;
+        *)
+            echo "${CWARNING}ERROR: unknown argument! ${CEND}" &&  exit 1
+            ;;
+    esac
+done
