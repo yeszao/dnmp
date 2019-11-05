@@ -61,7 +61,7 @@ while :; do
             composer "$@"; exit 0
             ;;
         *)
-            echo "${CWARNING}ERROR: unknown argument! ${CEND}" &&  exit 1
+            echo "ERROR: unknown argument! " &&  exit 1
             ;;
     esac
 done
