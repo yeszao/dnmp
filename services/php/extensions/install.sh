@@ -509,3 +509,19 @@ if [[ -z "${EXTENSIONS##*,zip,*}" ]]; then
 
 	docker-php-ext-install ${MC} zip
 fi
+
+if [[ -z "${EXTENSIONS##*,xhprof,*}" ]]; then
+    echo "---------- Install XHProf ----------"
+
+    isPhpVersionGreaterOrEqual 7 0
+
+    if [[ "$?" = "1" ]]; then
+        mkdir xhprof \
+        && tar -xf xhprof-2.1.0.tgz -C xhprof --strip-components=1 \
+        && ( cd xhprof/extension/ && phpize && ./configure  && make ${MC} && make install ) \
+        && docker-php-ext-enable xhprof
+    else
+       echo "---------- PHP Version>= 7.0----------"
+    fi
+
+fi
