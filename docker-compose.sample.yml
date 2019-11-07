@@ -218,7 +218,7 @@ services:
 #        TZ: "$TZ"
 #    volumes:
 #      - ${DATA_DIR}/mongo:/data/db:rw
-#      - ${MONGODB_DATA_DIR}/mongo_key:/mongo:rw
+#      - ${DATA_DIR}/mongo_key:/mongo:rw
 #    ports:
 #       - "${MONGODB_HOST_PORT}:27017"
 #    networks:
