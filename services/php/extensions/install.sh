@@ -353,7 +353,7 @@ fi
 
 if [[ -z "${EXTENSIONS##*,varnish,*}" ]]; then
     echo "---------- Install varnish ----------"
-	apk add --no-cache varnish
+	apk add --no-cache varnish-dev
     printf "\n" | pecl install varnish
     docker-php-ext-enable varnish
 fi
