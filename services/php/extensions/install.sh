@@ -429,7 +429,7 @@ if [[ -z "${EXTENSIONS##*,redis,*}" ]]; then
 fi
 
 if [[ -z "${EXTENSIONS##*,apcu,*}" ]]; then
-    echo "---------- Install redis ----------"
+    echo "---------- Install apcu ----------"
     installExtensionFromTgz apcu-5.1.17
 fi
 
