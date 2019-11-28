@@ -531,3 +531,15 @@ if [[ -z "${EXTENSIONS##*,xhprof,*}" ]]; then
     fi
 
 fi
+
+if [[ -z "${EXTENSIONS##*,xlswriter,*}" ]]; then
+    echo "---------- Install xlswriter ----------"
+    isPhpVersionGreaterOrEqual 7 0
+
+    if [[ "$?" = "1" ]]; then
+        printf "\n" | pecl install xlswriter
+        docker-php-ext-enable xlswriter
+    else
+        echo "---------- PHP Version>= 7.0----------"
+    fi
+fi
