@@ -7,3 +7,5 @@ docker-compose.yml.*
 www/*
 !www/localhost/
 logs/*
+services/php/extensions/custom_install.sh
+services/php54/extensions/custom_install.sh

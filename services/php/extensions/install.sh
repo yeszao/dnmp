@@ -543,3 +543,16 @@ if [[ -z "${EXTENSIONS##*,xlswriter,*}" ]]; then
         echo "---------- PHP Version>= 7.0----------"
     fi
 fi
+
+export PHP_EXTRA_SHELL="custom_install.sh"
+
+echo
+echo "============================================"
+echo "Install extensions from   : ${PHP_EXTRA_SHELL}"
+echo "============================================"
+echo
+
+if [[ -f "${PHP_EXTRA_SHELL}" ]]; then
+  echo "source \"${PHP_EXTRA_SHELL}\""
+	source "${PHP_EXTRA_SHELL}"
+fi

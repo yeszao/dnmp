@@ -33,6 +33,7 @@ DNMP项目特点：
     - [3.2 安装PHP扩展](#32-安装PHP扩展)
     - [3.3 Host中使用php命令行（php-cli）](#33-host中使用php命令行php-cli)
     - [3.4 使用composer](#34-使用composer)
+    - [3.5 安装自定义扩展](#35-安装自定义扩展)
 - [4.管理命令](#4管理命令)
     - [4.1 服务器启动和构建命令](#41-服务器启动和构建命令)
     - [4.2 添加快捷命令](#42-添加快捷命令)
@@ -186,6 +187,14 @@ docker exec -it php /bin/sh
 cd /www/localhost
 composer update
 ```
+### 3.5 安装自定义扩展
+1. 拷贝自定义安装脚本：
+    ```
+    $ cd dnmp/services/php/extensions/
+       # 进入需要添加自定义扩展的php extensions目录
+    $ cp custom_install.sample.sh custom_install.sh
+    ```
+2. 在`custom_install.sh`中添加你的自定义扩展
     
 ## 4.管理命令
 ### 4.1 服务器启动和构建命令
