@@ -19,6 +19,6 @@ docker-php-ext-enable phalcon
 # e.g. swoole extension add specific compilation parameters
 # If you do this step please remove swoole in the .env file
 mkdir swoole
-tar -xf swoole-4.4.2 -C swoole --strip-components=1
+tar -xf swoole-4.4.2.tgz -C swoole --strip-components=1
 ( cd swoole && phpize && ./configure --enable-openssl --enable-sockets --enable-debug-log && make "${MC}" && make install )
 docker-php-ext-enable swoole

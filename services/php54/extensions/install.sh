@@ -271,3 +271,16 @@ if [ -z "${EXTENSIONS##*,pdo_sqlsrv,*}" ]; then
     pecl install pdo_sqlsrv
     docker-php-ext-enable pdo_sqlsrv
 fi
+
+export PHP_EXTRA_SHELL="custom_install.sh"
+
+echo
+echo "============================================"
+echo "Install extensions from   : ${PHP_EXTRA_SHELL}"
+echo "============================================"
+echo
+
+if [ -f "${PHP_EXTRA_SHELL}" ]; then
+  echo ". ./${PHP_EXTRA_SHELL}"
+	. ./${PHP_EXTRA_SHELL}
+fi
