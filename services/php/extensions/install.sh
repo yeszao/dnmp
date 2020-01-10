@@ -339,6 +339,19 @@ if [[ -z "${EXTENSIONS##*,yac,*}" ]]; then
     docker-php-ext-enable yac
 fi
 
+if [[ -z "${EXTENSIONS##*,yar,*}" ]]; then
+    isPhpVersionGreaterOrEqual 7 0
+    if [[ "$?" = "1" ]]; then
+        echo "---------- Install yar ----------"
+        printf "\n" | pecl install yar
+        docker-php-ext-enable yar
+    else
+        echo "yar requires PHP >= 7.0.0, installed version is ${PHP_VERSION}"
+    fi
+
+fi
+
+
 if [[ -z "${EXTENSIONS##*,yaconf,*}" ]]; then
     echo "---------- Install yaconf ----------"
     printf "\n" | pecl install yaconf
