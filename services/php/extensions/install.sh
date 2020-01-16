@@ -476,6 +476,16 @@ if [[ -z "${EXTENSIONS##*,memcached,*}" ]]; then
     docker-php-ext-enable memcached
 fi
 
+if [[ -z "${EXTENSIONS##*,memcache,*}" ]]; then
+    echo "---------- Install memcache ----------"
+    isPhpVersionGreaterOrEqual 7 0
+    if [[ "$?" = "1" ]]; then
+        installExtensionFromTgz memcache-4.0.5.2
+    else
+        installExtensionFromTgz memcache-2.2.6
+    fi
+fi
+
 if [[ -z "${EXTENSIONS##*,xdebug,*}" ]]; then
     echo "---------- Install xdebug ----------"
     isPhpVersionGreaterOrEqual 7 0
