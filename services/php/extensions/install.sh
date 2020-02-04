@@ -554,7 +554,11 @@ if [[ -z "${EXTENSIONS##*,zip,*}" ]]; then
     echo "---------- Install zip ----------"
     # Fix: https://github.com/docker-library/php/issues/797
     apk add --no-cache libzip-dev
-    docker-php-ext-configure zip --with-libzip=/usr/include
+
+    isPhpVersionGreaterOrEqual 7 4
+    if [[ "$?" != "1" ]]; then
+        docker-php-ext-configure zip --with-libzip=/usr/include
+    fi
 
 	docker-php-ext-install ${MC} zip
 fi
