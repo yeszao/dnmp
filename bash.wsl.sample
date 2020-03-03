@@ -1,0 +1,46 @@
+www_win_path='D:\www'
+www_wsl_path=$(wslpath -u $www_win_path)
+
+# dnmp alias
+alias dnginx='docker exec -it nginx /bin/sh'
+alias dphp='docker exec -it php /bin/sh'
+alias dmysql='docker exec -it mysql /bin/bash'
+
+# docker for Win
+docker() {
+    docker.exe "$@"
+}
+
+docker-compose() {
+    docker-compose.exe "$@"
+}
+
+php-exec() {
+    docker exec \
+        -it \
+        --user www-data:www-data \
+        --workdir "$1" \
+        php "${@:2}"
+}
+
+php-sh() {
+
+    if [[ $PWD =~ "$www_wsl_path" ]]; then
+        local workdir_win=${PWD/"$www_wsl_path"/\/www}
+        php-exec "$workdir_win" "$@"
+    else
+        echo "Please run the command inside '$www_wsl_path'"
+    fi
+}
+
+laravel() {
+    php-sh laravel "$@"
+}
+
+php() {
+    php-sh php "$@"
+}
+
+composer() {
+    php-sh composer "$@"
+}
