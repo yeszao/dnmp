@@ -1,0 +1,84 @@
+composer_win_path='D:\dnmp\data\composer'
+www_win_path='D:\www'
+
+www_wsl_path=$(wslpath -u $www_win_path)
+
+# dnmp alias
+alias dnginx='docker exec -it nginx /bin/sh'
+alias dphp='docker exec -it php /bin/sh'
+alias dmysql='docker exec -it mysql /bin/bash'
+
+# dnmp 设置
+docker() {
+    # 调用 docker.exe，并传入参数
+    docker.exe "$@"
+}
+
+docker-compose() {
+    # 调用 docker-compose.exe， 并传入参数
+    docker-compose.exe "$@"
+}
+
+volume-win() {
+
+    win_dir=$(wslpath -w $(pwd) 2>&1)
+
+    chr=$(expr substr "$win_dir" 2 1)
+
+    if [ "$chr" = ":" ]; then
+        echo "$win_dir"
+    else
+        echo "$www_win_path"
+    fi
+}
+
+php-run() {
+    docker run \
+        -it \
+        --rm \
+        --user www-data:www-data \
+        --volume "$1":/www:rw \
+        --workdir /www \
+        dnmp_php "${@:2}"
+}
+
+php-exec() {
+    docker exec \
+        -it \
+        --user www-data:www-data \
+        --workdir "$1" \
+        php "${@:2}"
+}
+
+php-sh() {
+
+    volume_win=$(volume-win)
+
+    if [[ $PWD =~ "$www_wsl_path" ]]; then
+        local workdir_win=${PWD/"$www_wsl_path"/\/www}
+        php-exec "$workdir_win" "$@"
+    else
+        php-run "$volume_win" "$@"
+    fi
+}
+
+laravel() {
+    php-sh laravel "$@"
+}
+
+php() {
+    php-sh php "$@"
+}
+
+composer() {
+    volume_win=$(volume-win)
+
+    docker run \
+        -it \
+        --rm \
+        --user www-data:www-data \
+        --volume "$composer_win_path":/tmp/composer \
+        --volume "$volume_win":/app \
+        --workdir /app \
+        dnmp_php composer "$@"
+}
