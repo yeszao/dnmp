@@ -50,79 +50,35 @@ services:
     networks:
       - default
 
-#  php56:
-#    build:
-#      context: ./services/php
-#      args:
-#        PHP_VERSION: php:${PHP56_VERSION}-fpm-alpine
-#        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
-#        PHP_EXTENSIONS: ${PHP56_EXTENSIONS}
-#        TZ: "$TZ"
-#    container_name: php56
-#    expose:
-#      - 9501
-#    volumes:
-#      - ${SOURCE_DIR}:/www/:rw
-#      - ${PHP56_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
-#      - ${PHP56_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
-#      - ${PHP56_LOG_DIR}:/var/log/php
-#      - ${DATA_DIR}/composer:/tmp/composer
-#    restart: always
-#    cap_add:
-#      - SYS_PTRACE
-#    networks:
-#      - default
+  # mysql:
+  #   image: mysql:${MYSQL_VERSION}
+  #   container_name: mysql
+  #   ports:
+  #     - "${MYSQL_HOST_PORT}:3306"
+  #   volumes:
+  #     - ${MYSQL_CONF_FILE}:/etc/mysql/conf.d/mysql.cnf:ro
+  #     - ${DATA_DIR}/mysql:/var/lib/mysql/:rw
+  #   restart: always
+  #   networks:
+  #     - default
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+  #     TZ: "$TZ"
 
-#  php54:
-#    build:
-#      context: ./services/php54
-#      args:
-#        PHP_VERSION: php:${PHP54_VERSION}-fpm
-#        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
-#        PHP_EXTENSIONS: ${PHP54_EXTENSIONS}
-#        TZ: "$TZ"
-#    container_name: php54
-#    volumes:
-#      - ${SOURCE_DIR}:/www/:rw
-#      - ${PHP54_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
-#      - ${PHP54_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
-#      - ${PHP54_LOG_DIR}:/var/log/php
-#      - ${DATA_DIR}/composer:/tmp/composer
-#    restart: always
-#    cap_add:
-#      - SYS_PTRACE
-#    networks:
-#      - default
-
-  mysql:
-    image: mysql:${MYSQL_VERSION}
-    container_name: mysql
+  mysql5:
+    image: mysql:${MYSQL5_VERSION}
+    container_name: mysql5
     ports:
-      - "${MYSQL_HOST_PORT}:3306"
+      - "${MYSQL5_HOST_PORT}:3306"
     volumes:
-      - ${MYSQL_CONF_FILE}:/etc/mysql/conf.d/mysql.cnf:ro
-      - ${DATA_DIR}/mysql:/var/lib/mysql/:rw
+      - ${MYSQL5_CONF_FILE}:/etc/mysql/conf.d/mysql.cnf:ro
+      - ${DATA_DIR}/mysql5:/var/lib/mysql/:rw
     restart: always
     networks:
       - default
     environment:
-      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL5_ROOT_PASSWORD}"
       TZ: "$TZ"
-
-#  mysql5:
-#    image: mysql:${MYSQL5_VERSION}
-#    container_name: mysql5
-#    ports:
-#      - "${MYSQL5_HOST_PORT}:3306"
-#    volumes:
-#      - ${MYSQL5_CONF_FILE}:/etc/mysql/conf.d/mysql.cnf:ro
-#      - ${DATA_DIR}/mysql5:/var/lib/mysql/:rw
-#    restart: always
-#    networks:
-#      - default
-#    environment:
-#      MYSQL_ROOT_PASSWORD: "${MYSQL5_ROOT_PASSWORD}"
-#      TZ: "$TZ"
 
 #  openresty:
 #    image:  openresty/openresty:${OPENRESTY_VERSION}
@@ -285,5 +241,48 @@ services:
 #      - "${LOGSTASH_HOST_PORT_S}:5044"
 
 
+#  php56:
+#    build:
+#      context: ./services/php
+#      args:
+#        PHP_VERSION: php:${PHP56_VERSION}-fpm-alpine
+#        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
+#        PHP_EXTENSIONS: ${PHP56_EXTENSIONS}
+#        TZ: "$TZ"
+#    container_name: php56
+#    expose:
+#      - 9501
+#    volumes:
+#      - ${SOURCE_DIR}:/www/:rw
+#      - ${PHP56_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
+#      - ${PHP56_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
+#      - ${PHP56_LOG_DIR}:/var/log/php
+#      - ${DATA_DIR}/composer:/tmp/composer
+#    restart: always
+#    cap_add:
+#      - SYS_PTRACE
+#    networks:
+#      - default
+
+#  php54:
+#    build:
+#      context: ./services/php54
+#      args:
+#        PHP_VERSION: php:${PHP54_VERSION}-fpm
+#        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
+#        PHP_EXTENSIONS: ${PHP54_EXTENSIONS}
+#        TZ: "$TZ"
+#    container_name: php54
+#    volumes:
+#      - ${SOURCE_DIR}:/www/:rw
+#      - ${PHP54_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
+#      - ${PHP54_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
+#      - ${PHP54_LOG_DIR}:/var/log/php
+#      - ${DATA_DIR}/composer:/tmp/composer
+#    restart: always
+#    cap_add:
+#      - SYS_PTRACE
+#    networks:
+#      - default
 networks:
   default:
