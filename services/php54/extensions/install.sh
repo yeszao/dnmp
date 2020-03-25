@@ -16,6 +16,17 @@ echo "---------- Install zip extension ----------"
 apt-get install -y zlib1g-dev unzip
 docker-php-ext-install zip
 
+installExtensionFromTgz()
+{
+    tgzName=$1
+    extensionName="${tgzName%%-*}"
+
+    mkdir ${extensionName}
+    tar -xf ${tgzName}.tgz -C ${extensionName} --strip-components=1
+    ( cd ${extensionName} && phpize && ./configure && make ${MC} && make install )
+
+    docker-php-ext-enable ${extensionName} $2
+}
 
 export EXTENSIONS=",${PHP_EXTENSIONS},"
 
@@ -270,4 +281,9 @@ if [ -z "${EXTENSIONS##*,pdo_sqlsrv,*}" ]; then
 	apt-get install -y unixodbc-dev
     pecl install pdo_sqlsrv
     docker-php-ext-enable pdo_sqlsrv
+fi
+
+if [ -z "${EXTENSIONS##*,redis,*}" ]; then
+    echo "---------- Install redis ----------"
+    installExtensionFromTgz redis-4.1.1
 fi
