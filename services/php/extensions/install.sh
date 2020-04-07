@@ -615,7 +615,7 @@ if [[ -z "${EXTENSIONS##*,zookeeper,*}" ]]; then
 
     if [[ "$?" = "1" ]]; then
         apk add re2c
-        apk add libzookeeper-dev --repository http://nl.alpinelinux.org/alpine/edge/testing/
+        apk add libzookeeper-dev --repository http://${CONTAINER_PACKAGE_URL}/alpine/edge/testing/
         printf "\n" | pecl install zookeeper
         docker-php-ext-enable zookeeper
     else
