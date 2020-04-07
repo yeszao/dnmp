@@ -609,6 +609,19 @@ if [[ -z "${EXTENSIONS##*,rdkafka,*}" ]]; then
     fi
 fi
 
+if [[ -z "${EXTENSIONS##*,zookeeper,*}" ]]; then
+    echo "---------- Install zookeeper ----------"
+    isPhpVersionGreaterOrEqual 7 0
+
+    if [[ "$?" = "1" ]]; then
+        apk add re2c
+        apk add libzookeeper-dev --repository http://nl.alpinelinux.org/alpine/edge/testing/
+        printf "\n" | pecl install zookeeper
+        docker-php-ext-enable zookeeper
+    else
+        echo "---------- PHP Version>= 7.0----------"
+    fi
+fi
 
 if [ "${PHP_EXTENSIONS}" != "" ]; then
     apk del .build-deps \
