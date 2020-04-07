@@ -596,6 +596,20 @@ if [[ -z "${EXTENSIONS##*,xlswriter,*}" ]]; then
     fi
 fi
 
+if [[ -z "${EXTENSIONS##*,rdkafka,*}" ]]; then
+    echo "---------- Install rdkafka ----------"
+    isPhpVersionGreaterOrEqual 5 6
+
+    if [[ "$?" = "1" ]]; then
+        apk add librdkafka-dev
+        printf "\n" | pecl install rdkafka
+        docker-php-ext-enable rdkafka
+    else
+        echo "---------- PHP Version>= 5.6----------"
+    fi
+fi
+
+
 if [ "${PHP_EXTENSIONS}" != "" ]; then
     apk del .build-deps \
     && docker-php-source delete
