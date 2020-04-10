@@ -264,7 +264,7 @@ services:
 #    environment:
 #      TZ: "$TZ"
 #      elasticsearch.hosts: http://elasticsearch:9200
-#      I18N_LOCALE: zh-CN
+#      I18N_LOCALE: "${KIBANA_I18N_LOCALE}"
 #    hostname: kibana
 #    depends_on:
 #      - elasticsearch
