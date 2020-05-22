@@ -15,7 +15,7 @@ RUN chmod +x install.sh \
     && sh install.sh \
     && rm -rf /tmp/extensions
 
-ADD https://raw.githubusercontent.com/mlocati/docker-php-extension-installer/master/install-php-extensions /usr/local/bin/
+ADD ./extensions/install-php-extensions  /usr/local/bin/
 
 RUN chmod uga+x /usr/local/bin/install-php-extensions
 
