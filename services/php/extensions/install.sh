@@ -378,9 +378,14 @@ fi
 
 
 if [[ -z "${EXTENSIONS##*,yaconf,*}" ]]; then
-    echo "---------- Install yaconf ----------"
-    printf "\n" | pecl install yaconf
-    docker-php-ext-enable yaconf
+    isPhpVersionGreaterOrEqual 7 0
+    if [[ "$?" = "1" ]]; then
+        echo "---------- Install yaconf ----------"
+        printf "\n" | pecl install yaconf
+        docker-php-ext-enable yaconf
+    else
+        echo "yar requires PHP >= 7.0.0, installed version is ${PHP_VERSION}"
+    fi
 fi
 
 if [[ -z "${EXTENSIONS##*,seaslog,*}" ]]; then
