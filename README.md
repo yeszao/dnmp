@@ -453,8 +453,26 @@ $ redis-cli -h127.0.0.1
 ```
 这里`host`参数不能用localhost是因为它默认是通过sock文件与mysql通信，而容器与主机文件系统已经隔离，所以需要通过TCP方式连接，所以需要指定IP。
 
+### 8.5 容器内的php如何连接宿主机MySQL
+1.宿主机执行`ifconfig docker0`得到`inet`就是要连接的`ip`地址
+```sh
+$ ifconfig docker0
+docker0: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500
+        inet 172.17.0.1  netmask 255.255.0.0  broadcast 172.17.255.255
+        ...
+```
+2.运行宿主机Mysql命令行
+```mysql
+ mysql>GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '123456' WITH GRANT OPTION;
+ mysql>flush privileges;
+// 其中各字符的含义：
+// *.* 对任意数据库任意表有效
+// "root" "123456" 是数据库用户名和密码
+// '%' 允许访问数据库的IP地址，%意思是任意IP，也可以指定IP
+// flush privileges 刷新权限信息
+```
 
-
+3.接着直接php容器使用`172.0.17.1:3306`连接即可
 ## License
 MIT
 
