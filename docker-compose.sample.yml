@@ -51,33 +51,30 @@ services:
       - default
 
 
-#  php_supervisor:
-#      build:
-#        context: .
-#        dockerfile: ./services/phpsupervisor/Dockerfile
-#        args:
-#          PHP_VERSION: php:${SUPERVISOR_PHP_VERSION}-alpine
-#          CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
-#          PHP_EXTENSIONS: ${SUPERVISOR_PHP_EXTENSIONS}
-#          TZ: "$TZ"
-#      container_name: supervisor
-#      ports:
-#        - "5200:5200"
-#        - "${SUPERVISOR_HOST_PORT_C}:9001"
-#      extra_hosts:
-#        - "www.site1.com:172.17.0.1"
-#      volumes:
-#        - ${SUPERVISOR_LOG}:/var/log/supervisor
-#        - ${SUPERVISOR_CONFIG}:/etc/supervisor/conf.d
-#        - ${SOURCE_DIR}:/www/:rw
-#        - ${SUPERVISOR_PHP_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
-#        - ${SUPERVISOR_PHP_LOG_DIR}:/var/log/phpsupervisor
-#        - ${DATA_DIR}/composer:/tmp/composer
-#      restart: always
-#      cap_add:
-#        - SYS_PTRACE
-#      networks:
-#        - default
+#  supervisor:
+#    build:
+#      context: ./services/supervisor
+#      args:
+#        ALPINE_VERSION: alpine:${ALPINE_VERSION}
+#        TZ: "$TZ"
+#    container_name: supervisor
+#    ports:
+#      - "${SUPERVISOR_HOST_PORT_C}:9001"
+#    volumes:
+#      - ${SUPERVISOR_LOG}:/var/log/supervisor/:rw
+#      - ${SUPERVISOR_CONFIG}:/etc/supervisor/conf.d/:rw
+#      - ${SUPERVISOR_CONF_FILE}:/etc/supervisor/supervisord.conf:ro
+#    command:
+#      - /bin/sh
+#      - -c
+#      - |
+#        supervisord -n -c /etc/supervisor/supervisord.conf
+#    restart: always
+#    cap_add:
+#      - SYS_PTRACE
+#    networks:
+#      - default
+
 
 #  php56:
 #    build:
