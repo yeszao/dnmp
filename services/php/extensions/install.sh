@@ -321,6 +321,12 @@ if [[ -z "${EXTENSIONS##*,ldap,*}" ]]; then
 	docker-php-ext-install ${MC} ldap
 fi
 
+if [[ -z "${EXTENSIONS##*,psr,*}" ]]; then
+    echo "---------- Install psr ----------"
+    printf "\n" | pecl install psr
+    docker-php-ext-enable psr
+fi
+
 if [[ -z "${EXTENSIONS##*,imagick,*}" ]]; then
     echo "---------- Install imagick ----------"
 	apk add --no-cache file-dev
