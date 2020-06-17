@@ -470,7 +470,7 @@ fi
 if [[ -z "${EXTENSIONS##*,amqp,*}" ]]; then
     echo "---------- Install amqp ----------"
     apk add --no-cache rabbitmq-c-dev
-    installExtensionFromTgz amqp-1.9.4
+    installExtensionFromTgz amqp-1.10.2
 fi
 
 if [[ -z "${EXTENSIONS##*,redis,*}" ]]; then
