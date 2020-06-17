@@ -52,7 +52,7 @@ isPhpVersionGreaterOrEqual()
 # Install extension from package file(.tgz),
 # For example:
 #
-# installExtensionFromTgz redis-5.0.2
+# installExtensionFromTgz redis-5.2.2
 #
 # Param 1: Package name with version
 # Param 2: enable options
@@ -477,7 +477,7 @@ if [[ -z "${EXTENSIONS##*,redis,*}" ]]; then
     echo "---------- Install redis ----------"
     isPhpVersionGreaterOrEqual 7 0
     if [[ "$?" = "1" ]]; then
-        installExtensionFromTgz redis-5.0.2
+        installExtensionFromTgz redis-5.2.2
     else
         printf "\n" | pecl install redis-4.3.0
         docker-php-ext-enable redis
