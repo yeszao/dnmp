@@ -640,6 +640,19 @@ if [[ -z "${EXTENSIONS##*,zookeeper,*}" ]]; then
     fi
 fi
 
+if [[ -z "${EXTENSIONS##*,phalcon,*}" ]]; then
+    echo "---------- Install phalcon ----------"
+    isPhpVersionGreaterOrEqual 7 2
+
+    if [[ "$?" = "1" ]]; then
+        printf "\n" | pecl install phalcon
+        docker-php-ext-enable psr
+        docker-php-ext-enable phalcon
+    else
+        echo "---------- PHP Version>= 7.2----------"
+    fi
+fi
+
 if [ "${PHP_EXTENSIONS}" != "" ]; then
     apk del .build-deps \
     && docker-php-source delete
