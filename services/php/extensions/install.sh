@@ -539,7 +539,7 @@ fi
 
 if [[ -z "${EXTENSIONS##*,mongodb,*}" ]]; then
     echo "---------- Install mongodb ----------"
-    installExtensionFromTgz mongodb-1.5.5
+    installExtensionFromTgz mongodb-1.7.4
 fi
 
 if [[ -z "${EXTENSIONS##*,yaf,*}" ]]; then
@@ -560,7 +560,7 @@ if [[ -z "${EXTENSIONS##*,swoole,*}" ]]; then
     isPhpVersionGreaterOrEqual 7 0
 
     if [[ "$?" = "1" ]]; then
-        installExtensionFromTgz swoole-4.4.2
+        installExtensionFromTgz swoole-4.5.2
     else
         installExtensionFromTgz swoole-2.0.11
     fi
