@@ -592,7 +592,7 @@ if [[ -z "${EXTENSIONS##*,xhprof,*}" ]]; then
 
     if [[ "$?" = "1" ]]; then
         mkdir xhprof \
-        && tar -xf xhprof-2.1.0.tgz -C xhprof --strip-components=1 \
+        && tar -xf xhprof-2.2.0.tgz -C xhprof --strip-components=1 \
         && ( cd xhprof/extension/ && phpize && ./configure  && make ${MC} && make install ) \
         && docker-php-ext-enable xhprof
     else
