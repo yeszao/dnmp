@@ -305,10 +305,12 @@ services:
 #      args:
 #        ALPINE_VERSION: alpine:${ALPINE_VERSION}
 #        TZ: "$TZ"
+#        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
 #    container_name: supervisor
 #    ports:
 #      - "${SUPERVISOR_HOST_PORT_C}:9001"
 #    volumes:
+#      - ${SOURCE_DIR}:/www/:rw
 #      - ${SUPERVISOR_LOG}:/var/log/supervisor/:rw
 #      - ${SUPERVISOR_CONFIG}:/etc/supervisor/conf.d/:rw
 #      - ${SUPERVISOR_CONF_FILE}:/etc/supervisor/supervisord.conf:ro
