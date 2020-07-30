@@ -251,7 +251,7 @@ services:
 #      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
 #    volumes:
 #      - ${DATA_DIR}/esdata:/usr/share/elasticsearch/data
-#      - ${ELASTICSEARCH_CONF_FILE}:/usr/share/elasticsearch/elasticsearch.yml
+#      - ${ELASTICSEARCH_CONF_FILE}:/usr/share/elasticsearch/config/elasticsearch.yml
 #    hostname: elasticsearch
 #    restart: always
 #    ports:
