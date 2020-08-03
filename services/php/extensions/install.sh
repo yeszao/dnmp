@@ -121,7 +121,9 @@ fi
 
 if [[ -z "${EXTENSIONS##*,gettext,*}" ]]; then
     echo "---------- Install gettext ----------"
-	docker-php-ext-install ${MC} gettext
+    apk --no-cache add gettext-dev
+    docker-php-ext-install ${MC} gettext
+
 fi
 
 if [[ -z "${EXTENSIONS##*,shmop,*}" ]]; then
