@@ -672,34 +672,7 @@ if [[ -z "${EXTENSIONS##*,sdebug,*}" ]]; then
                  && ./configure  --enable-xdebug \
                  && make clean && make && make install \
              ) \
-             && { \
-                 echo "zend_extension=xdebug.so"; \
-                 echo "xdebug.remote_autostart=on"; \
-                 echo "xdebug.remote_enable=on"; \
-                 echo "xdebug.remote_handler=dbgp"; \
-                 echo "xdebug.remote_mode=req"; \
-                 echo "xdebug.remote_host=host.docker.internal"; \
-                 echo "xdebug.remote_port=9000"; \
-                 echo "xdebug.collect_includes=on"; \
-                 echo "xdebug.collect_params=1"; \
-                 echo "xdebug.collect_return=1"; \
-                 echo "xdebug.default_enable=on"; \
-                 echo "xdebug.extended_info=1"; \
-                 echo "xdebug.manual_url=http://www.php.net"; \
-                 echo "xdebug.show_local_vars=0"; \
-                 echo "xdebug.show_mem_delta=1"; \
-                 echo "xdebug.max_nesting_level=1200"; \
-                 echo "xdebug.auto_trace=0"; \
-                 echo "xdebug.trace_format=1"; \
-                 echo "xdebug.trace_output_dir=/var/log/php/xdebug"; \
-                 echo "xdebug.trace_options=0"; \
-                 echo "xdebug.trace_output_name="xdebug_trace_%t""; \
-                 echo "xdebug.profiler_enable=0"; \
-                 echo "xdebug.profiler_append=0"; \
-                 echo "xdebug.profiler_enable_trigger=1"; \
-                 echo "xdebug.profiler_output_dir=/var/log/php/xdebug"; \
-                 echo "xdebug.profiler_output_name="xdebug_profiler_%t""; \
-             } | tee /usr/local/etc/php/conf.d/20-sdebug.ini
+             && docker-php-ext-enable xdebug
     else
         echo "---------- PHP Version>= 7.2----------"
     fi
