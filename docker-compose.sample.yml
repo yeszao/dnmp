@@ -285,6 +285,20 @@ services:
 #      - "${LOGSTASH_HOST_PORT_C}:9600"
 #      - "${LOGSTASH_HOST_PORT_S}:5044"
 
+#  node:
+#    image: node:${NODE_VERSION}
+#    environment:
+#      - NODE_ENV=production
+#    volumes:
+#      - ${SOURCE_DIR}:/www/:rw
+#    expose:
+#      - "8081"
+#    networks:
+#      - default
+#    stdin_open: true
+#    tty: true
+
+
 #  supervisor:
 #    build:
 #      context: ./services/supervisor
