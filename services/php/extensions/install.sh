@@ -437,9 +437,12 @@ if [[ -z "${EXTENSIONS##*,sqlsrv,*}" ]]; then
 fi
 
 if [[ -z "${EXTENSIONS##*,mcrypt,*}" ]]; then
-    isPhpVersionGreaterOrEqual 7 2
+    isPhpVersionGreaterOrEqual 7 0
     if [[ "$?" = "1" ]]; then
-        echo "---------- mcrypt was REMOVED from PHP 7.2.0 ----------"
+        echo "---------- Install mcrypt ----------"
+        apk add --no-cache libmcrypt-dev libmcrypt re2c
+        printf "\n" |pecl install mcrypt
+        docker-php-ext-enable mcrypt
     else
         echo "---------- Install mcrypt ----------"
         apk add --no-cache libmcrypt-dev \
