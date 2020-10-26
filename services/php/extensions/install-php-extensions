@@ -12,9 +12,14 @@
 set -o errexit
 set -o nounset
 
+if ! which docker-php-ext-configure >/dev/null || ! which docker-php-ext-enable >/dev/null || ! which docker-php-ext-install >/dev/null || ! which docker-php-source >/dev/null; then
+	printf 'The script %s is meant to be used with official Docker PHP Images - https://hub.docker.com/_/php\n' "$0" >&2
+	exit 1
+fi
+
 # Reset the Internal Field Separator
 resetIFS() {
-	IFS='	 
+	IFS='
 '
 }
 
@@ -27,7 +32,9 @@ setDistro() {
 		exit 1
 	fi
 	DISTRO="$(cat /etc/os-release | grep -E ^ID= | cut -d = -f 2)"
-	DISTRO_VERSION="$(printf '%s@%s' $DISTRO $(cat /etc/os-release | grep -E ^VERSION_ID= | cut -d = -f 2 | cut -d '"' -f 2 | cut -d . -f 1,2))"
+	DISTRO_VERSION_NUMBER="$(cat /etc/os-release | grep -E ^VERSION_ID= | cut -d = -f 2 | cut -d '"' -f 2 | cut -d . -f 1,2)"
+	DISTRO_VERSION="$(printf '%s@%s' $DISTRO $DISTRO_VERSION_NUMBER)"
+	DISTRO_MAJMIN_VERSION="$(echo "$DISTRO_VERSION_NUMBER" | awk -F. '{print $1*100+$2}')"
 }
 
 # Set the PHP_MAJMIN_VERSION variable containing the PHP Major-Minor version as an integer value, in format MMmm (example: 506 for PHP 5.6.15)
@@ -35,12 +42,38 @@ setPHPMajorMinor() {
 	PHP_MAJMIN_VERSION=$(php-config --version | awk -F. '{print $1*100+$2}')
 }
 
-# Get the normalized list of already installed PHP modules
+# Normalize the name of a PHP extension
+#
+# Arguments:
+#   $1: the name of the module to be normalized
 #
 # Output:
-#   Space-separated list of module handles
-getPHPInstalledModules() {
-	getPHPInstalledModules_result=''
+#   The normalized module name
+normalizePHPModuleName() {
+	normalizePHPModuleName_name="$1"
+	case "$normalizePHPModuleName_name" in
+		*A* | *B* | *C* | *D* | *E* | *F* | *G* | *H* | *I* | *J* | *K* | *L* | *M* | *N* | *O* | *P* | *Q* | *R* | *S* | *T* | *U* | *V* | *W* | *X* | *Y* | *Z*)
+			normalizePHPModuleName_name="$(LC_CTYPE=C printf '%s' "$normalizePHPModuleName_name" | tr '[:upper:]' '[:lower:]')"
+			;;
+	esac
+	case "$normalizePHPModuleName_name" in
+		pecl_http)
+			normalizePHPModuleName_name='http'
+			;;
+		zend\ opcache)
+			normalizePHPModuleName_name='opcache'
+			;;
+		*\ *)
+			printf '### WARNING Unrecognized module name: %s ###\n' "$1" >&2
+			;;
+	esac
+	printf '%s' "$normalizePHPModuleName_name"
+}
+
+# Set these variables:
+# - PHP_PREINSTALLED_MODULES the normalized list of PHP modules installed before running this script
+setPHPPreinstalledModules() {
+	PHP_PREINSTALLED_MODULES=''
 	IFS='
 '
 	for getPHPInstalledModules_module in $(php -m); do
@@ -50,27 +83,16 @@ getPHPInstalledModules() {
 			\[Zend\ Modules\])
 				break
 				;;
-			Core | PDO | PDO_* | Phar | Reflection | SimpleXML | SPL | SQLite | Xdebug)
-				getPHPInstalledModules_moduleNormalized=$(LC_CTYPE=C printf '%s' "$getPHPInstalledModules_module" | tr '[:upper:]' '[:lower:]')
-				;;
-			Zend\ OPcache)
-				getPHPInstalledModules_moduleNormalized='opcache'
-				;;
-			*\ * | *A* | *B* | *C* | *D* | *E* | *F* | *G* | *H* | *I* | *J* | *K* | *L* | *M* | *N* | *O* | *P* | *Q* | *R* | *S* | *T* | *U* | *V* | *W* | *X* | *Y* | *Z*)
-				printf '### WARNING Unrecognized module name: %s ###\n' "$getPHPInstalledModules_module" >&2
-				;;
 			*)
-				getPHPInstalledModules_moduleNormalized="$getPHPInstalledModules_module"
+				getPHPInstalledModules_moduleNormalized="$(normalizePHPModuleName "$getPHPInstalledModules_module")"
+				if ! stringInList "$getPHPInstalledModules_moduleNormalized" "$PHP_PREINSTALLED_MODULES"; then
+					PHP_PREINSTALLED_MODULES="$PHP_PREINSTALLED_MODULES $getPHPInstalledModules_moduleNormalized"
+				fi
 				;;
 		esac
-		if test -n "$getPHPInstalledModules_moduleNormalized"; then
-			if ! stringInList "$getPHPInstalledModules_moduleNormalized" "$getPHPInstalledModules_result"; then
-				getPHPInstalledModules_result="$getPHPInstalledModules_result $getPHPInstalledModules_moduleNormalized"
-			fi
-		fi
 	done
 	resetIFS
-	printf '%s' "${getPHPInstalledModules_result# }"
+	PHP_PREINSTALLED_MODULES="${PHP_PREINSTALLED_MODULES# }"
 }
 
 # Get the handles of the modules to be installed
@@ -84,7 +106,6 @@ getPHPInstalledModules() {
 # Output:
 #   Nothing
 processCommandArguments() {
-	processCommandArguments_alreadyInstalled="$(getPHPInstalledModules)"
 	processCommandArguments_endArgs=0
 	PHP_MODULES_TO_INSTALL=''
 	while :; do
@@ -109,17 +130,10 @@ processCommandArguments() {
 			esac
 		fi
 		if test $processCommandArguments_skip -eq 0; then
-			case "$1" in
-				pecl_http)
-					processCommandArguments_name='http'
-					;;
-				*)
-					processCommandArguments_name=$1
-					;;
-			esac
+			processCommandArguments_name="$(normalizePHPModuleName "$1")"
 			if stringInList "$processCommandArguments_name" "$PHP_MODULES_TO_INSTALL"; then
 				printf '### WARNING Duplicated module name specified: %s ###\n' "$processCommandArguments_name" >&2
-			elif stringInList "$processCommandArguments_name" "$processCommandArguments_alreadyInstalled"; then
+			elif stringInList "$processCommandArguments_name" "$PHP_PREINSTALLED_MODULES"; then
 				printf '### WARNING Module already installed: %s ###\n' "$processCommandArguments_name" >&2
 			else
 				PHP_MODULES_TO_INSTALL="$PHP_MODULES_TO_INSTALL $processCommandArguments_name"
@@ -130,6 +144,32 @@ processCommandArguments() {
 	PHP_MODULES_TO_INSTALL="${PHP_MODULES_TO_INSTALL# }"
 }
 
+# Add a module that's required by another module
+#
+# Arguments:
+#   $1: module that requires another module
+#   $2: the required module
+#
+# Update:
+#   PHP_MODULES_TO_INSTALL
+#
+# Output:
+#   Nothing
+checkRequiredModule() {
+	if ! stringInList "$1" "$PHP_MODULES_TO_INSTALL"; then
+		return
+	fi
+	if stringInList "$2" "$PHP_PREINSTALLED_MODULES"; then
+		return
+	fi
+	PHP_MODULES_TO_INSTALL="$(removeStringFromList "$1" "$PHP_MODULES_TO_INSTALL")"
+	if ! stringInList "$2" "$PHP_MODULES_TO_INSTALL"; then
+		PHP_MODULES_TO_INSTALL="$PHP_MODULES_TO_INSTALL $2"
+		PHP_MODULES_TO_INSTALL="${PHP_MODULES_TO_INSTALL# }"
+	fi
+	PHP_MODULES_TO_INSTALL="$PHP_MODULES_TO_INSTALL $1"
+}
+
 # Sort the modules to be installed, in order to fix dependencies
 #
 # Update:
@@ -138,40 +178,22 @@ processCommandArguments() {
 # Output:
 #   Nothing
 sortModulesToInstall() {
-	if stringInList 'apcu_bc' "$PHP_MODULES_TO_INSTALL"; then
-		PHP_MODULES_TO_INSTALL="$(removeStringFromList 'apcu_bc' "$PHP_MODULES_TO_INSTALL")"
-		sortModulesToInstall_alreadyInstalled="$(getPHPInstalledModules)"
-		if ! stringInList 'apcu' "$PHP_MODULES_TO_INSTALL" && ! stringInList 'apcu' "$sortModulesToInstall_alreadyInstalled"; then
-			PHP_MODULES_TO_INSTALL="$PHP_MODULES_TO_INSTALL apcu"
-		fi
-		PHP_MODULES_TO_INSTALL="$PHP_MODULES_TO_INSTALL apcu_bc"
-	fi
+	# apcu_bc requires apcu
+	checkRequiredModule 'apcu_bc' 'apcu'
+	# http requires propro and raphf
+	checkRequiredModule 'http' 'propro'
+	checkRequiredModule 'http' 'raphf'
+	# Some module installation may use igbinary if available: move it before other modules
 	if stringInList 'igbinary' "$PHP_MODULES_TO_INSTALL"; then
 		PHP_MODULES_TO_INSTALL="$(removeStringFromList 'igbinary' "$PHP_MODULES_TO_INSTALL")"
-		if test -z "$PHP_MODULES_TO_INSTALL"; then
-			PHP_MODULES_TO_INSTALL='igbinary'
-		else
-			PHP_MODULES_TO_INSTALL="igbinary $PHP_MODULES_TO_INSTALL"
-		fi
+		PHP_MODULES_TO_INSTALL="igbinary $PHP_MODULES_TO_INSTALL"
+		PHP_MODULES_TO_INSTALL="${PHP_MODULES_TO_INSTALL% }"
 	fi
+	# Some module installation may use msgpack if available: move it before other modules
 	if stringInList 'msgpack' "$PHP_MODULES_TO_INSTALL"; then
 		PHP_MODULES_TO_INSTALL="$(removeStringFromList 'msgpack' "$PHP_MODULES_TO_INSTALL")"
-		if test -z "$PHP_MODULES_TO_INSTALL"; then
-			PHP_MODULES_TO_INSTALL='msgpack'
-		else
-			PHP_MODULES_TO_INSTALL="msgpack $PHP_MODULES_TO_INSTALL"
-		fi
-	fi
-	if stringInList 'http' "$PHP_MODULES_TO_INSTALL"; then
-		PHP_MODULES_TO_INSTALL="$(removeStringFromList 'http' "$PHP_MODULES_TO_INSTALL")"
-		sortModulesToInstall_alreadyInstalled="$(getPHPInstalledModules)"
-		if ! stringInList 'propro' "$PHP_MODULES_TO_INSTALL" && ! stringInList 'propro' "$sortModulesToInstall_alreadyInstalled"; then
-			PHP_MODULES_TO_INSTALL="$PHP_MODULES_TO_INSTALL propro"
-		fi
-		if ! stringInList 'raphf' "$PHP_MODULES_TO_INSTALL" && ! stringInList 'raphf' "$sortModulesToInstall_alreadyInstalled"; then
-			PHP_MODULES_TO_INSTALL="$PHP_MODULES_TO_INSTALL raphf"
-		fi
-		PHP_MODULES_TO_INSTALL="$PHP_MODULES_TO_INSTALL http"
+		PHP_MODULES_TO_INSTALL="msgpack $PHP_MODULES_TO_INSTALL"
+		PHP_MODULES_TO_INSTALL="${PHP_MODULES_TO_INSTALL% }"
 	fi
 }
 
@@ -241,8 +263,13 @@ buildRequiredPackageLists() {
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libmpdec-dev"
 				;;
 			enchant@alpine)
-				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent enchant"
-				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile enchant-dev"
+				if test $DISTRO_MAJMIN_VERSION -ge 312; then
+					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent enchant2"
+					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile enchant2-dev"
+				else
+					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent enchant"
+					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile enchant-dev"
+				fi
 				;;
 			enchant@debian)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libenchant1c2a"
@@ -759,6 +786,23 @@ expandPackagesToBeInstalled() {
 	printf '%s' "${expandPackagesToBeInstalled_result# }"
 }
 
+# Retrieve the number of processors to be used when compiling an extension
+#
+# Arguments:
+#   $1: the handle of the PHP extension to be compiled
+# Output:
+#   The number of processors to be used
+getCompilationProcessorCount() {
+	case "$1" in
+		amqp | bcmath | bz2 | calendar | exif | gd | gettext | grpc | imagick | intl | mysqli | opcache | pcntl | pdo_mysql | protobuf | redis | soap | sockets | tidy | xdebug | xsl | yaml | zip)
+			nproc
+			;;
+		*)
+			echo 1
+			;;
+	esac
+}
+
 # Install the required APT/APK packages
 #
 # Arguments:
@@ -1027,7 +1071,7 @@ installModuleFromSource() {
 installPECLModule() {
 	printf '### INSTALLING PECL MODULE %s ###\n' "$1"
 	installPECLModule_actual="$1"
-	installPECLModule_stdin='\n'
+	rm -rf "$CONFIGURE_FILE"
 	installPECLModule_manuallyInstalled=0
 	case "$1" in
 		amqp)
@@ -1092,39 +1136,46 @@ installPECLModule() {
 			fi
 			;;
 		memcached)
+			# Set the path to libmemcached install prefix
+			addConfigureOption 'with-libmemcached-dir' 'no'
 			if test $PHP_MAJMIN_VERSION -lt 700; then
 				installPECLModule_actual="$1-2.2.0"
-				# --with-libmemcached-dir (default: no)      Set the path to libmemcached install prefix
 			else
-				installPECLModule_stdin=''
-				# --with-libmemcached-dir (default: no)      Set the path to libmemcached install prefix
-				installPECLModule_stdin="${installPECLModule_stdin}\n"
-				# --with-zlib-dir (default: no)              Set the path to ZLIB install prefix
-				installPECLModule_stdin="${installPECLModule_stdin}\n"
-				# --with-system-fastlz (default: no)         Use system FastLZ library
-				installPECLModule_stdin="${installPECLModule_stdin}no\n"
-				# --enable-memcached-igbinary (default: no)  Enable memcached igbinary serializer support
-				php --ri igbinary >/dev/null 2>/dev/null && installPECLModule_stdin="${installPECLModule_stdin}yes\n" || installPECLModule_stdin="${installPECLModule_stdin}no\n"
-				# --enable-memcached-msgpack (default: no)   Enable memcached msgpack serializer support
-				php --ri msgpack >/dev/null 2>/dev/null && installPECLModule_stdin="${installPECLModule_stdin}yes\n" || installPECLModule_stdin="${installPECLModule_stdin}no\n"
-				# --enable-memcached-json (default: no)      Enable memcached json serializer support
-				installPECLModule_stdin="${installPECLModule_stdin}yes\n"
-				# --enable-memcached-protocol (default: no)  Enable memcached protocol support
-				installPECLModule_stdin="${installPECLModule_stdin}no\n" # https://github.com/php-memcached-dev/php-memcached/issues/418#issuecomment-449587972
-				# --enable-memcached-sasl (default: yes)     Enable memcached sasl support
-				installPECLModule_stdin="${installPECLModule_stdin}yes\n"
-				# --enable-memcached-session (default: yes)  Enable memcached session handler support
-				installPECLModule_stdin="${installPECLModule_stdin}yes\n"
+				# Set the path to ZLIB install prefix
+				addConfigureOption 'with-zlib-dir' 'no'
+				# Use system FastLZ library
+				addConfigureOption 'with-system-fastlz' 'no'
+				# Enable memcached igbinary serializer support
+				if php --ri igbinary >/dev/null 2>/dev/null; then
+					addConfigureOption 'enable-memcached-igbinary' 'yes'
+				else
+					addConfigureOption 'enable-memcached-igbinary' 'no'
+				fi
+				# Enable memcached msgpack serializer support
+				if php --ri msgpack >/dev/null 2>/dev/null; then
+					addConfigureOption 'enable-memcached-msgpack' 'yes'
+				else
+					addConfigureOption 'enable-memcached-msgpack' 'no'
+				fi
+				# Enable memcached json serializer support
+				addConfigureOption 'enable-memcached-json' 'yes'
+				# Enable memcached protocol support
+				addConfigureOption 'enable-memcached-protocol' 'no' # https://github.com/php-memcached-dev/php-memcached/issues/418#issuecomment-449587972
+				# Enable memcached sasl support
+				addConfigureOption 'enable-memcached-sasl' 'yes'
+				# Enable memcached session handler support
+				addConfigureOption 'enable-memcached-session' 'yes'
 			fi
 			;;
 		mongo)
-			installPECLModule_stdin=''
-			# --with-mongo-sasl (default: no)      Build with Cyrus SASL (MongoDB Enterprise Authentication) support?
-			installPECLModule_stdin="${installPECLModule_stdin}yes\n"
+			# Build with Cyrus SASL (MongoDB Enterprise Authentication) support?
+			addConfigureOption '-with-mongo-sasl' 'yes'
 			;;
 		mongodb)
 			if test $PHP_MAJMIN_VERSION -le 505; then
 				installPECLModule_actual="$1-1.5.5"
+			elif test $PHP_MAJMIN_VERSION -le 506; then
+				installPECLModule_actual="$1-1.7.5"
 			fi
 			;;
 		msgpack)
@@ -1174,6 +1225,11 @@ installPECLModule() {
 				installPECLModule_actual="$1-1.0.2"
 			fi
 			;;
+		protobuf)
+			if test $PHP_MAJMIN_VERSION -lt 700; then
+				installPECLModule_actual="$1-3.12.4"
+			fi
+			;;
 		pthreads)
 			if test $PHP_MAJMIN_VERSION -lt 700; then
 				installPECLModule_actual="$1-2.0.10"
@@ -1208,30 +1264,47 @@ installPECLModule() {
 			fi
 			;;
 		redis)
-			# enable igbinary serializer support?
-			php --ri igbinary >/dev/null 2>/dev/null && installPECLModule_stdin='yes\n' || installPECLModule_stdin='no\n'
-			# enable lzf compression support?
-			installPECLModule_stdin="${installPECLModule_stdin}yes\n"
-			if test $PHP_MAJMIN_VERSION -le 506; then
-				installPECLModule_actual="$1-4.3.0"
+			if test $PHP_MAJMIN_VERSION -ge 800; then
+				installPECLModule_src="$(getPackageSource https://codeload.github.com/phpredis/phpredis/tar.gz/develop)"
+				cd -- "$installPECLModule_src"
+				installPECLModule_cmd='./configure'
+				php --ri igbinary >/dev/null 2>/dev/null && installPECLModule_cmd="$installPECLModule_cmd --enable-redis-igbinary"
+				phpize
+				$installPECLModule_cmd
+				make -j$(nproc)
+				make install
+				cd - >/dev/null
+				installPECLModule_manuallyInstalled=1
 			else
-				installPECLModule_machine=$(gcc -dumpmachine)
-				if ! test -e /usr/include/zstd.h || ! test -e /usr/lib/libzstd.so -o -e "/usr/lib/$installPECLModule_machine/libzstd.so"; then
-					installPECLModule_zstdVersion=1.4.4
-					installPECLModule_zstdVersionMajor=$(echo $installPECLModule_zstdVersion | cut -d. -f1)
-					rm -rf /tmp/src/zstd
-					mv "$(getPackageSource https://github.com/facebook/zstd/releases/download/v1.4.4/zstd-$installPECLModule_zstdVersion.tar.gz)" /tmp/src/zstd
-					cd /tmp/src/zstd
-					make V=0 -j$(nproc) lib
-					cp -f lib/libzstd.so "/usr/lib/$installPECLModule_machine/libzstd.so.$installPECLModule_zstdVersion"
-					ln -sf "/usr/lib/$installPECLModule_machine/libzstd.so.$installPECLModule_zstdVersion" "/usr/lib/$installPECLModule_machine/libzstd.so.$installPECLModule_zstdVersionMajor"
-					ln -sf "/usr/lib/$installPECLModule_machine/libzstd.so.$installPECLModule_zstdVersion" "/usr/lib/$installPECLModule_machine/libzstd.so"
-					ln -sf /tmp/src/zstd/lib/zstd.h /usr/include/zstd.h
-					UNNEEDED_PACKAGE_LINKS="$UNNEEDED_PACKAGE_LINKS /usr/include/zstd.h"
-					cd - >/dev/null
+				# Enable igbinary serializer support?
+				if php --ri igbinary >/dev/null 2>/dev/null; then
+					addConfigureOption 'enable-redis-igbinary' 'yes'
+				else
+					addConfigureOption 'enable-redis-igbinary' 'no'
 				fi
-				# enable zstd compression support?
-				installPECLModule_stdin="${installPECLModule_stdin}yes\n"
+				# Enable lzf compression support?
+				addConfigureOption 'enable-redis-lzf' 'yes'
+				if test $PHP_MAJMIN_VERSION -le 506; then
+					installPECLModule_actual="$1-4.3.0"
+				else
+					installPECLModule_machine=$(gcc -dumpmachine)
+					if ! test -e /usr/include/zstd.h || ! test -e /usr/lib/libzstd.so -o -e "/usr/lib/$installPECLModule_machine/libzstd.so"; then
+						installPECLModule_zstdVersion=1.4.4
+						installPECLModule_zstdVersionMajor=$(echo $installPECLModule_zstdVersion | cut -d. -f1)
+						rm -rf /tmp/src/zstd
+						mv "$(getPackageSource https://github.com/facebook/zstd/releases/download/v1.4.4/zstd-$installPECLModule_zstdVersion.tar.gz)" /tmp/src/zstd
+						cd /tmp/src/zstd
+						make V=0 -j$(nproc) lib
+						cp -f lib/libzstd.so "/usr/lib/$installPECLModule_machine/libzstd.so.$installPECLModule_zstdVersion"
+						ln -sf "/usr/lib/$installPECLModule_machine/libzstd.so.$installPECLModule_zstdVersion" "/usr/lib/$installPECLModule_machine/libzstd.so.$installPECLModule_zstdVersionMajor"
+						ln -sf "/usr/lib/$installPECLModule_machine/libzstd.so.$installPECLModule_zstdVersion" "/usr/lib/$installPECLModule_machine/libzstd.so"
+						ln -sf /tmp/src/zstd/lib/zstd.h /usr/include/zstd.h
+						UNNEEDED_PACKAGE_LINKS="$UNNEEDED_PACKAGE_LINKS /usr/include/zstd.h"
+						cd - >/dev/null
+					fi
+					# Enable zstd compression support?
+					addConfigureOption 'enable-redis-zstd' 'yes'
+				fi
 			fi
 			;;
 		solr)
@@ -1286,6 +1359,15 @@ installPECLModule() {
 				installPECLModule_actual="$1-2.5.5"
 			elif test $PHP_MAJMIN_VERSION -le 700; then
 				installPECLModule_actual="$1-2.6.1"
+			elif test $PHP_MAJMIN_VERSION -ge 800; then
+				installPECLModule_src="$(getPackageSource https://codeload.github.com/xdebug/xdebug/tar.gz/master)"
+				cd -- "$installPECLModule_src"
+				phpize
+				./configure --enable-xdebug
+				make -j$(nproc)
+				make install
+				cd - >/dev/null
+				installPECLModule_manuallyInstalled=1
 			fi
 			;;
 		uopz)
@@ -1331,7 +1413,7 @@ installPECLModule() {
 		if test "$1" != "$installPECLModule_actual"; then
 			printf '  (installing version %s)\n' "$installPECLModule_actual"
 		fi
-		printf "$installPECLModule_stdin" | pecl install "$installPECLModule_actual"
+		installPeclPackage "$installPECLModule_actual"
 	fi
 	case "$1" in
 		apcu_bc)
@@ -1350,6 +1432,60 @@ installPECLModule() {
 			docker-php-ext-enable "$1"
 			;;
 	esac
+}
+
+# Configure the PECL package installed
+# If we'll use pickle, the zip extension will be added to PHP_MODULES_TO_INSTALL
+#
+# Updates:
+#   PHP_MODULES_TO_INSTALL
+# Sets:
+#   USE_PICKLE
+configureInstaller() {
+	USE_PICKLE=0
+	for PHP_MODULE_TO_INSTALL in $PHP_MODULES_TO_INSTALL; do
+		if ! stringInList "$PHP_MODULE_TO_INSTALL" "$BUNDLED_MODULES"; then
+			if test $PHP_MAJMIN_VERSION -lt 800; then
+				pecl channel-update pecl.php.net || true
+				return
+			fi
+			curl -sSL https://github.com/FriendsOfPHP/pickle/releases/latest/download/pickle.phar -o /tmp/pickle
+			chmod +x /tmp/pickle
+			if ! stringInList 'zip' "$PHP_PREINSTALLED_MODULES"; then
+				PHP_MODULES_TO_INSTALL="zip $(removeStringFromList 'zip' "$PHP_MODULES_TO_INSTALL")"
+			fi
+			USE_PICKLE=1
+			return
+		fi
+	done
+}
+
+# Add a configure option for the pecl/pickle install command
+#
+# Arguments:
+#   $1: the option name
+#   $2: the option value
+addConfigureOption() {
+	if test $USE_PICKLE -eq 0; then
+		printf -- '%s\n' "$2" >>"$CONFIGURE_FILE"
+	else
+		printf -- '--%s=%s\n' "$1" "$2" >>"$CONFIGURE_FILE"
+	fi
+}
+
+# Actually installs a PECL package
+#
+# Arguments:
+#   $1: the package to be installed
+installPeclPackage() {
+	if ! test -f "$CONFIGURE_FILE"; then
+		printf '\n' >"$CONFIGURE_FILE"
+	fi
+	if test $USE_PICKLE -eq 0; then
+		cat "$CONFIGURE_FILE" | MAKE="make -j$(getCompilationProcessorCount $1)" pecl install "$1"
+	else
+		MAKE="make -j$(getCompilationProcessorCount $1)" /tmp/pickle install --tmp-dir=/tmp/pickle.tmp --no-interaction --with-configure-options "$CONFIGURE_FILE" -- "$1"
+	fi
 }
 
 # Check if a string is in a list of space-separated string
@@ -1432,15 +1568,21 @@ cleanup() {
 	docker-php-source delete
 	rm -rf /tmp/pear
 	rm -rf /tmp/src
+	rm -rf /tmp/pickle
+	rm -rf /tmp/pickle.tmp
+	rm -rf "$CONFIGURE_FILE"
 }
 
 resetIFS
 mkdir -p /tmp/src
+mkdir -p /tmp/pickle.tmp
 IPE_ERRFLAG_FILE="$(mktemp -p /tmp/src)"
+CONFIGURE_FILE=/tmp/configure-options
 setDistro
 setPHPMajorMinor
+setPHPPreinstalledModules
 case "$PHP_MAJMIN_VERSION" in
-	505 | 506 | 700 | 701 | 702 | 703 | 704) ;;
+	505 | 506 | 700 | 701 | 702 | 703 | 704 | 800) ;;
 	*)
 		printf "### ERROR: Unsupported PHP version: %s.%s ###\n" $((PHP_MAJMIN_VERSION / 100)) $((PHP_MAJMIN_VERSION % 100))
 		;;
@@ -1454,12 +1596,14 @@ fi
 
 sortModulesToInstall
 
+docker-php-source extract
+BUNDLED_MODULES="$(find /usr/src/php/ext -mindepth 2 -maxdepth 2 -type f -name 'config.m4' | xargs -n1 dirname | xargs -n1 basename | xargs)"
+configureInstaller
+
 buildRequiredPackageLists $PHP_MODULES_TO_INSTALL
 if test -n "$PACKAGES_PERSISTENT$PACKAGES_VOLATILE"; then
 	installRequiredPackages
 fi
-docker-php-source extract
-BUNDLED_MODULES="$(find /usr/src/php/ext -mindepth 2 -maxdepth 2 -type f -name 'config.m4' | xargs -n1 dirname | xargs -n1 basename | xargs)"
 for PHP_MODULE_TO_INSTALL in $PHP_MODULES_TO_INSTALL; do
 	if stringInList "$PHP_MODULE_TO_INSTALL" "$BUNDLED_MODULES"; then
 		installBundledModule "$PHP_MODULE_TO_INSTALL"
