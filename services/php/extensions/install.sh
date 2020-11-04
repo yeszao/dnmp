@@ -362,6 +362,18 @@ if [[ -z "${EXTENSIONS##*,igbinary,*}" ]]; then
 fi
 
 
+if [[ -z "${EXTENSIONS##*,ssh2,*}" ]]; then
+    isPhpVersionGreaterOrEqual 7 0
+    if [[ "$?" = "1" ]]; then
+        echo "---------- Install ssh2 ----------"
+        printf "\n" | apk add libssh2-dev
+        pecl install ssh2-1.1.2
+        docker-php-ext-enable ssh2
+    else
+        echo "ssh2 requires PHP >= 7.0.0, installed version is ${PHP_VERSION}"
+    fi
+fi
+
 if [[ -z "${EXTENSIONS##*,yac,*}" ]]; then
     isPhpVersionGreaterOrEqual 7 0
     if [[ "$?" = "1" ]]; then
