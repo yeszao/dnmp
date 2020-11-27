@@ -2,7 +2,7 @@
 
 # This script wraps docker-php-ext-install, properly configuring the system.
 #
-# Copyright (c) Michele Locati, 2018
+# Copyright (c) Michele Locati, 2018-2020
 #
 # Source: https://github.com/mlocati/docker-php-extension-installer
 #
@@ -19,7 +19,7 @@ fi
 
 # Reset the Internal Field Separator
 resetIFS() {
-	IFS='
+	IFS='	 
 '
 }
 
@@ -786,6 +786,33 @@ expandPackagesToBeInstalled() {
 	printf '%s' "${expandPackagesToBeInstalled_result# }"
 }
 
+# Retrieve the number of available cores (alternative to nproc if not available)
+# Output:
+#   The number of processor cores available
+getProcessorCount() {
+	if command -v nproc >/dev/null 2>&1; then
+		nproc
+	else
+		getProcessorCount_tmp=$(cat /proc/cpuinfo | grep -E '^processor\s*:\s*\d+$' | wc -l)
+		if test $getProcessorCount_tmp -ge 1; then
+			echo $getProcessorCount_tmp
+		else
+			echo 1
+		fi
+	fi
+}
+
+# Get the build target tripled
+# Output:
+#   The target triplet (eg x86_64-linux-gnu, i686-linux-gnu, i386-linux-gnu, ...)
+getTargetTriplet() {
+	getTargetTriplet_tmp="$(gcc -print-multiarch 2>/dev/null || true)"
+	if test -z "$getTargetTriplet_tmp"; then
+		getTargetTriplet_tmp="$(gcc -dumpmachine 2>/dev/null || true)"
+	fi
+	printf '%s' "$getTargetTriplet_tmp"
+}
+
 # Retrieve the number of processors to be used when compiling an extension
 #
 # Arguments:
@@ -795,7 +822,7 @@ expandPackagesToBeInstalled() {
 getCompilationProcessorCount() {
 	case "$1" in
 		amqp | bcmath | bz2 | calendar | exif | gd | gettext | grpc | imagick | intl | mysqli | opcache | pcntl | pdo_mysql | protobuf | redis | soap | sockets | tidy | xdebug | xsl | yaml | zip)
-			nproc
+			getProcessorCount
 			;;
 		*)
 			echo 1
@@ -935,7 +962,7 @@ installBundledModule() {
 		ldap)
 			case "$DISTRO" in
 				debian)
-					docker-php-ext-configure ldap --with-libdir=lib/$(gcc -dumpmachine)
+					docker-php-ext-configure ldap --with-libdir=lib/$(getTargetTriplet)
 					;;
 			esac
 			;;
@@ -990,7 +1017,7 @@ installBundledModule() {
 			fi
 			;;
 	esac
-	docker-php-ext-install -j$(nproc) "$1"
+	docker-php-ext-install -j$(getProcessorCount) "$1"
 	case "$1" in
 		imap)
 			case "$DISTRO_VERSION" in
@@ -1053,7 +1080,7 @@ installModuleFromSource() {
 	esac
 	phpize
 	./configure $3 CFLAGS="${4:-}"
-	make -j$(nproc) install
+	make -j$(getProcessorCount) install
 	cd - >/dev/null
 	docker-php-ext-enable "$1"
 	case "$1" in
@@ -1093,7 +1120,7 @@ installPECLModule() {
 					installPECLModule_src="$(getPackageSource https://codeload.github.com/bematech/libmpdec/tar.gz/master)"
 					cd -- "$installPECLModule_src"
 					./configure CFLAGS='-w'
-					make -j$(nproc)
+					make -j$(getProcessorCount)
 					make install
 					cd - >/dev/null
 					;;
@@ -1115,7 +1142,7 @@ installPECLModule() {
 					installPECLModule_src="$(getPackageSource https://jprs.co.jp/idn/idnkit-2.3.tar.bz2)"
 					cd -- "$installPECLModule_src"
 					./configure
-					make -j$(nproc) install
+					make -j$(getProcessorCount) install
 					cd - >/dev/null
 				fi
 			fi
@@ -1271,7 +1298,7 @@ installPECLModule() {
 				php --ri igbinary >/dev/null 2>/dev/null && installPECLModule_cmd="$installPECLModule_cmd --enable-redis-igbinary"
 				phpize
 				$installPECLModule_cmd
-				make -j$(nproc)
+				make -j$(getProcessorCount)
 				make install
 				cd - >/dev/null
 				installPECLModule_manuallyInstalled=1
@@ -1287,14 +1314,14 @@ installPECLModule() {
 				if test $PHP_MAJMIN_VERSION -le 506; then
 					installPECLModule_actual="$1-4.3.0"
 				else
-					installPECLModule_machine=$(gcc -dumpmachine)
+					installPECLModule_machine=$(getTargetTriplet)
 					if ! test -e /usr/include/zstd.h || ! test -e /usr/lib/libzstd.so -o -e "/usr/lib/$installPECLModule_machine/libzstd.so"; then
 						installPECLModule_zstdVersion=1.4.4
 						installPECLModule_zstdVersionMajor=$(echo $installPECLModule_zstdVersion | cut -d. -f1)
 						rm -rf /tmp/src/zstd
 						mv "$(getPackageSource https://github.com/facebook/zstd/releases/download/v1.4.4/zstd-$installPECLModule_zstdVersion.tar.gz)" /tmp/src/zstd
 						cd /tmp/src/zstd
-						make V=0 -j$(nproc) lib
+						make V=0 -j$(getProcessorCount) lib
 						cp -f lib/libzstd.so "/usr/lib/$installPECLModule_machine/libzstd.so.$installPECLModule_zstdVersion"
 						ln -sf "/usr/lib/$installPECLModule_machine/libzstd.so.$installPECLModule_zstdVersion" "/usr/lib/$installPECLModule_machine/libzstd.so.$installPECLModule_zstdVersionMajor"
 						ln -sf "/usr/lib/$installPECLModule_machine/libzstd.so.$installPECLModule_zstdVersion" "/usr/lib/$installPECLModule_machine/libzstd.so"
@@ -1329,7 +1356,7 @@ installPECLModule() {
 				else
 					cd "$(getPackageSource https://codeload.github.com/CopernicaMarketingSoftware/PHP-CPP/tar.gz/444d1f90cf6b7f3cb5178fa0d0b5ab441b0389d0)"
 				fi
-				make -j$(nproc)
+				make -j$(getProcessorCount)
 				make install
 				cd - >/dev/null
 			fi
@@ -1359,12 +1386,15 @@ installPECLModule() {
 				installPECLModule_actual="$1-2.5.5"
 			elif test $PHP_MAJMIN_VERSION -le 700; then
 				installPECLModule_actual="$1-2.6.1"
+			elif test $PHP_MAJMIN_VERSION -le 701; then
+				installPECLModule_actual="$1-2.9.8"
 			elif test $PHP_MAJMIN_VERSION -ge 800; then
-				installPECLModule_src="$(getPackageSource https://codeload.github.com/xdebug/xdebug/tar.gz/master)"
+				# Workaround for picke problem - see https://github.com/FriendsOfPHP/pickle/issues/188 and https://github.com/FriendsOfPHP/pickle/issues/191
+				installPECLModule_src="$(getPackageSource https://codeload.github.com/xdebug/xdebug/tar.gz/3.0.0)"
 				cd -- "$installPECLModule_src"
 				phpize
 				./configure --enable-xdebug
-				make -j$(nproc)
+				make -j$(getProcessorCount)
 				make install
 				cd - >/dev/null
 				installPECLModule_manuallyInstalled=1
@@ -1396,7 +1426,7 @@ installPECLModule() {
 						installPECLModule_src="$(getPackageSource https://downloads.apache.org/zookeeper/zookeeper-3.4.14/zookeeper-3.4.14.tar.gz)"
 						cd -- "$installPECLModule_src/zookeeper-client/zookeeper-client-c"
 						./configure --without-cppunit
-						make -j$(nproc) CFLAGS='-Wno-stringop-truncation -Wno-format-overflow'
+						make -j$(getProcessorCount) CFLAGS='-Wno-stringop-truncation -Wno-format-overflow'
 						make install
 						cd - >/dev/null
 					fi
