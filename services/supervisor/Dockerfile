@@ -1,6 +1,10 @@
 ARG ALPINE_VERSION
 FROM ${ALPINE_VERSION}
 ARG TZ
+ARG CONTAINER_PACKAGE_URL
+
+
+RUN sed -i "s/dl-cdn.alpinelinux.org/${CONTAINER_PACKAGE_URL}/g" /etc/apk/repositories
 
 RUN apk update \
 	&& apk upgrade \
