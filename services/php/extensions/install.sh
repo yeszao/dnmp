@@ -231,7 +231,7 @@ if [[ -z "${EXTENSIONS##*,yaml,*}" ]]; then
     echo "---------- Install yaml ----------"
     apk add --no-cache yaml-dev
     printf "\n" | pecl install yaml
-    docker-php-ext-enable psr
+    docker-php-ext-enable yaml
 fi
 
 if [[ -z "${EXTENSIONS##*,intl,*}" ]]; then
