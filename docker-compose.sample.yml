@@ -4,7 +4,7 @@ services:
     build:
       context: ./services/nginx
       args:
-        NGINX_VERSION: ${NGINX_VERSION}
+        NGINX_VERSION: nginx:${NGINX_VERSION}
         CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
         NGINX_INSTALL_APPS: ${NGINX_INSTALL_APPS}
     container_name: nginx
@@ -251,7 +251,7 @@ services:
 #      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
 #    volumes:
 #      - ${DATA_DIR}/esdata:/usr/share/elasticsearch/data
-#      - ${ELASTICSEARCH_CONF_FILE}:/usr/share/elasticsearch/elasticsearch.yml
+#      - ${ELASTICSEARCH_CONF_FILE}:/usr/share/elasticsearch/config/elasticsearch.yml
 #    hostname: elasticsearch
 #    restart: always
 #    ports:
@@ -285,6 +285,45 @@ services:
 #      - "${LOGSTASH_HOST_PORT_C}:9600"
 #      - "${LOGSTASH_HOST_PORT_S}:5044"
 
+#  node:
+#    image: node:${NODE_VERSION}
+#    environment:
+#      - NODE_ENV=production
+#    volumes:
+#      - ${SOURCE_DIR}:/www/:rw
+#    expose:
+#      - "8081"
+#    networks:
+#      - default
+#    stdin_open: true
+#    tty: true
+
+
+#  supervisor:
+#    build:
+#      context: ./services/supervisor
+#      args:
+#        ALPINE_VERSION: alpine:${ALPINE_VERSION}
+#        TZ: "$TZ"
+#        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
+#    container_name: supervisor
+#    ports:
+#      - "${SUPERVISOR_HOST_PORT_C}:9001"
+#    volumes:
+#      - ${SOURCE_DIR}:/www/:rw
+#      - ${SUPERVISOR_LOG}:/var/log/supervisor/:rw
+#      - ${SUPERVISOR_CONFIG}:/etc/supervisor/conf.d/:rw
+#      - ${SUPERVISOR_CONF_FILE}:/etc/supervisor/supervisord.conf:ro
+#    command:
+#      - /bin/sh
+#      - -c
+#      - |
+#        supervisord -n -c /etc/supervisor/supervisord.conf
+#    restart: always
+#    cap_add:
+#      - SYS_PTRACE
+#    networks:
+#      - default
 
 networks:
   default:

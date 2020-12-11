@@ -6,7 +6,7 @@ ARG PHP_EXTENSIONS
 ARG CONTAINER_PACKAGE_URL
 
 
-RUN sed -i "s/dl-cdn.alpinelinux.org/${CONTAINER_PACKAGE_URL}/g" /etc/apk/repositories
+RUN if [ $CONTAINER_PACKAGE_URL ] ; then sed -i "s/dl-cdn.alpinelinux.org/${CONTAINER_PACKAGE_URL}/g" /etc/apk/repositories ; fi
 
 
 COPY ./extensions /tmp/extensions
@@ -15,7 +15,7 @@ RUN chmod +x install.sh \
     && sh install.sh \
     && rm -rf /tmp/extensions
 
-ADD https://raw.githubusercontent.com/mlocati/docker-php-extension-installer/master/install-php-extensions /usr/local/bin/
+ADD ./extensions/install-php-extensions  /usr/local/bin/
 
 RUN chmod uga+x /usr/local/bin/install-php-extensions
 
