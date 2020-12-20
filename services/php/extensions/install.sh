@@ -381,6 +381,17 @@ if [[ -z "${EXTENSIONS##*,ssh2,*}" ]]; then
     fi
 fi
 
+if [[ -z "${EXTENSIONS##*,protobuf,*}" ]]; then
+    isPhpVersionGreaterOrEqual 7 0
+    if [[ "$?" = "1" ]]; then
+        echo "---------- Install protobuf ----------"
+        printf "\n" | pecl install protobuf
+        docker-php-ext-enable protobuf
+    else
+        echo "yar requires PHP >= 7.0.0, installed version is ${PHP_VERSION}"
+    fi
+fi
+
 if [[ -z "${EXTENSIONS##*,yac,*}" ]]; then
     isPhpVersionGreaterOrEqual 7 0
     if [[ "$?" = "1" ]]; then
@@ -403,6 +414,7 @@ if [[ -z "${EXTENSIONS##*,yar,*}" ]]; then
     fi
 
 fi
+
 
 
 if [[ -z "${EXTENSIONS##*,yaconf,*}" ]]; then
