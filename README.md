@@ -403,7 +403,7 @@ log-error               = /var/lib/mysql/mysql.error.log
 
 
 ## 6.数据库管理
-本项目默认在`docker-compose.yml`中开启了用于MySQL在线管理的*phpMyAdmin*，以及用于redis在线管理的*phpRedisAdmin*，可以根据需要修改或删除。
+本项目默认在`docker-compose.yml`中不开启了用于MySQL在线管理的*phpMyAdmin*，以及用于redis在线管理的*phpRedisAdmin*，可以根据需要修改或删除。
 
 ### 6.1 phpMyAdmin
 phpMyAdmin容器映射到主机的端口地址是：`8080`，所以主机上访问phpMyAdmin的地址是：
