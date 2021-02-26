@@ -28,7 +28,7 @@ if test "$IPE_VERSION" = master && test "${CI:-}" != true; then
 #                                                                                                           #
 # You are using an unsupported method to get install-php-extensions!                                        #
 #                                                                                                           #
-# Please update the way you fetch it. Read the instrictions at                                              #
+# Please update the way you fetch it. Read the instructions at                                              #
 # https://github.com/mlocati/docker-php-extension-installer#usage                                           #
 #                                                                                                           #
 # For example, if you get this script by fetching                                                           #
@@ -514,12 +514,20 @@ buildRequiredPackageLists() {
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libgearman[0-9]*$"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libgearman-dev"
 				;;
+			geoip@alpine)
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent geoip"
+				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile geoip-dev"
+				;;
+			geoip@debian)
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libgeoip1[0-9]*$"
+				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libgeoip-dev"
+				;;
 			gettext@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libintl"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile gettext-dev"
 				;;
 			gmagick@alpine)
-				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent graphicsmagick"
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent graphicsmagick libgomp"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile graphicsmagick-dev libtool"
 				;;
 			gmagick@debian)
@@ -534,7 +542,7 @@ buildRequiredPackageLists() {
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libgmp-dev"
 				;;
 			gnupg@alpine)
-				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_volatile gpgme"
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent gpgme"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile gpgme-dev"
 				;;
 			gnupg@debian)
@@ -852,17 +860,8 @@ buildRequiredPackageLists() {
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libssh2-1-dev"
 				;;
 			swoole@alpine)
-				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent postgresql-libs libstdc++"
-				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile curl-dev postgresql-dev linux-headers"
-				case "$DISTRO_VERSION" in
-					alpine@3.7 | alpine@3.8)
-						# I can assure you I tried very hard to enable openssl in these Alpine versions...
-						;;
-					*)
-						buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent $buildRequiredPackageLists_libssl"
-						buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libressl-dev"
-						;;
-				esac
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent postgresql-libs libstdc++ $buildRequiredPackageLists_libssl"
+				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile curl-dev postgresql-dev linux-headers libressl-dev"
 				;;
 			swoole@debian)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libcurl3-gnutls libpq5"
@@ -1036,7 +1035,7 @@ expandPackagesToBeInstalled() {
 			resetIFS
 			;;
 		debian)
-			expandPackagesToBeInstalled_log="$(DEBIAN_FRONTEND=noninteractive apt-get install -sy $@ 2>&1 || printf '\nE: apt-get failed\n')"
+			expandPackagesToBeInstalled_log="$(DEBIAN_FRONTEND=noninteractive apt-get install -sy --no-install-recommends $@ 2>&1 || printf '\nE: apt-get failed\n')"
 			if test -n "$(printf '%s' "$expandPackagesToBeInstalled_log" | grep -E '^E:')"; then
 				printf 'FAILED TO LIST THE WHOLE PACKAGE LIST FOR\n' >&2
 				printf '%s ' "$@" >&2
@@ -1102,7 +1101,7 @@ setTargetTriplet() {
 #   The number of processors to be used
 getCompilationProcessorCount() {
 	case "$1" in
-		amqp | bcmath | bz2 | calendar | exif | gd | gettext | grpc | http | imagick | intl | mysqli | opcache | pcntl | pdo_mysql | protobuf | redis | soap | sockets | tidy | xdebug | xsl | yaml | zip)
+		amqp | bcmath | bz2 | calendar | decimal | exif | gd | geospatial | gettext | gmagick | grpc | http | imagick | intl | mysqli | opcache | pcntl | pdo_mysql | protobuf | redis | ssh2 | soap | sockets | tidy | xdebug | xsl | yaml | zip)
 			# These extensions support parallel compilation
 			getProcessorCount
 			;;
@@ -1127,7 +1126,7 @@ installRequiredPackages() {
 			apk add $PACKAGES_PERSISTENT $PACKAGES_VOLATILE
 			;;
 		debian)
-			DEBIAN_FRONTEND=noninteractive apt-get install -qq -y $PACKAGES_PERSISTENT $PACKAGES_VOLATILE
+			DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -qq -y $PACKAGES_PERSISTENT $PACKAGES_VOLATILE
 			;;
 	esac
 }
@@ -1266,7 +1265,7 @@ installMicrosoftSqlServerODBC() {
 				DEBIAN_FRONTEND=noninteractive apt-get -q update
 			fi
 			printf -- '- installing the APT package\n'
-			DEBIAN_FRONTEND=noninteractive ACCEPT_EULA=Y apt-get -qy install '^msodbcsql[0-9]+$'
+			DEBIAN_FRONTEND=noninteractive ACCEPT_EULA=Y apt-get -qy --no-install-recommends install '^msodbcsql[0-9]+$'
 			;;
 	esac
 }
@@ -1542,15 +1541,24 @@ installRemoteModule() {
 				ldconfig || true
 			fi
 			;;
+		csv)
+			if test -z "$installRemoteModule_version"; then
+				if test $PHP_MAJMIN_VERSION -le 704; then
+					installRemoteModule_version=0.3.1
+				fi
+			fi
+			;;
 		decimal)
 			case "$DISTRO" in
 				alpine)
-					installRemoteModule_src="$(getPackageSource https://codeload.github.com/bematech/libmpdec/tar.gz/master)"
-					cd -- "$installRemoteModule_src"
-					./configure CFLAGS='-w'
-					make -j$(getProcessorCount)
-					make install
-					cd - >/dev/null
+					if ! test -f /usr/local/lib/libmpdec.so; then
+						installRemoteModule_src="$(getPackageSource https://www.bytereef.org/software/mpdecimal/releases/mpdecimal-2.5.1.tar.gz)"
+						cd -- "$installRemoteModule_src"
+						./configure --disable-cxx
+						make -j$(getProcessorCount)
+						make install
+						cd - >/dev/null
+					fi
 					;;
 			esac
 			;;
@@ -1572,6 +1580,20 @@ installRemoteModule() {
 					fi
 					;;
 			esac
+			;;
+		geoip)
+			if test -z "$installRemoteModule_version"; then
+				installRemoteModule_version=beta
+			fi
+			;;
+		geospatial)
+			if test -z "$installRemoteModule_version"; then
+				if test $PHP_MAJMIN_VERSION -le 506; then
+					installRemoteModule_version=0.2.1
+				else
+					installRemoteModule_version=beta
+				fi
+			fi
 			;;
 		gmagick)
 			if test -z "$installRemoteModule_version"; then
@@ -1888,6 +1910,24 @@ installRemoteModule() {
 				addConfigureOption 'enable-redis-zstd' 'yes'
 			fi
 			;;
+		ssh2)
+			if test -z "$installRemoteModule_version"; then
+				if test $PHP_MAJMIN_VERSION -le 506; then
+					installRemoteModule_version=0.13
+				elif test $PHP_MAJMIN_VERSION -le 704; then
+					installRemoteModule_version=beta
+				else
+					installRemoteModule_src="$(getPackageSource https://codeload.github.com/php/pecl-networking-ssh2/tar.gz/93265d71bdeb23350e8320126c7949ed791310df)"
+					cd -- "$installRemoteModule_src"
+					phpize
+					./configure
+					make -j$(getCompilationProcessorCount)
+					make install
+					cd - >/dev/null
+					installRemoteModule_manuallyInstalled=1
+				fi
+			fi
+			;;
 		snuffleupagus)
 			if test -z "$installRemoteModule_version"; then
 				installRemoteModule_version=0.7.0
@@ -1936,13 +1976,13 @@ installRemoteModule() {
 			else
 				installRemoteModule_sockets=no
 			fi
+			installRemoteModule_openssl=yes
 			case "$DISTRO_VERSION" in
 				alpine@3.7 | alpine@3.8)
-					# I can assure you I tried very hard to enable openssl in these Alpine versions...
-					installRemoteModule_openssl=no
-					;;
-				*)
-					installRemoteModule_openssl=yes
+					if test -n "$installRemoteModule_version" && test $(compareVersions "$installRemoteModule_version" 4.6.0) -lt 0; then
+						# see https://github.com/swoole/swoole-src/issues/3934
+						installRemoteModule_openssl=no
+					fi
 					;;
 			esac
 			if test -z "$installRemoteModule_version" || test $(compareVersions "$installRemoteModule_version" 4.6.1) -ge 0; then
@@ -2291,19 +2331,14 @@ installPeclPackage() {
 		printf '\n' >"$CONFIGURE_FILE"
 	fi
 	installPeclPackage_name="$(getPeclModuleName "$1")"
+	if test -z "${2:-}"; then
+		installPeclPackage_fullname="$installPeclPackage_name"
+	else
+		installPeclPackage_fullname="$installPeclPackage_name-$2"
+	fi
 	if test $USE_PICKLE -eq 0; then
-		if test -z "${2:-}"; then
-			installPeclPackage_fullname="$installPeclPackage_name"
-		else
-			installPeclPackage_fullname="$installPeclPackage_name-$2"
-		fi
 		cat "$CONFIGURE_FILE" | MAKE="make -j$(getCompilationProcessorCount $1)" CPPFLAGS="${3:-}" pecl install "$installPeclPackage_fullname"
 	else
-		if test -z "${2:-}"; then
-			installPeclPackage_fullname="$installPeclPackage_name"
-		else
-			installPeclPackage_fullname="$installPeclPackage_name@$2"
-		fi
 		MAKE="make -j$(getCompilationProcessorCount $1)" CPPFLAGS="${3:-}" /tmp/pickle install --tmp-dir=/tmp/pickle.tmp --no-interaction --version-override='' --with-configure-options "$CONFIGURE_FILE" -- "$installPeclPackage_fullname"
 	fi
 }
@@ -2391,7 +2426,7 @@ cleanup() {
 		case "$DISTRO" in
 			debian)
 				printf '### RESTORING PREVIOUSLY INSTALLED PACKAGES ###\n'
-				DEBIAN_FRONTEND=noninteractive apt-get install --no-upgrade -qqy $PACKAGES_PREVIOUS
+				DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --no-upgrade -qqy $PACKAGES_PREVIOUS
 				;;
 		esac
 	fi
