@@ -355,8 +355,10 @@ checkRequiredModule() {
 sortModulesToInstall() {
 	# apcu_bc requires apcu
 	checkRequiredModule 'apcu_bc' 'apcu'
-	# http requires propro and raphf
-	checkRequiredModule 'http' 'propro'
+	# http requires propro (for PHP < 8) and raphf
+	if test $PHP_MAJMIN_VERSION -le 704; then
+		checkRequiredModule 'http' 'propro'
+	fi
 	checkRequiredModule 'http' 'raphf'
 	# Some module installation may use igbinary if available: move it before other modules
 	if stringInList 'igbinary' "$PHP_MODULES_TO_INSTALL"; then
@@ -546,7 +548,7 @@ buildRequiredPackageLists() {
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile gpgme-dev"
 				;;
 			gnupg@debian)
-				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_volatile libgpgme[0-9]*$"
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libgpgme[0-9]*$"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libgpgme[0-9]*-dev"
 				;;
 			grpc@alpine)
@@ -705,11 +707,11 @@ buildRequiredPackageLists() {
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libaio[0-9]*$"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile unzip"
 				;;
-			odbc@alpine)
+			odbc@alpine | pdo_odbc@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent unixodbc"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile unixodbc-dev"
 				;;
-			odbc@debian)
+			odbc@debian | pdo_odbc@debian)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libodbc1"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile unixodbc-dev"
 				;;
@@ -728,27 +730,11 @@ buildRequiredPackageLists() {
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libfbclient2"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile firebird-dev libib-util"
 				;;
-			pdo_odbc@alpine)
-				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent unixodbc"
-				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile unixodbc-dev"
-				;;
-			pdo_odbc@debian)
-				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libodbc1"
-				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile unixodbc-dev"
-				;;
-			pdo_pgsql@alpine)
+			pgsql@alpine | pdo_pgsql@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent postgresql-libs"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile postgresql-dev"
 				;;
-			pdo_pgsql@debian)
-				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libpq5"
-				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libpq-dev"
-				;;
-			pgsql@alpine)
-				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent postgresql-libs"
-				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile postgresql-dev"
-				;;
-			pgsql@debian)
+			pgsql@debian | pdo_pgsql@debian)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libpq5"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libpq-dev"
 				;;
@@ -881,6 +867,23 @@ buildRequiredPackageLists() {
 				;;
 			tdlib@debian)
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile git cmake gperf zlib1g-dev $buildRequiredPackageLists_libssldev"
+				;;
+			tensor@alpine)
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent lapack libexecinfo openblas"
+				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile lapack-dev libexecinfo-dev openblas-dev"
+				if test $DISTRO_MAJMIN_VERSION -le 310; then
+					if ! stringInList --force-overwrite "$IPE_APK_FLAGS"; then
+						IPE_APK_FLAGS="$IPE_APK_FLAGS --force-overwrite"
+					fi
+				fi
+				;;
+			tensor@debian)
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent liblapacke libopenblas-base"
+				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile liblapack-dev libopenblas-dev liblapacke-dev"
+				if test $DISTRO_VERSION_NUMBER -ge 10; then
+					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent gfortran-8"
+					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libgfortran-8-dev"
+				fi
 				;;
 			tidy@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent tidyhtml-libs"
@@ -1101,13 +1104,13 @@ setTargetTriplet() {
 #   The number of processors to be used
 getCompilationProcessorCount() {
 	case "$1" in
-		amqp | bcmath | bz2 | calendar | decimal | exif | gd | geospatial | gettext | gmagick | grpc | http | imagick | intl | mysqli | opcache | pcntl | pdo_mysql | protobuf | redis | ssh2 | soap | sockets | tidy | xdebug | xsl | yaml | zip)
-			# These extensions support parallel compilation
-			getProcessorCount
+		'')
+			# The above extensions don't support parallel compilation
+			echo 1
 			;;
 		*)
-			# We don't know - it's safer to disable parallel compilation
-			echo 1
+			# All the other extensions support parallel compilation
+			getProcessorCount
 			;;
 	esac
 }
@@ -1123,7 +1126,7 @@ installRequiredPackages() {
 
 	case "$DISTRO" in
 		alpine)
-			apk add $PACKAGES_PERSISTENT $PACKAGES_VOLATILE
+			apk add $IPE_APK_FLAGS $PACKAGES_PERSISTENT $PACKAGES_VOLATILE
 			;;
 		debian)
 			DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -qq -y $PACKAGES_PERSISTENT $PACKAGES_VOLATILE
@@ -1363,7 +1366,7 @@ EOF
 					if ! test -d /tmp/src/firebird; then
 						mv "$(getPackageSource https://github.com/FirebirdSQL/firebird/releases/download/R2_5_9/Firebird-2.5.9.27139-0.tar.bz2)" /tmp/src/firebird
 						cd /tmp/src/firebird
-						#Patch rwlock.h (this has been fixed in later release of firebird 3.x)
+						# Patch rwlock.h (this has been fixed in later release of firebird 3.x)
 						sed -i '194s/.*/#if 0/' src/common/classes/rwlock.h
 						./configure --with-system-icu
 						# -j option can't be used: make targets must be compiled sequentially
@@ -1638,7 +1641,7 @@ installRemoteModule() {
 			;;
 		igbinary)
 			if test -z "$installRemoteModule_version"; then
-				if test $PHP_MAJMIN_VERSION -lt 700; then
+				if test $PHP_MAJMIN_VERSION -le 506; then
 					installRemoteModule_version=2.0.8
 				fi
 			fi
@@ -1679,23 +1682,23 @@ installRemoteModule() {
 			;;
 		mailparse)
 			if test -z "$installRemoteModule_version"; then
-				if test $PHP_MAJMIN_VERSION -lt 700; then
+				if test $PHP_MAJMIN_VERSION -le 506; then
 					installRemoteModule_version=2.1.6
 				fi
 			fi
 			;;
 		memcache)
 			if test -z "$installRemoteModule_version"; then
-				if test $PHP_MAJMIN_VERSION -lt 700; then
+				if test $PHP_MAJMIN_VERSION -le 506; then
 					installRemoteModule_version=2.2.7
-				elif test $PHP_MAJMIN_VERSION -lt 800; then
+				elif test $PHP_MAJMIN_VERSION -le 704; then
 					installRemoteModule_version=4.0.5.2
 				fi
 			fi
 			;;
 		memcached)
 			if test -z "$installRemoteModule_version"; then
-				if test $PHP_MAJMIN_VERSION -lt 700; then
+				if test $PHP_MAJMIN_VERSION -le 506; then
 					installRemoteModule_version=2.2.0
 				fi
 			fi
@@ -1747,7 +1750,7 @@ installRemoteModule() {
 			;;
 		mosquitto)
 			if test -z "$installRemoteModule_version"; then
-				installRemoteModule_version=0.4.0
+				installRemoteModule_version=beta
 			fi
 			;;
 		msgpack)
@@ -1793,54 +1796,35 @@ installRemoteModule() {
 			;;
 		pcov)
 			if test -z "$installRemoteModule_version"; then
-				if test $PHP_MAJMIN_VERSION -lt 701; then
+				if test $PHP_MAJMIN_VERSION -le 700; then
 					installRemoteModule_version=0.9.0
 				fi
 			fi
 			;;
-		pdo_sqlsrv | sqlsrv)
-			if test -z "$installRemoteModule_version"; then
-				# https://docs.microsoft.com/it-it/sql/connect/php/system-requirements-for-the-php-sql-driver?view=sql-server-2017
-				if test $PHP_MAJMIN_VERSION -le 506; then
-					installRemoteModule_version=3.0.1
-				elif test $PHP_MAJMIN_VERSION -le 700; then
-					installRemoteModule_version=5.3.0
-				elif test $PHP_MAJMIN_VERSION -le 701; then
-					installRemoteModule_version=5.6.1
-				elif test $PHP_MAJMIN_VERSION -le 702; then
-					installRemoteModule_version=5.8.1
-				fi
-			fi
-			if ! isMicrosoftSqlServerODBCInstalled; then
-				installMicrosoftSqlServerODBC
-			fi
-			;;
 		propro)
 			if test -z "$installRemoteModule_version"; then
-				if test $PHP_MAJMIN_VERSION -lt 700; then
+				if test $PHP_MAJMIN_VERSION -le 506; then
 					installRemoteModule_version=1.0.2
 				fi
 			fi
 			;;
 		protobuf)
 			if test -z "$installRemoteModule_version"; then
-				if test $PHP_MAJMIN_VERSION -lt 700; then
+				if test $PHP_MAJMIN_VERSION -le 506; then
 					installRemoteModule_version=3.12.4
-				else
-					installRemoteModule_version=3.13.0
 				fi
 			fi
 			;;
 		pthreads)
 			if test -z "$installRemoteModule_version"; then
-				if test $PHP_MAJMIN_VERSION -lt 700; then
+				if test $PHP_MAJMIN_VERSION -le 506; then
 					installRemoteModule_version=2.0.10
 				fi
 			fi
 			;;
 		raphf)
 			if test -z "$installRemoteModule_version"; then
-				if test $PHP_MAJMIN_VERSION -lt 700; then
+				if test $PHP_MAJMIN_VERSION -le 506; then
 					installRemoteModule_version=1.1.2
 				fi
 			fi
@@ -1910,24 +1894,6 @@ installRemoteModule() {
 				addConfigureOption 'enable-redis-zstd' 'yes'
 			fi
 			;;
-		ssh2)
-			if test -z "$installRemoteModule_version"; then
-				if test $PHP_MAJMIN_VERSION -le 506; then
-					installRemoteModule_version=0.13
-				elif test $PHP_MAJMIN_VERSION -le 704; then
-					installRemoteModule_version=beta
-				else
-					installRemoteModule_src="$(getPackageSource https://codeload.github.com/php/pecl-networking-ssh2/tar.gz/93265d71bdeb23350e8320126c7949ed791310df)"
-					cd -- "$installRemoteModule_src"
-					phpize
-					./configure
-					make -j$(getCompilationProcessorCount)
-					make install
-					cd - >/dev/null
-					installRemoteModule_manuallyInstalled=1
-				fi
-			fi
-			;;
 		snuffleupagus)
 			if test -z "$installRemoteModule_version"; then
 				installRemoteModule_version=0.7.0
@@ -1948,12 +1914,29 @@ installRemoteModule() {
 				fi
 			fi
 			;;
+		sqlsrv | pdo_sqlsrv)
+			if test -z "$installRemoteModule_version"; then
+				# https://docs.microsoft.com/it-it/sql/connect/php/system-requirements-for-the-php-sql-driver?view=sql-server-2017
+				if test $PHP_MAJMIN_VERSION -le 506; then
+					installRemoteModule_version=3.0.1
+				elif test $PHP_MAJMIN_VERSION -le 700; then
+					installRemoteModule_version=5.3.0
+				elif test $PHP_MAJMIN_VERSION -le 701; then
+					installRemoteModule_version=5.6.1
+				elif test $PHP_MAJMIN_VERSION -le 702; then
+					installRemoteModule_version=5.8.1
+				fi
+			fi
+			if ! isMicrosoftSqlServerODBCInstalled; then
+				installMicrosoftSqlServerODBC
+			fi
+			;;
 		ssh2)
 			if test -z "$installRemoteModule_version"; then
 				if test $PHP_MAJMIN_VERSION -le 506; then
 					installRemoteModule_version=0.13
 				else
-					installRemoteModule_version=1.2
+					installRemoteModule_version=beta
 				fi
 			fi
 			;;
@@ -2013,7 +1996,7 @@ installRemoteModule() {
 				# enable mysqlnd support?
 				addConfigureOption enable-mysqlnd yes
 			elif test $(compareVersions "$installRemoteModule_version" 4.2.11) -ge 0; then
-				#enable sockets supports?
+				# enable sockets supports?
 				addConfigureOption enable-sockets $installRemoteModule_sockets
 				# enable openssl support?
 				addConfigureOption enable-openssl $installRemoteModule_openssl
@@ -2024,7 +2007,7 @@ installRemoteModule() {
 				# enable postgresql coroutine client support?
 				addConfigureOption enable-coroutine-postgresql yes
 			elif test $(compareVersions "$installRemoteModule_version" 4.2.7) -ge 0; then
-				#enable sockets supports?
+				# enable sockets supports?
 				addConfigureOption enable-sockets $installRemoteModule_sockets
 				# enable openssl support?
 				addConfigureOption enable-openssl $installRemoteModule_openssl
@@ -2039,7 +2022,7 @@ installRemoteModule() {
 			elif test $(compareVersions "$installRemoteModule_version" 4.2.6) -ge 0; then
 				# enable debug/trace log support?
 				addConfigureOption enable-debug-log no
-				#enable sockets supports?
+				# enable sockets supports?
 				addConfigureOption enable-sockets $installRemoteModule_sockets
 				# enable openssl support?
 				addConfigureOption enable-openssl $installRemoteModule_openssl
@@ -2052,7 +2035,7 @@ installRemoteModule() {
 			elif test $(compareVersions "$installRemoteModule_version" 4.2.0) -ge 0; then
 				# enable debug/trace log support?
 				addConfigureOption enable-debug-log no
-				#enable sockets supports?
+				# enable sockets supports?
 				addConfigureOption enable-sockets $installRemoteModule_sockets
 				# enable openssl support?
 				addConfigureOption enable-openssl $installRemoteModule_openssl
@@ -2067,7 +2050,7 @@ installRemoteModule() {
 			elif test $(compareVersions "$installRemoteModule_version" 2.1.2) -ge 0; then
 				# enable debug/trace log support?
 				addConfigureOption enable-swoole-debug no
-				#enable sockets supports?
+				# enable sockets supports?
 				addConfigureOption enable-sockets $installRemoteModule_sockets
 				# enable openssl support?
 				addConfigureOption enable-openssl $installRemoteModule_openssl
@@ -2082,7 +2065,7 @@ installRemoteModule() {
 			elif test $(compareVersions "$installRemoteModule_version" 1.10.4) -ge 0 && test $(compareVersions "$installRemoteModule_version" 1.10.5) -le 0; then
 				# enable debug/trace log support?
 				addConfigureOption enable-swoole-debug no
-				#enable sockets supports?
+				# enable sockets supports?
 				addConfigureOption enable-sockets $installRemoteModule_sockets
 				# enable openssl support?
 				addConfigureOption enable-openssl $installRemoteModule_openssl
@@ -2119,9 +2102,9 @@ installRemoteModule() {
 			;;
 		uopz)
 			if test -z "$installRemoteModule_version"; then
-				if test $PHP_MAJMIN_VERSION -lt 700; then
+				if test $PHP_MAJMIN_VERSION -le 506; then
 					installRemoteModule_version=2.0.7
-				elif test $PHP_MAJMIN_VERSION -lt 701; then
+				elif test $PHP_MAJMIN_VERSION -le 700; then
 					installRemoteModule_version=5.0.2
 				fi
 			fi
@@ -2165,9 +2148,9 @@ installRemoteModule() {
 			;;
 		yaml)
 			if test -z "$installRemoteModule_version"; then
-				if test $PHP_MAJMIN_VERSION -lt 700; then
+				if test $PHP_MAJMIN_VERSION -le 506; then
 					installRemoteModule_version=1.3.1
-				elif test $PHP_MAJMIN_VERSION -lt 701; then
+				elif test $PHP_MAJMIN_VERSION -le 700; then
 					installRemoteModule_version=2.0.4
 				fi
 			fi
@@ -2210,10 +2193,10 @@ installRemoteModule() {
 					;;
 			esac
 			if test -z "$installRemoteModule_version"; then
-				if test $PHP_MAJMIN_VERSION -lt 700; then
+				if test $PHP_MAJMIN_VERSION -le 506; then
 					installRemoteModule_version=0.5.0
-				elif test $PHP_MAJMIN_VERSION -gt 702; then
-					installRemoteModule_version=0.7.2
+				elif test $PHP_MAJMIN_VERSION -ge 703; then
+					installRemoteModule_version=beta
 				fi
 			fi
 			;;
@@ -2451,6 +2434,7 @@ mkdir -p /tmp/src
 mkdir -p /tmp/pickle.tmp
 IPE_ERRFLAG_FILE="$(mktemp -p /tmp/src)"
 CONFIGURE_FILE=/tmp/configure-options
+IPE_APK_FLAGS=''
 setDistro
 case "$DISTRO_VERSION" in
 	debian@8)
