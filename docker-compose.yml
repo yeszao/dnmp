@@ -1,0 +1,388 @@
+version: "3"
+services:
+#  nginx:
+#    build:
+#      context: ./services/nginx
+#      args:
+#        NGINX_VERSION: nginx:${NGINX_VERSION}
+#        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
+#        NGINX_INSTALL_APPS: ${NGINX_INSTALL_APPS}
+#    container_name: nginx
+#    ports:
+#      - "${NGINX_HTTP_HOST_PORT}:80"
+#      - "${NGINX_HTTPS_HOST_PORT}:443"
+#    volumes:
+#      - ${SOURCE_DIR}:/www/:rw
+#      - ${NGINX_SSL_CERTIFICATE_DIR}:/ssl:rw
+#      - ${NGINX_CONFD_DIR}:/etc/nginx/conf.d/:rw
+#      - ${NGINX_CONF_FILE}:/etc/nginx/nginx.conf:ro
+#      - ${NGINX_FASTCGI_PHP_CONF}:/etc/nginx/fastcgi-php.conf:ro
+#      - ${NGINX_FASTCGI_PARAMS}:/etc/nginx/fastcgi_params:ro
+#      - ${NGINX_LOG_DIR}:/var/log/nginx/:rw
+#    environment:
+#      TZ: "$TZ"
+#    restart: always
+#    networks:
+#      - default
+#
+#  php:
+#    build:
+#      context: ./services/php
+#      args:
+#        PHP_VERSION: php:${PHP_VERSION}-fpm-alpine
+#        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
+#        PHP_EXTENSIONS: ${PHP_EXTENSIONS}
+#        TZ: "$TZ"
+#    container_name: php
+#    expose:
+#      - 9501
+#    extra_hosts:
+#      - "www.site1.com:172.17.0.1"
+#    volumes:
+#      - ${SOURCE_DIR}:/www/:rw
+#      - ${PHP_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
+#      - ${PHP_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
+#      - ${PHP_LOG_DIR}:/var/log/php
+#      - ${DATA_DIR}/composer:/tmp/composer
+#    restart: always
+#    cap_add:
+#      - SYS_PTRACE
+#    networks:
+#      - default
+
+#  php56:
+#    build:
+#      context: ./services/php
+#      args:
+#        PHP_VERSION: php:${PHP56_VERSION}-fpm-alpine
+#        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
+#        PHP_EXTENSIONS: ${PHP56_EXTENSIONS}
+#        TZ: "$TZ"
+#    container_name: php56
+#    expose:
+#      - 9501
+#    volumes:
+#      - ${SOURCE_DIR}:/www/:rw
+#      - ${PHP56_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
+#      - ${PHP56_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
+#      - ${PHP56_LOG_DIR}:/var/log/php
+#      - ${DATA_DIR}/composer:/tmp/composer
+#    restart: always
+#    cap_add:
+#      - SYS_PTRACE
+#    networks:
+#      - default
+
+#  php54:
+#    build:
+#      context: ./services/php54
+#      args:
+#        PHP_VERSION: php:${PHP54_VERSION}-fpm
+#        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
+#        PHP_EXTENSIONS: ${PHP54_EXTENSIONS}
+#        TZ: "$TZ"
+#    container_name: php54
+#    volumes:
+#      - ${SOURCE_DIR}:/www/:rw
+#      - ${PHP54_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
+#      - ${PHP54_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
+#      - ${PHP54_LOG_DIR}:/var/log/php
+#      - ${DATA_DIR}/composer:/tmp/composer
+#    restart: always
+#    cap_add:
+#      - SYS_PTRACE
+#    networks:
+#      - default
+
+#  mysql5:
+#    image: mysql:${MYSQL5_VERSION}
+#    container_name: mysql5
+#    ports:
+#      - "${MYSQL5_HOST_PORT}:3306"
+#    volumes:
+#      - ${MYSQL5_CONF_FILE}:/etc/mysql/conf.d/mysql.cnf:ro
+#      - ${DATA_DIR}/mysql5:/var/lib/mysql/:rw
+#    restart: always
+#    networks:
+#      - default
+#    environment:
+#      MYSQL_ROOT_PASSWORD: "${MYSQL5_ROOT_PASSWORD}"
+#      TZ: "$TZ"
+
+#  openresty:
+#    image:  openresty/openresty:${OPENRESTY_VERSION}
+#    container_name: openresty
+#    ports:
+#       - "${OPENRESTY_HTTP_HOST_PORT}:80"
+#       - "${OPENRESTY_HTTPS_HOST_PORT}:443"
+#    volumes:
+#       - ${SOURCE_DIR}:/www/:rw
+#       - ${OPENRESTY_CONFD_DIR}:/etc/nginx/conf.d/:ro
+#       - ${OPENRESTY_SSL_CERTIFICATE_DIR}:/ssl:rw
+#       - ${OPENRESTY_CONF_FILE}:/usr/local/openresty/nginx/conf/nginx.conf:ro
+#       - ${OPENRESTY_FASTCGI_PHP_CONF}:/usr/local/openresty/nginx/conf/fastcgi-php.conf:ro
+#       - ${OPENRESTY_CONF_FASTCGIPARAMS_FILE}:/usr/local/openresty/nginx/conf/fastcgi_params:ro
+#       - ${OPENRESTY_LOG_DIR}:/var/log/nginx/:rw
+#    environment:
+#      TZ: "$TZ"
+#    networks:
+#      - default
+
+  redis:
+    image: redis:${REDIS_VERSION}
+    container_name: redis
+    ports:
+      - "${REDIS_HOST_PORT}:6379"
+    volumes:
+      - ${REDIS_CONF_FILE}:/etc/redis.conf:ro
+      - ${DATA_DIR}/redis:/data/:rw
+    restart: always
+    entrypoint: ["redis-server", "/etc/redis.conf"]
+    environment:
+      TZ: "$TZ"
+    networks:
+      - default
+
+#  memcached:
+#    image: memcached:${MEMCACHED_VERSION}
+#    container_name: memcached
+#    ports:
+#      - "${MEMCACHED_HOST_PORT}:11211"
+#    environment:
+#       MEMCACHED_CACHE_SIZE: "${MEMCACHED_CACHE_SIZE}"
+#    networks:
+#      - default
+
+  rabbitmq:
+    image: rabbitmq:${RABBITMQ_VERSION}
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - "${RABBITMQ_HOST_PORT_C}:5672"
+      - "${RABBITMQ_HOST_PORT_S}:15672"
+    environment:
+       TZ: "$TZ"
+       RABBITMQ_DEFAULT_USER: "${RABBITMQ_DEFAULT_USER}"
+       RABBITMQ_DEFAULT_PASS: "${RABBITMQ_DEFAULT_PASS}"
+    networks:
+          - default
+
+#  phpmyadmin:
+#    image: phpmyadmin/phpmyadmin:latest
+#    container_name: phpmyadmin
+#    ports:
+#      - "${PHPMYADMIN_HOST_PORT}:80"
+#    volumes:
+#      - ${PHPMYADMIN_USER_CONF_FILE}:/etc/phpmyadmin/config.user.inc.php:ro
+#      - ${PHPMYADMIN_PHP_CONF_FILE}:/usr/local/etc/php/conf.d/php-phpmyadmin.ini:ro
+#    networks:
+#      - default
+#    environment:
+#      - PMA_HOST=mysql
+#      - PMA_PORT=3306
+#      - TZ=$TZ
+
+#  phpredisadmin:
+#    image: erikdubbelboer/phpredisadmin:latest
+#    container_name: phpredisadmin
+#    ports:
+#      - "${REDISMYADMIN_HOST_PORT}:80"
+#    networks:
+#      - default
+#    environment:
+#      - REDIS_1_HOST=redis
+#      - REDIS_1_PORT=6379
+#      - TZ=$TZ
+
+#  mongodb:
+#    image: mongo:${MONGODB_VERSION}
+#    container_name: mongodb
+#    environment:
+#        MONGO_INITDB_ROOT_USERNAME: "${MONGODB_INITDB_ROOT_USERNAME}"
+#        MONGO_INITDB_ROOT_PASSWORD: "${MONGODB_INITDB_ROOT_PASSWORD}"
+#        TZ: "$TZ"
+#    volumes:
+#      - ${DATA_DIR}/mongo:/data/db:rw
+#      - ${DATA_DIR}/mongo_key:/mongo:rw
+#    ports:
+#       - "${MONGODB_HOST_PORT}:27017"
+#    networks:
+#       - default
+#    command:
+#       --auth
+
+#  adminmongo:
+#    image: mrvautin/adminmongo
+#    container_name: adminmongo
+#    ports:
+#      - "${ADMINMONGO_HOST_PORT}:1234"
+#    environment:
+#      - HOST=0.0.0.0
+#      - DB_HOST=mongodb
+#      - DB_PORT=27017
+#    networks:
+#      - default
+
+  elasticsearch:
+    build:
+      context: ./services/elasticsearch
+      args:
+        ELASTICSEARCH_VERSION: ${ELASTICSEARCH_VERSION}
+        ELASTICSEARCH_PLUGINS: ${ELASTICSEARCH_PLUGINS}
+    container_name: elasticsearch
+    environment:
+      - TZ=$TZ
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - ${DATA_DIR}/esdata:/usr/share/elasticsearch/data
+      - ${ELASTICSEARCH_CONF_FILE}:/usr/share/elasticsearch/config/elasticsearch.yml
+    hostname: elasticsearch
+    restart: always
+    ports:
+      - "${ELASTICSEARCH_HOST_PORT_C}:9200"
+      - "${ELASTICSEARCH_HOST_PORT_S}:9300"
+
+  kibana:
+    image: kibana:${KIBANA_VERSION}
+    container_name: kibana
+    environment:
+      TZ: "$TZ"
+      elasticsearch.hosts: http://elasticsearch:9200
+      I18N_LOCALE: "${KIBANA_I18N_LOCALE}"
+    hostname: kibana
+    depends_on:
+      - elasticsearch
+    restart: always
+    ports:
+      - "${KIBANA_HOST}:5601"
+
+  logstash:
+    image: logstash:${LOGSTASH_VERSION}
+    container_name: logstash
+    hostname: logstash
+    restart: always
+    depends_on:
+      - elasticsearch
+    environment:
+      TZ: "$TZ"
+    ports:
+      - "${LOGSTASH_HOST_PORT_C}:9600"
+      - "${LOGSTASH_HOST_PORT_S}:5044"
+
+  zipkin:
+    image: openzipkin/zipkin:${ZIPKIN_VERSION}
+    container_name: zipkin
+    restart: always
+    volumes:
+    - ${ZIPKIN_LOG_DIR}:/logs:rw
+    environment:
+      - STORAGE_TYPE=elasticsearch
+      - ES_HOSTS=elasticsearch
+    networks:
+      - default
+    ports:
+      - "${ZIPKIN_HOST}:9411"
+
+#  grafana:
+#    image: grafana/grafana:${GRAFANA_VERSION}
+#    container_name: grafana
+#    restart: always
+#    volumes:
+#      - ${GRAFANA_LOG_DIR}:/var/logs/grafana:rw
+#    networks:
+#      - default
+#    ports:
+#      - "${GRAFANA_HOST}:3000"
+
+  mysql:
+    image: mysql:${MYSQL_VERSION}
+    container_name: mysql
+    ports:
+      - "${MYSQL_HOST_PORT}:3306"
+    command: --init-file /data/application/init.sql
+    volumes:
+      - ${MYSQL_CONF_FILE}:/etc/mysql/conf.d/mysql.cnf:ro
+      - ${DATA_DIR}/mysql:/var/lib/mysql/:rw
+      - ${MYSQL_INIT_FILE}:/data/application/init.sql
+    restart: always
+    networks:
+      - default
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MYSQL_DATABASE: nacos
+      TZ: "$TZ"
+      MYSQL_USER: root
+      MYSQL_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+
+  nacos:
+    image: nacos/nacos-server:${NACOS_VERSION}
+    restart: always
+    container_name: nacos
+    depends_on:
+      - mysql
+    networks:
+      - default
+    environment:
+      PREFER_HOST_MODE: hostname
+      MODE: standalone
+      SPRING_DATASOURCE_PLATFORM: mysql
+      MYSQL_SERVICE_HOST: mysql
+      MYSQL_SERVICE_DB_NAME: nacos
+      MYSQL_SERVICE_PORT: 3306
+      MYSQL_SERVICE_USER: root
+      MYSQL_SERVICE_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      NACOS_APPLICATION_PORT: 8848
+      JVM_XMS: 512m
+      JVM_MMS: 320m
+      JVM_XMX: 512m
+    volumes:
+      - ${NACOS_LOG_DIR}:/home/nacos/logs:rw
+      - ${NACOS_PLUGIN_DIR}:/home/nacos/plugins
+      - ${NACOS_CONF}:/home/nacos/conf/application.properties
+    ports:
+      - "${NACOS_HOST}:8848"
+
+
+#  node:
+#    image: node:${NODE_VERSION}
+#    environment:
+#      - NODE_ENV=production
+#    volumes:
+#      - ${SOURCE_DIR}:/www/:rw
+#    expose:
+#      - "8081"
+#    networks:
+#      - default
+#    stdin_open: true
+#    tty: true
+
+
+#  supervisor:
+#    build:
+#      context: ./services/supervisor
+#      args:
+#        ALPINE_VERSION: alpine:${ALPINE_VERSION}
+#        TZ: "$TZ"
+#        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
+#    container_name: supervisor
+#    ports:
+#      - "${SUPERVISOR_HOST_PORT_C}:9001"
+#    volumes:
+#      - ${SOURCE_DIR}:/www/:rw
+#      - ${SUPERVISOR_LOG}:/var/log/supervisor/:rw
+#      - ${SUPERVISOR_CONFIG}:/etc/supervisor/conf.d/:rw
+#      - ${SUPERVISOR_CONF_FILE}:/etc/supervisor/supervisord.conf:ro
+#    command:
+#      - /bin/sh
+#      - -c
+#      - |
+#        supervisord -n -c /etc/supervisor/supervisord.conf
+#    restart: always
+#    cap_add:
+#      - SYS_PTRACE
+#    networks:
+#      - default
+
+networks:
+  default:
