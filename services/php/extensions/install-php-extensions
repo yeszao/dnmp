@@ -900,6 +900,14 @@ buildRequiredPackageLists() {
 			uuid@debian)
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile uuid-dev"
 				;;
+			vips@alpine)
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent vips"
+				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile vips-dev"
+				;;
+			vips@debian)
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libvips"
+				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libvips-dev"
+				;;
 			wddx@alpine)
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libxml2-dev"
 				;;
@@ -1694,6 +1702,13 @@ installRemoteModule() {
 				installRemoteModule_manuallyInstalled=1
 			fi
 			;;
+		inotify)
+			if test -z "$installRemoteModule_version"; then
+				if test $PHP_MAJMIN_VERSION -le 506; then
+					installRemoteModule_version=0.1.6
+				fi
+			fi
+			;;
 		ioncube_loader)
 			installRemoteModule_src='https://downloads.ioncube.com/loader_downloads/'
 			if test $(php -r 'echo PHP_INT_SIZE;') -eq 4; then
@@ -2127,6 +2142,15 @@ installRemoteModule() {
 			make install
 			rm "$PHP_INI_DIR/conf.d/tdlib.ini"
 			installRemoteModule_manuallyInstalled=1
+			;;
+		tensor)
+			if test -z "$installRemoteModule_version"; then
+				if test $PHP_MAJMIN_VERSION -le 703; then
+					installRemoteModule_version=2.2.3
+				elif test $PHP_MAJMIN_VERSION -ge 800; then
+					installRemoteModule_version=beta
+				fi
+			fi
 			;;
 		uopz)
 			if test -z "$installRemoteModule_version"; then
