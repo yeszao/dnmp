@@ -1,4 +1,4 @@
 *
 !.gitignore
 !certs/localhost/
-!localhost.conf
+!localhost.conf.copy
