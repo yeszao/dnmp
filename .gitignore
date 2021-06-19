@@ -3,7 +3,7 @@
 .env
 nohup.out
 docker-compose.yml
-docker-compose.diff.yml
+docker-compose.yml*
 www/*
 !www/localhost/
 logs/*
