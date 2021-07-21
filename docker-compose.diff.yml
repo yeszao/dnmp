@@ -90,7 +90,7 @@ services:
       args:
         PHP_VERSION: php:${PHP72_VERSION}-fpm-alpine
         CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
-        PHP_EXTENSIONS: ${PHP56_EXTENSIONS}
+        PHP_EXTENSIONS: ${PHP72_EXTENSIONS}
         TZ: "$TZ"
     container_name: php72
     expose:
