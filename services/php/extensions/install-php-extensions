@@ -360,6 +360,16 @@ sortModulesToInstall() {
 		checkRequiredModule 'http' 'propro'
 	fi
 	checkRequiredModule 'http' 'raphf'
+	# event requires sockets (for PHP <= 5.6)
+	if test $PHP_MAJMIN_VERSION -le 506; then
+		checkRequiredModule event sockets
+	fi
+	# Some module installation may use sockets if available: move it before other modules
+	if stringInList 'sockets' "$PHP_MODULES_TO_INSTALL"; then
+		PHP_MODULES_TO_INSTALL="$(removeStringFromList 'sockets' "$PHP_MODULES_TO_INSTALL")"
+		PHP_MODULES_TO_INSTALL="sockets $PHP_MODULES_TO_INSTALL"
+		PHP_MODULES_TO_INSTALL="${PHP_MODULES_TO_INSTALL% }"
+	fi
 	# Some module installation may use igbinary if available: move it before other modules
 	if stringInList 'igbinary' "$PHP_MODULES_TO_INSTALL"; then
 		PHP_MODULES_TO_INSTALL="$(removeStringFromList 'igbinary' "$PHP_MODULES_TO_INSTALL")"
@@ -401,7 +411,12 @@ buildRequiredPackageLists() {
 	buildRequiredPackageLists_volatile=''
 	case "$DISTRO" in
 		alpine)
-			apk update
+			if test $DISTRO_VERSION_NUMBER = '3.14'; then
+				# https://gitlab.alpinelinux.org/alpine/aports/-/issues/12763#note_172090
+				apk -U upgrade
+			else
+				apk update
+			fi
 			;;
 	esac
 	case "$DISTRO_VERSION" in
@@ -437,6 +452,9 @@ buildRequiredPackageLists() {
 			break
 		fi
 		case "$1@$DISTRO" in
+			@composer@debian)
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent unzip"
+				;;
 			amqp@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent rabbitmq-c"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile rabbitmq-c-dev"
@@ -484,6 +502,14 @@ buildRequiredPackageLists() {
 			enchant@debian)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libenchant1c2a"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libenchant-dev"
+				;;
+			event@alpine)
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libevent $buildRequiredPackageLists_libssl"
+				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libevent-dev $buildRequiredPackageLists_libssldev"
+				;;
+			event@debian)
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent ^libevent[0-9\.\-]*$ ^libevent-openssl[0-9\.\-]*$ ^libevent-extra[0-9\.\-]*$ ^libevent-pthreads[0-9\.\-]*$"
+				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libevent-dev $buildRequiredPackageLists_libssldev"
 				;;
 			ffi@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libffi"
@@ -832,6 +858,12 @@ buildRequiredPackageLists() {
 			solr@debian)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libcurl3-gnutls"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libcurl4-gnutls-dev libxml2-dev"
+				;;
+			spx@alpine)
+				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile zlib-dev"
+				;;
+			spx@debian)
+				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile zlib1g-dev"
 				;;
 			sqlsrv@alpine | pdo_sqlsrv@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libstdc++ unixodbc"
@@ -1622,6 +1654,26 @@ installRemoteModule() {
 				fi
 			fi
 			;;
+		blackfire)
+			case $(uname -m) in
+				i386 | i686 | x86)
+					installRemoteModule_tmp1=i386
+					;;
+				aarch64 | arm64 | armv8)
+					installRemoteModule_tmp1=arm64
+					;;
+				*)
+					installRemoteModule_tmp1=amd64
+					;;
+			esac
+			installRemoteModule_tmp2=$(php -r 'echo PHP_MAJOR_VERSION . PHP_MINOR_VERSION;')
+			installRemoteModule_tmp="$(mktemp -p /tmp/src -d)"
+			cd "$installRemoteModule_tmp"
+			curl -sSLf --user-agent Docker https://blackfire.io/api/v1/releases/probe/php/linux/$installRemoteModule_tmp1/$installRemoteModule_tmp2 | tar xz
+			mv blackfire-*.so $(getPHPExtensionsDir)/blackfire.so
+			cd - >/dev/null
+			installRemoteModule_manuallyInstalled=1
+			;;
 		cmark)
 			if test -z "$installRemoteModule_version"; then
 				if test $PHP_MAJMIN_VERSION -le 701; then
@@ -1631,11 +1683,11 @@ installRemoteModule() {
 			if ! test -e /usr/local/lib/libcmark.so && ! test -e /usr/local/lib64/libcmark.so && ! test -e /usr/lib/libcmark.so && ! test -e /usr/lib64/libcmark.so && ! test -e /lib/libcmark.so; then
 				case "$DISTRO_VERSION" in
 					debian@8)
-						# cmark library version 0.30.0 requires cmake 3.3+ (debian jessie comes with cmake 3.0)
+						# See https://github.com/commonmark/cmark/issues/384
 						installRemoteModule_tmp=0.29.0
 						;;
 					*)
-						installRemoteModule_tmp=0.30.0
+						installRemoteModule_tmp=0.30.1
 						;;
 				esac
 				cd "$(getPackageSource https://github.com/commonmark/cmark/archive/$installRemoteModule_tmp.tar.gz)"
@@ -1674,6 +1726,66 @@ installRemoteModule() {
 					fi
 					;;
 			esac
+			;;
+		event)
+			if test -z "$installRemoteModule_version" || test $(compareVersions "$installRemoteModule_version" 2.4.0) -ge 0; then
+				# Enable internal debugging in Event
+				addConfigureOption enable-event-debug no
+				# Enable sockets support in Event
+				if php --ri sockets >/dev/null 2>/dev/null; then
+					addConfigureOption enable-event-sockets yes
+				else
+					addConfigureOption enable-event-sockets no
+				fi
+				# libevent installation prefix
+				addConfigureOption with-event-libevent-dir /usr
+				# Include libevent's pthreads library and enable thread safety support in Event
+				addConfigureOption with-event-pthreads yes
+				# Include libevent protocol-specific functionality support including HTTP, DNS, and RPC
+				addConfigureOption with-event-extra yes
+				# Include libevent OpenSSL support
+				addConfigureOption with-event-openssl yes
+				# PHP Namespace for all Event classes
+				if test -n "${IPE_EVENT_NAMESPACE:-}"; then
+					addConfigureOption with-event-ns "$IPE_EVENT_NAMESPACE"
+				else
+					addConfigureOption with-event-ns no
+				fi
+				# openssl installation prefix
+				addConfigureOption with-openssl-dir no
+			elif test $(compareVersions "$installRemoteModule_version" 1.7.6) -ge 0; then
+				# Enable internal debugging in Event
+				addConfigureOption enable-event-debug no
+				# Enable sockets support in Event
+				if php --ri sockets >/dev/null 2>/dev/null; then
+					addConfigureOption enable-event-sockets yes
+				else
+					addConfigureOption enable-event-sockets no
+				fi
+				# libevent installation prefix
+				addConfigureOption with-event-libevent-dir /usr
+				# Include libevent's pthreads library and enable thread safety support in Event
+				addConfigureOption with-event-pthreads yes
+				# Include libevent protocol-specific functionality support including HTTP, DNS, and RPC
+				addConfigureOption with-event-extra yes
+				# Include libevent OpenSSL support
+				addConfigureOption with-event-openssl yes
+				# openssl installation prefix
+				addConfigureOption with-openssl-dir no
+			elif test $(compareVersions "$installRemoteModule_version" 1.3.0) -ge 0; then
+				# Enable internal debugging in event
+				addConfigureOption enable-event-debug no
+				# libevent installation prefix
+				addConfigureOption with-event-libevent-dir /usr
+				# Include libevent's pthreads library and enable thread safety support in event
+				addConfigureOption with-event-pthreads yes
+				# Include libevent protocol-specific functionality support including HTTP, DNS, and RPC
+				addConfigureOption with-event-extra yes
+				# Include libevent OpenSSL support
+				addConfigureOption with-event-openssl yes
+				# openssl installation prefix
+				addConfigureOption with-openssl-dir no
+			fi
 			;;
 		gearman)
 			if test -z "$installRemoteModule_version"; then
@@ -1998,7 +2110,7 @@ installRemoteModule() {
 			;;
 		snuffleupagus)
 			if test -z "$installRemoteModule_version"; then
-				installRemoteModule_version=0.7.0
+				installRemoteModule_version=0.7.1
 			fi
 			installRemoteModule_src="$(getPackageSource https://codeload.github.com/jvoisin/snuffleupagus/tar.gz/v$installRemoteModule_version)"
 			cd "$installRemoteModule_src/src"
@@ -2015,6 +2127,24 @@ installRemoteModule() {
 					installRemoteModule_version=2.4.0
 				fi
 			fi
+			;;
+		spx)
+			if test -z "$installRemoteModule_version"; then
+				installRemoteModule_version=1367cbc70194d18888ec9cfe9b06c0a5b4426dff
+			fi
+			if test "${installRemoteModule_version%.*}" = "$installRemoteModule_version"; then
+				installRemoteModule_displayVersion="$installRemoteModule_version"
+			else
+				installRemoteModule_displayVersion="git--master-$installRemoteModule_version"
+			fi
+			installRemoteModule_src="$(getPackageSource https://codeload.github.com/NoiseByNorthwest/php-spx/tar.gz/$installRemoteModule_version)"
+			cd -- "$installRemoteModule_src"
+			sed -Ei "s/^([ \t]*#define[ \t]+PHP_SPX_VERSION[ \t]+\")0.4.10(\")/\1git--master-$installRemoteModule_displayVersion\2/" src/php_spx.h
+			phpize
+			./configure
+			make -j$(getProcessorCount) install
+			cd - >/dev/null
+			installRemoteModule_manuallyInstalled=1
 			;;
 		sqlsrv | pdo_sqlsrv)
 			isMicrosoftSqlServerODBCInstalled || installMicrosoftSqlServerODBC
@@ -2240,6 +2370,8 @@ installRemoteModule() {
 					installRemoteModule_version=2.0.7
 				elif test $PHP_MAJMIN_VERSION -le 700; then
 					installRemoteModule_version=5.0.2
+				elif test $PHP_MAJMIN_VERSION -le 740; then
+					installRemoteModule_version=6.1.2
 				fi
 			fi
 			;;
@@ -2278,6 +2410,33 @@ installRemoteModule() {
 			if test -z "$installRemoteModule_version" || test $(compareVersions "$installRemoteModule_version" 1.2.7) -ge 0; then
 				# enable reader supports?
 				addConfigureOption enable-reader yes
+			fi
+			;;
+		yac)
+			if test -z "$installRemoteModule_version"; then
+				if test $PHP_MAJMIN_VERSION -le 506; then
+					installRemoteModule_version=0.9.2
+				fi
+			fi
+			if test -z "$installRemoteModule_version" || test $(compareVersions "$installRemoteModule_version" 2.2.0) -ge 0; then
+				# Enable igbinary serializer support
+				if php --ri igbinary >/dev/null 2>/dev/null; then
+					addConfigureOption enable-igbinary yes
+				else
+					addConfigureOption enable-igbinary no
+				fi
+				# Enable json serializer support
+				if php --ri json >/dev/null 2>/dev/null; then
+					addConfigureOption enable-json yes
+				else
+					addConfigureOption enable-json no
+				fi
+				# Enable msgpack serializer support
+				if php --ri msgpack >/dev/null 2>/dev/null; then
+					addConfigureOption enable-msgpack yes
+				else
+					addConfigureOption enable-msgpack no
+				fi
 			fi
 			;;
 		yaml)
@@ -2358,6 +2517,13 @@ installRemoteModule() {
 			# apcu_bc must be loaded after apcu
 			docker-php-ext-enable --ini-name "xx-php-ext-$installRemoteModule_module.ini" apc
 			;;
+		blackfire)
+			printf "extension=blackfire.so\nblackfire.agent_socket=tcp://blackfire:8307\n" >"$PHP_INI_DIR/conf.d/docker-php-ext-$installRemoteModule_module.ini"
+			;;
+		event)
+			# event must be loaded after sockets
+			docker-php-ext-enable --ini-name "xx-php-ext-$installRemoteModule_module.ini" "$installRemoteModule_module"
+			;;
 		ioncube_loader)
 			# On PHP 5.5, docker-php-ext-enable fails to detect that ionCube Loader is a Zend Extension
 			if test $PHP_MAJMIN_VERSION -le 505; then
@@ -2390,6 +2556,9 @@ configureInstaller() {
 	USE_PICKLE=0
 	for PHP_MODULE_TO_INSTALL in $PHP_MODULES_TO_INSTALL; do
 		if test "${PHP_MODULE_TO_INSTALL#@}" != "$PHP_MODULE_TO_INSTALL"; then
+			continue
+		fi
+		if test "$PHP_MODULE_TO_INSTALL" = 'spx'; then
 			continue
 		fi
 		if test "$PHP_MODULE_TO_INSTALL" = 'amqp' && test $PHP_MAJMIN_VERSION -ge 800; then
@@ -2556,20 +2725,25 @@ cleanup() {
 				;;
 		esac
 	fi
-	case "$DISTRO" in
-		alpine)
-			rm -rf /var/cache/apk/*
-			;;
-		debian)
-			rm -rf /var/lib/apt/lists/*
-			;;
-	esac
 	docker-php-source delete
-	rm -rf /tmp/pear
 	rm -rf /tmp/src
 	rm -rf /tmp/pickle
 	rm -rf /tmp/pickle.tmp
 	rm -rf "$CONFIGURE_FILE"
+	case "${IPE_KEEP_SYSPKG_CACHE:-}" in
+		1 | y* | Y*) ;;
+		*)
+			case "$DISTRO" in
+				alpine)
+					rm -rf /var/cache/apk/*
+					;;
+				debian)
+					rm -rf /var/lib/apt/lists/*
+					;;
+			esac
+			rm -rf /tmp/pear
+			;;
+	esac
 }
 
 resetIFS
