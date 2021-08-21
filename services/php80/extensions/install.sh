@@ -559,9 +559,7 @@ if [[ -z "${EXTENSIONS##*,event,*}" ]]; then
     fi
 
     echo "---------- Install event again ----------"
-    pecl install event
-    docker-php-ext-enable event
-
+    installExtensionFromTgz event-3.0.5  "--ini-name event.ini"
 fi
 
 if [[ -z "${EXTENSIONS##*,mongodb,*}" ]]; then
