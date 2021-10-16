@@ -161,6 +161,7 @@ install-php-extensions apcu
 | apcu_bc |  |  | &check; | &check; | &check; | &check; | &check; |  |  |
 | ast |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | bcmath | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
+| blackfire | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |
 | bz2 | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | calendar | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | cmark |  |  | &check; | &check; | &check; | &check; | &check; |  |  |
@@ -168,8 +169,9 @@ install-php-extensions apcu
 | dba | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | decimal |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | ds |  |  | &check; | &check; | &check; | &check; | &check; | &check; |  |
-| enchant[*](#special-requirements-for-enchant) | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
+| enchant | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | ev | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
+| event | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | excimer |  |  |  | &check; | &check; | &check; | &check; | &check; | &check; |
 | exif | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | ffi |  |  |  |  |  |  | &check; | &check; | &check; |
@@ -194,7 +196,7 @@ install-php-extensions apcu
 | json_post | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | ldap | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | lzf | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
-| mailparse | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |
+| mailparse | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | maxminddb |  |  |  |  | &check; | &check; | &check; | &check; | &check; |
 | mcrypt | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | memcache | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
@@ -238,6 +240,8 @@ install-php-extensions apcu
 | soap | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | sockets | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | solr | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
+| sourceguardian | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |
+| spx |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |
 | sqlsrv[*](#special-requirements-for-sqlsrv) |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | ssh2 | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | stomp | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |  |
@@ -249,24 +253,26 @@ install-php-extensions apcu
 | tensor |  |  |  |  | &check; | &check; | &check; | &check; |  |
 | tidy | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | timezonedb | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
-| uopz | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |  |
-| uploadprogress | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |  |
+| uopz | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
+| uploadprogress | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | uuid | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | vips[*](#special-requirements-for-vips) |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | wddx | &check; | &check; | &check; | &check; | &check; | &check; |  |  |  |
 | xdebug | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | xhprof | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
-| xlswriter |  |  | &check; | &check; | &check; | &check; | &check; | &check; |  |
+| xlswriter |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | xmldiff | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
-| xmlrpc | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
+| xmlrpc | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |
 | xsl | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
-| yaml | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
+| yac |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
+| yaml | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |
 | yar | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
+| zephir_parser |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | zip | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | zookeeper | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | zstd | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 
-
+*Number of supported extensions: 115*
 
 此扩展来自[https://github.com/mlocati/docker-php-extension-installer](https://github.com/mlocati/docker-php-extension-installer)
 参考示例文件
