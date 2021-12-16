@@ -168,7 +168,7 @@ install-php-extensions apcu
 | csv |  |  |  |  |  | &check; | &check; | &check; | &check; |
 | dba | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | decimal |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
-| ds |  |  | &check; | &check; | &check; | &check; | &check; | &check; |  |
+| ds |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | enchant | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | ev | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | event | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
@@ -213,6 +213,7 @@ install-php-extensions apcu
 | odbc | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | opcache | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | opencensus |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
+| openswoole |  |  |  |  | &check; | &check; | &check; | &check; | &check; |
 | parallel[*](#special-requirements-for-parallel) |  |  |  | &check; | &check; | &check; | &check; |  |  |
 | pcntl | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | pcov |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
@@ -245,12 +246,12 @@ install-php-extensions apcu
 | sqlsrv[*](#special-requirements-for-sqlsrv) |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | ssh2 | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | stomp | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |  |
-| swoole | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |
+| swoole | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | sybase_ct | &check; | &check; |  |  |  |  |  |  |  |
 | sysvmsg | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | sysvsem | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | sysvshm | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
-| tensor |  |  |  |  | &check; | &check; | &check; | &check; |  |
+| tensor[*](#special-requirements-for-tensor) |  |  |  |  | &check; | &check; | &check; | &check; |  |
 | tidy | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | timezonedb | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | uopz | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
@@ -265,14 +266,14 @@ install-php-extensions apcu
 | xmlrpc | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |
 | xsl | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | yac |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
-| yaml | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |
+| yaml | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | yar | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | zephir_parser |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | zip | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | zookeeper | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | zstd | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 
-*Number of supported extensions: 115*
+*Number of supported extensions: 116*
 
 此扩展来自[https://github.com/mlocati/docker-php-extension-installer](https://github.com/mlocati/docker-php-extension-installer)
 参考示例文件
