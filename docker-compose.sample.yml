@@ -118,7 +118,7 @@ services:
   #      - default
 
   mysql:
-    image: mysql:${MYSQL_VERSION}
+    image: mysql/mysql-server:${MYSQL_VERSION}
     container_name: mysql
     ports:
       - "${MYSQL_HOST_PORT}:3306"
