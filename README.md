@@ -5,7 +5,7 @@ DNMP（Docker + Nginx + MySQL + PHP7/5 + Redis）是一款全功能的**LNMP一�
 QQ交流群：
 - 1群：**572041090**（已满）
 - 2群：**300723526**（快满了）
-- 3群：**142227642**
+- 3群：**142227642**（有位）
 
 **[[ENGLISH]](README-en.md)** -
 [**[GitHub地址]**](https://github.com/yeszao/dnmp) -
