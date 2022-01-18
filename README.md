@@ -90,7 +90,7 @@ DNMP项目特点：
     ```
     $ git clone https://github.com/yeszao/dnmp.git
     ```
-3. 如果不是`root`用户，还需将当前用户加入`docker`用户组：
+3. 如果主机是 Linux系统，且当前用户不是`root`用户，还需将当前用户加入`docker`用户组：
     ```
     $ sudo gpasswd -a ${USER} docker
     ```
