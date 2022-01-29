@@ -324,7 +324,7 @@ install-php-extensions apcu
             "packagist": {
                 "type": "composer",
                 "url": "https://mirrors.aliyun.com/composer/"
-s            }
+            }
         }
     }
 
