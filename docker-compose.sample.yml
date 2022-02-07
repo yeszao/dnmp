@@ -24,6 +24,9 @@ services:
     restart: always
     networks:
       - default
+      # 可以把-default 改成下列配置，以固定容器IP
+      #default:
+      #  ipv4_address: 10.0.0.10
 
   php:
     build:
@@ -118,7 +121,7 @@ services:
 #      - default
 
   mysql:
-    image: mysql:${MYSQL_VERSION}
+    image: mysql/mysql-server:${MYSQL_VERSION}
     container_name: mysql
     ports:
       - "${MYSQL_HOST_PORT}:3306"
@@ -130,6 +133,7 @@ services:
       - default
     environment:
       MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MYSQL_ROOT_HOST: "${MYSQL_ROOT_HOST}"
       TZ: "$TZ"
 
 #  mysql5:
@@ -354,3 +358,9 @@ services:
 
 networks:
   default:
+    driver: bridge
+    ipam:
+      driver: default
+      # 解除下面的注释可以设置网段，用于nginx等容器固定容器IP
+      #config:
+      #  - subnet: 10.0.0.0/24
