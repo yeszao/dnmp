@@ -403,6 +403,12 @@ sortModulesToInstall() {
 		PHP_MODULES_TO_INSTALL="socket $PHP_MODULES_TO_INSTALL"
 		PHP_MODULES_TO_INSTALL="${PHP_MODULES_TO_INSTALL% }"
 	fi
+	# Some module installation may use apcu if available: move it before other modules
+	if stringInList 'apcu' "$PHP_MODULES_TO_INSTALL"; then
+		PHP_MODULES_TO_INSTALL="$(removeStringFromList 'apcu' "$PHP_MODULES_TO_INSTALL")"
+		PHP_MODULES_TO_INSTALL="apcu $PHP_MODULES_TO_INSTALL"
+		PHP_MODULES_TO_INSTALL="${PHP_MODULES_TO_INSTALL% }"
+	fi
 	# In any case, first of all, we need to install composer
 	if stringInList '@composer' "$PHP_MODULES_TO_INSTALL"; then
 		PHP_MODULES_TO_INSTALL="$(removeStringFromList '@composer' "$PHP_MODULES_TO_INSTALL")"
@@ -1409,10 +1415,20 @@ installOracleInstantClient() {
 			installOracleInstantClient_sdk=https://download.oracle.com/otn_software/linux/instantclient/199000/instantclient-sdk-linux-$installOracleInstantClient_version.0.0.0dbru.zip
 			;;
 		*)
-			installOracleInstantClient_client=client64
-			installOracleInstantClient_version='21.1'
-			installOracleInstantClient_ic=https://download.oracle.com/otn_software/linux/instantclient/211000/instantclient-basic-linux.x64-$installOracleInstantClient_version.0.0.0.zip
-			installOracleInstantClient_sdk=https://download.oracle.com/otn_software/linux/instantclient/211000/instantclient-sdk-linux.x64-$installOracleInstantClient_version.0.0.0.zip
+			case $(uname -m) in
+				aarch64*)
+					installOracleInstantClient_client=client64
+					installOracleInstantClient_version='19.10'
+					installOracleInstantClient_ic=https://download.oracle.com/otn_software/linux/instantclient/191000/instantclient-basic-linux.arm64-$installOracleInstantClient_version.0.0.0dbru.zip
+					installOracleInstantClient_sdk=https://download.oracle.com/otn_software/linux/instantclient/191000/instantclient-sdk-linux.arm64-$installOracleInstantClient_version.0.0.0dbru.zip
+					;;
+				*)
+					installOracleInstantClient_client=client64
+					installOracleInstantClient_version='21.1'
+					installOracleInstantClient_ic=https://download.oracle.com/otn_software/linux/instantclient/211000/instantclient-basic-linux.x64-$installOracleInstantClient_version.0.0.0.zip
+					installOracleInstantClient_sdk=https://download.oracle.com/otn_software/linux/instantclient/211000/instantclient-sdk-linux.x64-$installOracleInstantClient_version.0.0.0.zip
+					;;
+			esac
 			;;
 	esac
 	ORACLE_INSTANTCLIENT_LIBPATH=/usr/lib/oracle/$installOracleInstantClient_version/$installOracleInstantClient_client/lib
@@ -1900,6 +1916,15 @@ EOF
 					;;
 			esac
 			;;
+		sockets)
+			case "$PHP_MAJDOTMINDOTPAT_VERSION" in
+				8.0.15 | 8.1.2)
+					sed -i '70 i #ifndef _GNU_SOURCE' /usr/src/php/ext/sockets/config.m4
+					sed -i '71 i #define _GNU_SOURCE' /usr/src/php/ext/sockets/config.m4
+					sed -i '72 i #endif' /usr/src/php/ext/sockets/config.m4
+					;;
+			esac
+			;;
 		sybase_ct)
 			docker-php-ext-configure sybase_ct --with-sybase-ct=/usr
 			;;
@@ -2245,6 +2270,11 @@ installRemoteModule() {
 			fi
 			;;
 		lzf)
+			if test -z "$installRemoteModule_version"; then
+				if test $PHP_MAJMIN_VERSION -lt 702; then
+					installRemoteModule_version=1.6.8
+				fi
+			fi
 			if test -z "$installRemoteModule_version" || test $(compareVersions "$installRemoteModule_version" '1.5.0') -ge 0; then
 				# Sacrifice speed in favour of compression ratio?
 				case "${IPE_LZF_BETTERCOMPRESSION:-}" in
@@ -2433,6 +2463,9 @@ installRemoteModule() {
 					debian)
 						installRemoteModule_tmp='librdkafka*'
 						;;
+					*)
+						installRemoteModule_tmp=''
+						;;
 				esac
 				if test -n "$installRemoteModule_tmp"; then
 					installRemoteModule_tmp="$(getInstalledPackageVersion "$installRemoteModule_tmp")"
@@ -2536,20 +2569,8 @@ installRemoteModule() {
 					installRemoteModule_version=5.6.1
 				elif test $PHP_MAJMIN_VERSION -le 702; then
 					installRemoteModule_version=5.8.1
-				elif test $PHP_MAJMIN_VERSION -ge 801; then
-					# https://github.com/microsoft/msphpsql/commits/PHP-8.1-dev
-					installRemoteModule_src="$(getPackageSource https://codeload.github.com/microsoft/msphpsql/tar.gz/f00dc9f0c555eebaf9f1e5a9bd1a04044908bba1)"
-					cd -- "$installRemoteModule_src/source/$installRemoteModule_module"
-					if command -v bash >/dev/null; then
-						(cd .. && bash ./packagize.sh)
-					else
-						(cd .. && sh ./packagize.sh)
-					fi
-					phpize
-					./configure
-					make -j$(getProcessorCount) install
-					cd - >/dev/null
-					installRemoteModule_manuallyInstalled=1
+				elif test $PHP_MAJMIN_VERSION -le 703; then
+					installRemoteModule_version=5.9.0
 				fi
 			fi
 			;;
