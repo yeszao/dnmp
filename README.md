@@ -520,6 +520,9 @@ docker0: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500
 ```
 
 3.接着直接php容器使用`172.0.17.1:3306`连接即可
+
+### 8.6 SQLSTATE[HY000] [1130] Host '172.19.0.2' is not allowed to connect to this MySQL server
+1. 目前使用mysql-server 8.0.28以上的版本,php版本需要7.4.7以上才能连接
 ## License
 MIT
 
