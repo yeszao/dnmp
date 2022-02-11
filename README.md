@@ -5,7 +5,7 @@ DNMP（Docker + Nginx/Openresty + MySQL5,8 + PHP5,7,8 + Redis + ElasticSearch + 
 QQ交流群：
 - 1群：**572041090**（已满）
 - 2群：**300723526**（已满）
-- 3群：**142227642**（有位）
+- 3群：**878913761**（有位）
 
 **[[ENGLISH]](README-en.md)** -
 [**[GitHub地址]**](https://github.com/yeszao/dnmp) -
