@@ -1411,7 +1411,7 @@ installOracleInstantClient() {
 		32)
 			installOracleInstantClient_client=client
 			installOracleInstantClient_version='19.9'
-			installOracleInstantClient_ic=https://download.oracle.com/otn_software/linux/instantclient/199000/instantclient-basic-linux-$installOracleInstantClient_version.0.0.0dbru.zip
+			installOracleInstantClient_ic=https://download.oracle.com/otn_software/linux/instantclient/199000/instantclient-basiclite-linux-$installOracleInstantClient_version.0.0.0dbru.zip
 			installOracleInstantClient_sdk=https://download.oracle.com/otn_software/linux/instantclient/199000/instantclient-sdk-linux-$installOracleInstantClient_version.0.0.0dbru.zip
 			;;
 		*)
@@ -1419,13 +1419,13 @@ installOracleInstantClient() {
 				aarch64*)
 					installOracleInstantClient_client=client64
 					installOracleInstantClient_version='19.10'
-					installOracleInstantClient_ic=https://download.oracle.com/otn_software/linux/instantclient/191000/instantclient-basic-linux.arm64-$installOracleInstantClient_version.0.0.0dbru.zip
+					installOracleInstantClient_ic=https://download.oracle.com/otn_software/linux/instantclient/191000/instantclient-basiclite-linux.arm64-$installOracleInstantClient_version.0.0.0dbru.zip
 					installOracleInstantClient_sdk=https://download.oracle.com/otn_software/linux/instantclient/191000/instantclient-sdk-linux.arm64-$installOracleInstantClient_version.0.0.0dbru.zip
 					;;
 				*)
 					installOracleInstantClient_client=client64
 					installOracleInstantClient_version='21.1'
-					installOracleInstantClient_ic=https://download.oracle.com/otn_software/linux/instantclient/211000/instantclient-basic-linux.x64-$installOracleInstantClient_version.0.0.0.zip
+					installOracleInstantClient_ic=https://download.oracle.com/otn_software/linux/instantclient/211000/instantclient-basiclite-linux.x64-$installOracleInstantClient_version.0.0.0.zip
 					installOracleInstantClient_sdk=https://download.oracle.com/otn_software/linux/instantclient/211000/instantclient-sdk-linux.x64-$installOracleInstantClient_version.0.0.0.zip
 					;;
 			esac
@@ -1492,7 +1492,11 @@ installMicrosoftSqlServerODBC() {
 		alpine)
 			# https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server#alpine17
 			rm -rf /tmp/src/msodbcsql.apk
-			curl -sSLf -o /tmp/src/msodbcsql.apk https://download.microsoft.com/download/e/4/e/e4e67866-dffd-428c-aac7-8d28ddafb39b/msodbcsql17_17.8.1.1-1_amd64.apk
+			if test $PHP_MAJMIN_VERSION -le 703; then
+				curl -sSLf -o /tmp/src/msodbcsql.apk https://download.microsoft.com/download/e/4/e/e4e67866-dffd-428c-aac7-8d28ddafb39b/msodbcsql17_17.8.1.1-1_amd64.apk
+			else
+				curl -sSLf -o /tmp/src/msodbcsql.apk https://download.microsoft.com/download/b/9/f/b9f3cce4-3925-46d4-9f46-da08869c6486/msodbcsql18_18.0.1.1-1_amd64.apk
+			fi
 			printf '\n' | apk add --allow-untrusted /tmp/src/msodbcsql.apk
 			rm -rf /tmp/src/msodbcsql.apk
 			;;
@@ -1511,7 +1515,14 @@ installMicrosoftSqlServerODBC() {
 				DEBIAN_FRONTEND=noninteractive apt-get -q update
 			fi
 			printf -- '- installing the APT package\n'
-			DEBIAN_FRONTEND=noninteractive ACCEPT_EULA=Y apt-get -qy --no-install-recommends install '^msodbcsql[0-9]+$'
+			if test $PHP_MAJMIN_VERSION -le 703; then
+				DEBIAN_FRONTEND=noninteractive ACCEPT_EULA=Y apt-get -qy --no-install-recommends install msodbcsql17
+			elif test $DISTRO_VERSION_NUMBER -ge 9 && $DISTRO_VERSION_NUMBER -le 10; then
+				# On Debian 9 and 10 we have both msodbcsql17 and msodbcsql18: let's install just one
+				DEBIAN_FRONTEND=noninteractive ACCEPT_EULA=Y apt-get -qy --no-install-recommends install msodbcsql18
+			else
+				DEBIAN_FRONTEND=noninteractive ACCEPT_EULA=Y apt-get -qy --no-install-recommends install '^msodbcsql[0-9]+$'
+			fi
 			;;
 	esac
 }
@@ -2541,7 +2552,7 @@ installRemoteModule() {
 			;;
 		spx)
 			if test -z "$installRemoteModule_version"; then
-				installRemoteModule_version=1367cbc70194d18888ec9cfe9b06c0a5b4426dff
+				installRemoteModule_version=6eba1a5839d0ce8dc71148ed723c72fe06c69600
 			fi
 			if test "${installRemoteModule_version%.*}" = "$installRemoteModule_version"; then
 				installRemoteModule_displayVersion="$installRemoteModule_version"

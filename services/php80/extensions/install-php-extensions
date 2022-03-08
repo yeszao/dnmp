@@ -53,8 +53,10 @@ resetIFS() {
 }
 
 # Set these variables:
-# - DISTRO containing distribution name (eg 'alpine', 'debian')
-# - DISTO_VERSION containing distribution name and its version(eg 'alpine@3.10', 'debian@9')
+# - DISTRO containing the distribution name (eg 'alpine', 'debian')
+# - DISTRO_VERSION_NUMBER containing the distribution version (eg '3.14' for Alpine, 11 for Debian)
+# - DISTRO_VERSION containing the distribution name and its version(eg 'alpine@3.14', 'debian@11')
+# - DISTRO_MAJMIN_VERSION always containing a number representing the distribution version (eg 314 for Alpine, 1100 for Debian)
 setDistro() {
 	if ! test -r /etc/os-release; then
 		printf 'The file /etc/os-release is not readable\n' >&2
@@ -68,11 +70,18 @@ setDistro() {
 
 # Set:
 # - PHP_MAJMIN_VERSION: Major-Minor version, format MMmm (example 800 for PHP 8.0.1)
+# - PHP_MAJDOTMIN_VERSION: Major-Minor version, format M.m (example 8.0 for PHP 8.0.1)
 # - PHP_MAJMINPAT_VERSION: Major-Minor-Patch version, format MMmmpp (example 80001 for PHP 8.0.1) variables containing integers value
+# - PHP_MAJDOTMINDOTPAT_VERSION: Major-Minor-Patch version, format M.m.p (example 8.0.1 for PHP 8.0.1)
+# - PHP_THREADSAFE: 1 if PHP is thread-safe (TS), 0 if not thread-safe (NTS)
+# - PHP_BITS: 32 if PHP is compiled for 32-bit, 64 if 64-bit
 setPHPVersionVariables() {
-	setPHPVersionVariables_textual="$(php-config --version)"
-	PHP_MAJMIN_VERSION=$(printf '%s' "$setPHPVersionVariables_textual" | awk -F. '{print $1*100+$2}')
-	PHP_MAJMINPAT_VERSION=$(printf '%s' "$setPHPVersionVariables_textual" | awk -F. '{print $1*10000+$2*100+$3}')
+	PHP_MAJDOTMINDOTPAT_VERSION="$(php-config --version)"
+	PHP_MAJMIN_VERSION=$(printf '%s' "$PHP_MAJDOTMINDOTPAT_VERSION" | awk -F. '{print $1*100+$2}')
+	PHP_MAJDOTMIN_VERSION=$(printf '%s' "$PHP_MAJDOTMINDOTPAT_VERSION" | cut -d. -f1-2)
+	PHP_MAJMINPAT_VERSION=$(printf '%s' "$PHP_MAJDOTMINDOTPAT_VERSION" | awk -F. '{print $1*10000+$2*100+$3}')
+	PHP_THREADSAFE=$(php -r 'echo ZEND_THREAD_SAFE ? 1 : 0;')
+	PHP_BITS=$(php -r 'echo PHP_INT_SIZE * 8;')
 }
 
 # Fix apt-get being very slow on Debian Jessie
@@ -282,6 +291,12 @@ setPHPPreinstalledModules() {
 processCommandArguments() {
 	processCommandArguments_endArgs=0
 	PHP_MODULES_TO_INSTALL=''
+	# Support deprecated flag IPE_FIX_CACERTS
+	case "${IPE_FIX_CACERTS:-}" in
+		1 | y* | Y*)
+			PHP_MODULES_TO_INSTALL="$PHP_MODULES_TO_INSTALL @fix_letsencrypt"
+			;;
+	esac
 	while :; do
 		if test $# -lt 1; then
 			break
@@ -388,6 +403,12 @@ sortModulesToInstall() {
 		PHP_MODULES_TO_INSTALL="socket $PHP_MODULES_TO_INSTALL"
 		PHP_MODULES_TO_INSTALL="${PHP_MODULES_TO_INSTALL% }"
 	fi
+	# Some module installation may use apcu if available: move it before other modules
+	if stringInList 'apcu' "$PHP_MODULES_TO_INSTALL"; then
+		PHP_MODULES_TO_INSTALL="$(removeStringFromList 'apcu' "$PHP_MODULES_TO_INSTALL")"
+		PHP_MODULES_TO_INSTALL="apcu $PHP_MODULES_TO_INSTALL"
+		PHP_MODULES_TO_INSTALL="${PHP_MODULES_TO_INSTALL% }"
+	fi
 	# In any case, first of all, we need to install composer
 	if stringInList '@composer' "$PHP_MODULES_TO_INSTALL"; then
 		PHP_MODULES_TO_INSTALL="$(removeStringFromList '@composer' "$PHP_MODULES_TO_INSTALL")"
@@ -487,21 +508,38 @@ buildRequiredPackageLists() {
 				fi
 				;;
 			decimal@debian)
-				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libmpdec2"
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent ^libmpdec[0-9]*$"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libmpdec-dev"
 				;;
 			enchant@alpine)
 				if test $DISTRO_MAJMIN_VERSION -ge 312; then
-					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent enchant2"
-					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile enchant2-dev"
+					if test $PHP_MAJMIN_VERSION -ge 800; then
+						buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent enchant2"
+						buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile enchant2-dev"
+					else
+						# The system provides libenchant2, supported since PHP 8.0: we need to build libenchant1 on our own
+						buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent glib aspell-libs libhunspell"
+						buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile glib-dev aspell-dev hunspell-dev"
+					fi
 				else
 					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent enchant"
 					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile enchant-dev"
 				fi
 				;;
 			enchant@debian)
-				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libenchant1c2a"
-				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libenchant-dev"
+				if test $DISTRO_VERSION_NUMBER -ge 11; then
+					if test $PHP_MAJMIN_VERSION -ge 800; then
+						buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libenchant-2-2"
+						buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libenchant-2-dev"
+					else
+						# The system provides libenchant2, supported since PHP 8.0: we need to build libenchant1 on our own
+						buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent aspell-en libhunspell-1.7-0"
+						buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libglib2.0-dev libaspell-dev libhunspell-dev"
+					fi
+				else
+					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libenchant1c2a"
+					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libenchant-dev"
+				fi
 				;;
 			event@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libevent $buildRequiredPackageLists_libssl"
@@ -527,6 +565,19 @@ buildRequiredPackageLists() {
 				else
 					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libwebp"
 					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libwebp-dev"
+					if test $PHP_MAJMIN_VERSION -ge 801; then
+						if isLibaomInstalled && isLibdav1dInstalled && isLibyuvInstalled && isLibavifInstalled; then
+							buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libstdc++"
+						else
+							case "${IPE_GD_WITHOUTAVIF:-}" in
+								1 | y* | Y*) ;;
+								*)
+									buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libstdc++"
+									buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile cmake nasm meson"
+									;;
+							esac
+						fi
+					fi
 				fi
 				;;
 			gd@debian)
@@ -538,6 +589,16 @@ buildRequiredPackageLists() {
 				else
 					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent ^libwebp[0-9]+$"
 					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libwebp-dev"
+					if test $PHP_MAJMIN_VERSION -ge 801; then
+						if ! isLibaomInstalled || ! isLibdav1dInstalled || ! isLibyuvInstalled || ! isLibavifInstalled; then
+							case "${IPE_GD_WITHOUTAVIF:-}" in
+								1 | y* | Y*) ;;
+								*)
+									buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile cmake nasm meson"
+									;;
+							esac
+						fi
+					fi
 				fi
 				;;
 			gearman@alpine)
@@ -655,6 +716,9 @@ buildRequiredPackageLists() {
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile openldap-dev"
 				;;
 			ldap@debian)
+				if test $DISTRO_VERSION_NUMBER -ge 9; then
+					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libldap-common"
+				fi
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libldap2-dev"
 				;;
 			maxminddb@alpine)
@@ -746,6 +810,14 @@ buildRequiredPackageLists() {
 			odbc@debian | pdo_odbc@debian)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libodbc1"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile unixodbc-dev"
+				;;
+			openswoole@alpine)
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent postgresql-libs libstdc++ $buildRequiredPackageLists_libssl"
+				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile curl-dev postgresql-dev linux-headers $buildRequiredPackageLists_libssldev"
+				;;
+			openswoole@debian)
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libcurl3-gnutls libpq5"
+				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile $buildRequiredPackageLists_libssldev libcurl4-gnutls-dev libpq-dev"
 				;;
 			pdo_dblib@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent freetds"
@@ -925,13 +997,20 @@ buildRequiredPackageLists() {
 			tensor@debian)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent liblapacke libopenblas-base"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile liblapack-dev libopenblas-dev liblapacke-dev"
-				if test $DISTRO_VERSION_NUMBER -ge 10; then
+				if test $DISTRO_VERSION_NUMBER -ge 11; then
+					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent gfortran-10"
+					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libgfortran-10-dev"
+				elif test $DISTRO_VERSION_NUMBER -ge 10; then
 					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent gfortran-8"
 					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libgfortran-8-dev"
 				fi
 				;;
 			tidy@alpine)
-				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent tidyhtml-libs"
+				if test $DISTRO_MAJMIN_VERSION -ge 315; then
+					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent tidyhtml"
+				else
+					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent tidyhtml-libs"
+				fi
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile tidyhtml-dev"
 				;;
 			tidy@debian)
@@ -1205,6 +1284,44 @@ getCompilationProcessorCount() {
 	esac
 }
 
+# Enable a PHP extension
+#
+# Arguments:
+#   $1: the name of the PHP extension to be enabled
+#   $2: the name of the INI file (optional)
+#   $3: custom contents of the INI file (optional)
+enablePhpExtension() {
+	enablePhpExtension_cmd='docker-php-ext-enable'
+	enablePhpExtension_iniFile="$PHP_INI_DIR/conf.d"
+	if test -n "${2:-}"; then
+		enablePhpExtension_cmd="$enablePhpExtension_cmd --ini-name $2"
+		enablePhpExtension_iniFile="$enablePhpExtension_iniFile/$2"
+	else
+		enablePhpExtension_iniFile="$enablePhpExtension_iniFile/docker-php-ext-$1.ini"
+	fi
+	enablePhpExtension_cmd="$enablePhpExtension_cmd $1"
+	case "${IPE_DONT_ENABLE:-}" in
+		1 | y* | Y*)
+			enablePhpExtension_enableCommand="/usr/local/bin/docker-php-ext-enable-$1"
+			printf '#!/bin/sh\n\n' >"$enablePhpExtension_enableCommand"
+			if test -z "${3-}"; then
+				printf '%s\n' "$enablePhpExtension_cmd" >>"$enablePhpExtension_enableCommand"
+			else
+				printf 'cat <<EOT >%s\n%s\nEOT\n' "$enablePhpExtension_iniFile" "$3" >>"$enablePhpExtension_enableCommand"
+			fi
+			chmod +x "$enablePhpExtension_enableCommand"
+			printf '## Extension %s not enabled.\nYou can enable it by running the following command:\n%s\n\n' "$1" "$(basename "$enablePhpExtension_enableCommand")"
+			;;
+		*)
+			if test -z "${3-}"; then
+				$enablePhpExtension_cmd
+			else
+				printf '%s\n' "$3" >"$enablePhpExtension_iniFile"
+			fi
+			;;
+	esac
+}
+
 # Mark the pre-installed APT/APK packages as used
 # that way they won't be uninstalled by accident
 markPreinstalledPackagesAsUsed() {
@@ -1290,17 +1407,30 @@ compareVersions() {
 # Set:
 #   ORACLE_INSTANTCLIENT_LIBPATH
 installOracleInstantClient() {
-	if test $(php -r 'echo PHP_INT_SIZE;') -eq 4; then
-		installOracleInstantClient_client=client
-		installOracleInstantClient_version='19.9'
-		installOracleInstantClient_ic=https://download.oracle.com/otn_software/linux/instantclient/199000/instantclient-basic-linux-$installOracleInstantClient_version.0.0.0dbru.zip
-		installOracleInstantClient_sdk=https://download.oracle.com/otn_software/linux/instantclient/199000/instantclient-sdk-linux-$installOracleInstantClient_version.0.0.0dbru.zip
-	else
-		installOracleInstantClient_client=client64
-		installOracleInstantClient_version='21.1'
-		installOracleInstantClient_ic=https://download.oracle.com/otn_software/linux/instantclient/211000/instantclient-basic-linux.x64-$installOracleInstantClient_version.0.0.0.zip
-		installOracleInstantClient_sdk=https://download.oracle.com/otn_software/linux/instantclient/211000/instantclient-sdk-linux.x64-$installOracleInstantClient_version.0.0.0.zip
-	fi
+	case $PHP_BITS in
+		32)
+			installOracleInstantClient_client=client
+			installOracleInstantClient_version='19.9'
+			installOracleInstantClient_ic=https://download.oracle.com/otn_software/linux/instantclient/199000/instantclient-basiclite-linux-$installOracleInstantClient_version.0.0.0dbru.zip
+			installOracleInstantClient_sdk=https://download.oracle.com/otn_software/linux/instantclient/199000/instantclient-sdk-linux-$installOracleInstantClient_version.0.0.0dbru.zip
+			;;
+		*)
+			case $(uname -m) in
+				aarch64*)
+					installOracleInstantClient_client=client64
+					installOracleInstantClient_version='19.10'
+					installOracleInstantClient_ic=https://download.oracle.com/otn_software/linux/instantclient/191000/instantclient-basiclite-linux.arm64-$installOracleInstantClient_version.0.0.0dbru.zip
+					installOracleInstantClient_sdk=https://download.oracle.com/otn_software/linux/instantclient/191000/instantclient-sdk-linux.arm64-$installOracleInstantClient_version.0.0.0dbru.zip
+					;;
+				*)
+					installOracleInstantClient_client=client64
+					installOracleInstantClient_version='21.1'
+					installOracleInstantClient_ic=https://download.oracle.com/otn_software/linux/instantclient/211000/instantclient-basiclite-linux.x64-$installOracleInstantClient_version.0.0.0.zip
+					installOracleInstantClient_sdk=https://download.oracle.com/otn_software/linux/instantclient/211000/instantclient-sdk-linux.x64-$installOracleInstantClient_version.0.0.0.zip
+					;;
+			esac
+			;;
+	esac
 	ORACLE_INSTANTCLIENT_LIBPATH=/usr/lib/oracle/$installOracleInstantClient_version/$installOracleInstantClient_client/lib
 	if ! test -e "$ORACLE_INSTANTCLIENT_LIBPATH"; then
 		printf 'Downloading Oracle Instant Client v%s... ' "$installOracleInstantClient_version"
@@ -1327,11 +1457,14 @@ installOracleInstantClient() {
 					cat "$ORACLE_INSTANTCLIENT_LIBPATH" | awk -v suffix=":$ORACLE_INSTANTCLIENT_LIBPATH" '{print NR==1 ? $0suffix : $0}' >"$ORACLE_INSTANTCLIENT_LIBPATH"
 				fi
 			else
-				if test $(php -r 'echo PHP_INT_SIZE;') -eq 4; then
-					echo "/lib:/usr/local/lib:/usr/lib:$ORACLE_INSTANTCLIENT_LIBPATH" >"$installOracleInstantClient_ldconf"
-				else
-					echo "/lib64:/lib:/usr/local/lib:/usr/lib:$ORACLE_INSTANTCLIENT_LIBPATH" >"$installOracleInstantClient_ldconf"
-				fi
+				case $PHP_BITS in
+					32)
+						echo "/lib:/usr/local/lib:/usr/lib:$ORACLE_INSTANTCLIENT_LIBPATH" >"$installOracleInstantClient_ldconf"
+						;;
+					*)
+						echo "/lib64:/lib:/usr/local/lib:/usr/lib:$ORACLE_INSTANTCLIENT_LIBPATH" >"$installOracleInstantClient_ldconf"
+						;;
+				esac
 			fi
 			;;
 		debian)
@@ -1359,23 +1492,148 @@ installMicrosoftSqlServerODBC() {
 		alpine)
 			# https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server#alpine17
 			rm -rf /tmp/src/msodbcsql.apk
-			curl -sSLf -o /tmp/src/msodbcsql.apk https://download.microsoft.com/download/e/4/e/e4e67866-dffd-428c-aac7-8d28ddafb39b/msodbcsql17_17.7.2.1-1_amd64.apk
+			if test $PHP_MAJMIN_VERSION -le 703; then
+				curl -sSLf -o /tmp/src/msodbcsql.apk https://download.microsoft.com/download/e/4/e/e4e67866-dffd-428c-aac7-8d28ddafb39b/msodbcsql17_17.8.1.1-1_amd64.apk
+			else
+				curl -sSLf -o /tmp/src/msodbcsql.apk https://download.microsoft.com/download/b/9/f/b9f3cce4-3925-46d4-9f46-da08869c6486/msodbcsql18_18.0.1.1-1_amd64.apk
+			fi
 			printf '\n' | apk add --allow-untrusted /tmp/src/msodbcsql.apk
 			rm -rf /tmp/src/msodbcsql.apk
 			;;
 		debian)
 			# https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server#debian17
 			printf -- '- installing the Microsoft APT key\n'
-			curl -sSLf https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
+			if test $DISTRO_VERSION_NUMBER -ge 11; then
+				# apt-key is deprecated
+				curl -sSLf -o /etc/apt/trusted.gpg.d/microsoft.asc https://packages.microsoft.com/keys/microsoft.asc
+			else
+				curl -sSLf https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
+			fi
 			if ! test -f /etc/apt/sources.list.d/mssql-release.list; then
 				printf -- '- adding the Microsoft APT source list\n'
 				curl -sSLf https://packages.microsoft.com/config/debian/$DISTRO_VERSION_NUMBER/prod.list >/etc/apt/sources.list.d/mssql-release.list
 				DEBIAN_FRONTEND=noninteractive apt-get -q update
 			fi
 			printf -- '- installing the APT package\n'
-			DEBIAN_FRONTEND=noninteractive ACCEPT_EULA=Y apt-get -qy --no-install-recommends install '^msodbcsql[0-9]+$'
+			if test $PHP_MAJMIN_VERSION -le 703; then
+				DEBIAN_FRONTEND=noninteractive ACCEPT_EULA=Y apt-get -qy --no-install-recommends install msodbcsql17
+			elif test $DISTRO_VERSION_NUMBER -ge 9 && $DISTRO_VERSION_NUMBER -le 10; then
+				# On Debian 9 and 10 we have both msodbcsql17 and msodbcsql18: let's install just one
+				DEBIAN_FRONTEND=noninteractive ACCEPT_EULA=Y apt-get -qy --no-install-recommends install msodbcsql18
+			else
+				DEBIAN_FRONTEND=noninteractive ACCEPT_EULA=Y apt-get -qy --no-install-recommends install '^msodbcsql[0-9]+$'
+			fi
 			;;
 	esac
+}
+
+# Check if libaom is installed
+#
+# Return:
+#   0 (true)
+#   1 (false)
+isLibaomInstalled() {
+	if ! test -f /usr/local/lib/libaom.so && ! test -f /usr/lib/libaom.so; then
+		return 1
+	fi
+	if ! test -f /usr/local/include/aom/aom_codec.h && ! test -f /usr/include/aom/aom_codec.h; then
+		return 1
+	fi
+	return 0
+}
+
+# Install libaom
+installLibaom() {
+	printf 'Installing libaom\n'
+	installLibaom_dir="$(getPackageSource https://aomedia.googlesource.com/aom/+archive/v3.1.2.tar.gz)"
+	mkdir -- "$installLibaom_dir/my.build"
+	cd -- "$installLibaom_dir/my.build"
+	cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=1 -DENABLE_DOCS=0 -DENABLE_EXAMPLES=0 -DENABLE_TESTDATA=0 -DENABLE_TESTS=0 -DENABLE_TOOLS=0 -DCMAKE_INSTALL_LIBDIR:PATH=lib ..
+	ninja -j $(getProcessorCount) install
+	cd - >/dev/null
+	ldconfig || true
+}
+
+# Check if libdav1d is installed
+#
+# Return:
+#   0 (true)
+#   1 (false)
+isLibdav1dInstalled() {
+	if ! test -f /usr/local/lib/libdav1d.so && ! test -f /usr/lib/libdav1d.so; then
+		return 1
+	fi
+	if ! test -f /usr/local/include/dav1d/dav1d.h && ! test -f /usr/include/dav1d/dav1d.h; then
+		return 1
+	fi
+	return 0
+}
+
+# Install libdav1d
+installLibdav1d() {
+	printf 'Installing libdav1d\n'
+	installLibdav1d_dir="$(getPackageSource https://code.videolan.org/videolan/dav1d/-/archive/0.9.2/dav1d-0.9.2.tar.gz)"
+	mkdir -- "$installLibdav1d_dir/build"
+	cd -- "$installLibdav1d_dir/build"
+	meson --buildtype release -Dprefix=/usr ..
+	ninja -j $(getProcessorCount) install
+	cd - >/dev/null
+	if test -f /usr/lib/$TARGET_TRIPLET/libdav1d.so && ! test -f /usr/lib/libdav1d.so; then
+		ln -s /usr/lib/$TARGET_TRIPLET/libdav1d.so /usr/lib/
+	fi
+	ldconfig || true
+}
+
+# Check if libyuv is installed
+#
+# Return:
+#   0 (true)
+#   1 (false)
+isLibyuvInstalled() {
+	if ! test -f /usr/local/lib/libyuv.so && ! test -f /usr/lib/libyuv.so; then
+		return 1
+	fi
+	if ! test -f /usr/local/include/libyuv.h && ! test -f /usr/include/libyuv.h; then
+		return 1
+	fi
+	return 0
+}
+
+# Install libyuv
+installLibyuv() {
+	printf 'Installing libyuv\n'
+	installLibyuv_dir="$(getPackageSource https://chromium.googlesource.com/libyuv/libyuv/+archive/refs/heads/main.tar.gz)"
+	mkdir -- "$installLibyuv_dir/build"
+	cd -- "$installLibyuv_dir/build"
+	cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr -B. ..
+	make -j$(getProcessorCount) install
+	cd - >/dev/null
+}
+
+# Check if libavif is installed
+#
+# Return:
+#   0 (true)
+#   1 (false)
+isLibavifInstalled() {
+	if ! test -f /usr/local/lib/libavif.so && ! test -f /usr/lib/libavif.so; then
+		return 1
+	fi
+	if ! test -f /usr/local/include/avif/avif.h && ! test -f /usr/include/avif/avif.h; then
+		return 1
+	fi
+	return 0
+}
+
+# Install libavif
+installLibavif() {
+	printf 'Installing libavif\n'
+	installLibavif_dir="$(getPackageSource https://codeload.github.com/AOMediaCodec/libavif/tar.gz/refs/tags/v0.9.2)"
+	mkdir -- "$installLibavif_dir/build"
+	cd -- "$installLibavif_dir/build"
+	cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DAVIF_CODEC_AOM=ON -DCMAKE_INSTALL_LIBDIR:PATH=lib
+	make -j$(getProcessorCount) install
+	cd - >/dev/null
 }
 
 # Install Composer
@@ -1425,6 +1683,75 @@ actuallyInstallComposer() {
 	rm -- "$actuallyInstallComposer_installer"
 }
 
+# Install ionCube Loader
+installIonCubeLoader() {
+	# See https://www.ioncube.com/loaders.php
+	case $PHP_BITS in
+		32)
+			case $(uname -m) in
+				aarch* | arm*)
+					installIonCubeLoader_url="https://downloads.ioncube.com/loader_downloads/ioncube_loaders_lin_armv7l.tar.gz"
+					;;
+				*)
+					installIonCubeLoader_url="https://downloads.ioncube.com/loader_downloads/ioncube_loaders_lin_x86.tar.gz"
+					;;
+			esac
+			;;
+		*)
+			case $(uname -m) in
+				aarch64 | arm64 | armv8)
+					installIonCubeLoader_url="https://downloads.ioncube.com/loader_downloads/ioncube_loaders_lin_aarch64.tar.gz"
+					;;
+				*)
+					installIonCubeLoader_url="https://downloads.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz"
+					;;
+			esac
+			;;
+	esac
+	printf 'Downloading ionCube Loader... '
+	installIonCubeLoader_dir="$(getPackageSource $installIonCubeLoader_url)"
+	echo 'done.'
+	installIonCubeLoader_so=$(php -r "printf('ioncube_loader_lin_%s.%s%s.so', PHP_MAJOR_VERSION, PHP_MINOR_VERSION, ZEND_THREAD_SAFE ? '_ts' : '');")
+	cp "$installIonCubeLoader_dir/$installIonCubeLoader_so" "$(getPHPExtensionsDir)/ioncube_loader.so"
+}
+
+# Install SourceGuardian Loader
+installSourceGuardian() {
+	# See https://www.sourceguardian.com/loaders.html
+	case $PHP_BITS in
+		32)
+			installSourceGuardian_url=https://www.sourceguardian.com/loaders/download/loaders.linux-i386.tar.gz
+			;;
+		*)
+			case $(uname -m) in
+				aarch64 | arm64 | armv8)
+					installSourceGuardian_url=https://www.sourceguardian.com/loaders/download/loaders.linux-aarch64.tar.gz
+					;;
+				*)
+					installSourceGuardian_url=https://www.sourceguardian.com/loaders/download/loaders.linux-x86_64.tar.gz
+					;;
+			esac
+			;;
+	esac
+	printf 'Downloading SourceGuardian... '
+	installSourceGuardian_dir="$(getPackageSource $installSourceGuardian_url)"
+	printf 'done (version: %s)\n' "$(cat "$installSourceGuardian_dir/version")"
+	for installSourceGuardian_phpv in $PHP_MAJDOTMINDOTPAT_VERSION $PHP_MAJDOTMIN_VERSION; do
+		installSourceGuardian_file="$installSourceGuardian_dir/ixed.$PHP_MAJDOTMIN_VERSION"
+		if test $PHP_THREADSAFE -eq 1; then
+			installSourceGuardian_file="${installSourceGuardian_file}ts"
+		fi
+		installSourceGuardian_file="${installSourceGuardian_file}.lin"
+		if test -f "$installSourceGuardian_file"; then
+			mv "$installSourceGuardian_file" "$(getPHPExtensionsDir)/sourceguardian.so"
+			return
+		fi
+	done
+	printf 'Unable to find a SourceGuardian compatible with PHP %s or PHP %s.\nAvailable SourceGuardian versions:\n' "$PHP_MAJDOTMINDOTPAT_VERSION" "$PHP_MAJDOTMIN_VERSION" >&2
+	ls -1 "$installSourceGuardian_dir" | grep -E '^ixed\..*\.lin$' | sed -E 's/^[^0-9]+([0-9]+(\.[0-9]+)*).*$/\1/' | sort | uniq >&2
+	exit 1
+}
+
 # Install a bundled PHP module given its handle
 #
 # Arguments:
@@ -1461,6 +1788,32 @@ EOF
 			fi
 			docker-php-ext-configure dba --with-db4
 			;;
+		enchant)
+			installBundledModule_tmp=0
+			if test $PHP_MAJMIN_VERSION -lt 800; then
+				case "$DISTRO" in
+					alpine)
+						if test $DISTRO_MAJMIN_VERSION -ge 312; then
+							installBundledModule_tmp=1
+						fi
+						;;
+					debian)
+						if test $DISTRO_VERSION_NUMBER -ge 11; then
+							installBundledModule_tmp=1
+						fi
+						;;
+				esac
+			fi
+			if test $installBundledModule_tmp -eq 1 && ! test -f /usr/lib/libenchant.so && ! test -f /usr/local/lib/libenchant.so; then
+				# We need to install libenchant1 from source
+				installBundledModule_src="$(getPackageSource https://github.com/AbiWord/enchant/releases/download/enchant-1-6-1/enchant-1.6.1.tar.gz)"
+				cd -- "$installBundledModule_src"
+				./configure
+				make -j$(getProcessorCount)
+				make install
+				cd - >/dev/null
+			fi
+			;;
 		gd)
 			if test $PHP_MAJMIN_VERSION -le 506; then
 				docker-php-ext-configure gd --with-gd --with-jpeg-dir --with-png-dir --with-zlib-dir --with-xpm-dir --with-freetype-dir --enable-gd-native-ttf --with-vpx-dir
@@ -1468,8 +1821,31 @@ EOF
 				docker-php-ext-configure gd --with-gd --with-jpeg-dir --with-png-dir --with-zlib-dir --with-xpm-dir --with-freetype-dir --enable-gd-native-ttf --with-webp-dir
 			elif test $PHP_MAJMIN_VERSION -le 703; then
 				docker-php-ext-configure gd --with-gd --with-jpeg-dir --with-png-dir --with-zlib-dir --with-xpm-dir --with-freetype-dir --with-webp-dir
-			else
+			elif test $PHP_MAJMIN_VERSION -le 800; then
 				docker-php-ext-configure gd --enable-gd --with-webp --with-jpeg --with-xpm --with-freetype
+			else
+				case "${IPE_GD_WITHOUTAVIF:-}" in
+					1 | y* | Y*) ;;
+					*)
+						if ! isLibaomInstalled; then
+							installLibaom
+						fi
+						if ! isLibdav1dInstalled; then
+							installLibdav1d
+						fi
+						if ! isLibyuvInstalled; then
+							installLibyuv
+						fi
+						if ! isLibavifInstalled; then
+							installLibavif
+						fi
+						;;
+				esac
+				if isLibaomInstalled && isLibdav1dInstalled && isLibyuvInstalled && isLibavifInstalled; then
+					docker-php-ext-configure gd --enable-gd --with-webp --with-jpeg --with-xpm --with-freetype --with-avif
+				else
+					docker-php-ext-configure gd --enable-gd --with-webp --with-jpeg --with-xpm --with-freetype
+				fi
 			fi
 			;;
 		gmp)
@@ -1548,6 +1924,15 @@ EOF
 			case "$DISTRO" in
 				alpine)
 					mkdir -p -m 0755 /var/lib/net-snmp/mib_indexes
+					;;
+			esac
+			;;
+		sockets)
+			case "$PHP_MAJDOTMINDOTPAT_VERSION" in
+				8.0.15 | 8.1.2)
+					sed -i '70 i #ifndef _GNU_SOURCE' /usr/src/php/ext/sockets/config.m4
+					sed -i '71 i #define _GNU_SOURCE' /usr/src/php/ext/sockets/config.m4
+					sed -i '72 i #endif' /usr/src/php/ext/sockets/config.m4
 					;;
 			esac
 			;;
@@ -1637,9 +2022,7 @@ installRemoteModule() {
 	case "$installRemoteModule_module" in
 		amqp)
 			if test -z "$installRemoteModule_version"; then
-				if test $PHP_MAJMIN_VERSION -ge 800; then
-					installRemoteModule_version=beta
-				elif test "$DISTRO_VERSION" = debian@8; then
+				if test "$DISTRO_VERSION" = debian@8; then
 					# in Debian Jessie we have librabbitmq version 0.5.2
 					installRemoteModule_version=1.9.3
 				elif test $PHP_MAJMIN_VERSION -le 505; then
@@ -1689,15 +2072,11 @@ installRemoteModule() {
 				fi
 			fi
 			if ! test -e /usr/local/lib/libcmark.so && ! test -e /usr/local/lib64/libcmark.so && ! test -e /usr/lib/libcmark.so && ! test -e /usr/lib64/libcmark.so && ! test -e /lib/libcmark.so; then
-				case "$DISTRO_VERSION" in
-					debian@8)
-						# See https://github.com/commonmark/cmark/issues/384
-						installRemoteModule_tmp=0.29.0
-						;;
-					*)
-						installRemoteModule_tmp=0.30.1
-						;;
-				esac
+				if test $(compareVersions "$(cmake --version | head -n1 | sed -E 's/^.* //')" '3.7') -lt 0; then
+					installRemoteModule_tmp=0.29.0
+				else
+					installRemoteModule_tmp=0.30.2
+				fi
 				cd "$(getPackageSource https://github.com/commonmark/cmark/archive/$installRemoteModule_tmp.tar.gz)"
 				make -s -j$(getProcessorCount) cmake_build
 				make -s -j$(getProcessorCount) install
@@ -1734,6 +2113,13 @@ installRemoteModule() {
 					fi
 					;;
 			esac
+			;;
+		ds)
+			if test -z "$installRemoteModule_version"; then
+				if test $PHP_MAJMIN_VERSION -le 702; then
+					installRemoteModule_version=1.3.0
+				fi
+			fi
 			;;
 		event)
 			if test -z "$installRemoteModule_version" || test $(compareVersions "$installRemoteModule_version" 2.4.0) -ge 0; then
@@ -1884,17 +2270,7 @@ installRemoteModule() {
 			fi
 			;;
 		ioncube_loader)
-			installRemoteModule_src='https://downloads.ioncube.com/loader_downloads/'
-			if test $(php -r 'echo PHP_INT_SIZE;') -eq 4; then
-				installRemoteModule_src="${installRemoteModule_src}ioncube_loaders_lin_x86.tar.gz"
-			else
-				installRemoteModule_src="${installRemoteModule_src}ioncube_loaders_lin_x86-64.tar.gz"
-			fi
-			printf 'Downloading ionCube Loader... '
-			installRemoteModule_src="$(getPackageSource $installRemoteModule_src)"
-			echo 'done.'
-			installRemoteModule_so=$(php -r "printf('ioncube_loader_lin_%s.%s%s.so', PHP_MAJOR_VERSION, PHP_MINOR_VERSION, ZEND_THREAD_SAFE ? '_ts' : '');")
-			cp "$installRemoteModule_src/$installRemoteModule_so" "$(getPHPExtensionsDir)/$installRemoteModule_module.so"
+			installIonCubeLoader
 			installRemoteModule_manuallyInstalled=1
 			;;
 		jsmin)
@@ -1905,6 +2281,11 @@ installRemoteModule() {
 			fi
 			;;
 		lzf)
+			if test -z "$installRemoteModule_version"; then
+				if test $PHP_MAJMIN_VERSION -lt 702; then
+					installRemoteModule_version=1.6.8
+				fi
+			fi
 			if test -z "$installRemoteModule_version" || test $(compareVersions "$installRemoteModule_version" '1.5.0') -ge 0; then
 				# Sacrifice speed in favour of compression ratio?
 				case "${IPE_LZF_BETTERCOMPRESSION:-}" in
@@ -1982,6 +2363,8 @@ installRemoteModule() {
 					installRemoteModule_version=1.7.5
 				elif test $PHP_MAJMIN_VERSION -le 700; then
 					installRemoteModule_version=1.9.2
+				elif test $PHP_MAJMIN_VERSION -le 701; then
+					installRemoteModule_version=1.11.1
 				fi
 			fi
 			;;
@@ -2007,6 +2390,30 @@ installRemoteModule() {
 		opencensus)
 			if test -z "$installRemoteModule_version"; then
 				installRemoteModule_version=alpha
+			fi
+			;;
+		openswoole)
+			if php --ri sockets >/dev/null 2>/dev/null; then
+				installRemoteModule_sockets=yes
+			else
+				installRemoteModule_sockets=no
+			fi
+			installRemoteModule_openssl=yes
+			# enable sockets supports?
+			addConfigureOption enable-sockets $installRemoteModule_sockets
+			# enable openssl support?
+			addConfigureOption enable-openssl $installRemoteModule_openssl
+			# enable http2 support?
+			addConfigureOption enable-http2 yes
+			# enable mysqlnd support?
+			addConfigureOption enable-mysqlnd yes
+			# enable json support?
+			addConfigureOption enable-swoole-json yes
+			# enable curl support?
+			addConfigureOption enable-swoole-curl yes
+			if test -z "$installRemoteModule_version" || test $(compareVersions "$installRemoteModule_version" '4.8.0') -ge 0; then
+				# enable postgres support?
+				addConfigureOption with-postgres yes
 			fi
 			;;
 		parallel)
@@ -2066,6 +2473,9 @@ installRemoteModule() {
 						;;
 					debian)
 						installRemoteModule_tmp='librdkafka*'
+						;;
+					*)
+						installRemoteModule_tmp=''
 						;;
 				esac
 				if test -n "$installRemoteModule_tmp"; then
@@ -2136,9 +2546,13 @@ installRemoteModule() {
 				fi
 			fi
 			;;
+		sourceguardian)
+			installSourceGuardian
+			installRemoteModule_manuallyInstalled=1
+			;;
 		spx)
 			if test -z "$installRemoteModule_version"; then
-				installRemoteModule_version=1367cbc70194d18888ec9cfe9b06c0a5b4426dff
+				installRemoteModule_version=6eba1a5839d0ce8dc71148ed723c72fe06c69600
 			fi
 			if test "${installRemoteModule_version%.*}" = "$installRemoteModule_version"; then
 				installRemoteModule_displayVersion="$installRemoteModule_version"
@@ -2166,20 +2580,8 @@ installRemoteModule() {
 					installRemoteModule_version=5.6.1
 				elif test $PHP_MAJMIN_VERSION -le 702; then
 					installRemoteModule_version=5.8.1
-				elif test $PHP_MAJMIN_VERSION -ge 801; then
-					# https://github.com/microsoft/msphpsql/commits/PHP-8.1-dev
-					installRemoteModule_src="$(getPackageSource https://codeload.github.com/microsoft/msphpsql/tar.gz/f00dc9f0c555eebaf9f1e5a9bd1a04044908bba1)"
-					cd -- "$installRemoteModule_src/source/$installRemoteModule_module"
-					if command -v bash >/dev/null; then
-						(cd .. && bash ./packagize.sh)
-					else
-						(cd .. && sh ./packagize.sh)
-					fi
-					phpize
-					./configure
-					make -j$(getProcessorCount) install
-					cd - >/dev/null
-					installRemoteModule_manuallyInstalled=1
+				elif test $PHP_MAJMIN_VERSION -le 703; then
+					installRemoteModule_version=5.9.0
 				fi
 			fi
 			;;
@@ -2244,7 +2646,7 @@ installRemoteModule() {
 				# enable json support?
 				addConfigureOption enable-swoole-json yes
 				# enable curl support?
-				if test $PHP_MAJMINPAT_VERSION -ne 80000; then
+				if test $PHP_MAJMINPAT_VERSION -ne 80000 || test -z "$installRemoteModule_version" || test $(compareVersions "$installRemoteModule_version" 4.6.1) -ge 0; then
 					addConfigureOption enable-swoole-curl yes
 				else
 					# https://github.com/swoole/swoole-src/issues/3977#issuecomment-754755521
@@ -2380,6 +2782,13 @@ installRemoteModule() {
 					installRemoteModule_version=5.0.2
 				elif test $PHP_MAJMIN_VERSION -le 740; then
 					installRemoteModule_version=6.1.2
+				fi
+			fi
+			;;
+		uploadprogress)
+			if test -z "$installRemoteModule_version"; then
+				if test $PHP_MAJMIN_VERSION -le 701; then
+					installRemoteModule_version=1.1.4
 				fi
 			fi
 			;;
@@ -2523,38 +2932,60 @@ installRemoteModule() {
 	case "$installRemoteModule_module" in
 		apcu_bc)
 			# apcu_bc must be loaded after apcu
-			docker-php-ext-enable --ini-name "xx-php-ext-$installRemoteModule_module.ini" apc
+			enablePhpExtension apc "xx-php-ext-$installRemoteModule_module.ini"
 			;;
 		blackfire)
-			printf "extension=blackfire.so\nblackfire.agent_socket=tcp://blackfire:8307\n" >"$PHP_INI_DIR/conf.d/docker-php-ext-$installRemoteModule_module.ini"
+			enablePhpExtension "$installRemoteModule_module" '' "$(printf 'extension=blackfire.so\nblackfire.agent_socket=tcp://blackfire:8307')"
 			;;
 		event)
 			# event must be loaded after sockets
-			docker-php-ext-enable --ini-name "xx-php-ext-$installRemoteModule_module.ini" "$installRemoteModule_module"
+			enablePhpExtension "$installRemoteModule_module" "xx-php-ext-$installRemoteModule_module.ini"
 			;;
-		ioncube_loader)
+		ioncube_loader | sourceguardian)
 			# On PHP 5.5, docker-php-ext-enable fails to detect that ionCube Loader is a Zend Extension
 			if test $PHP_MAJMIN_VERSION -le 505; then
-				printf 'zend_extension=%s/%s.so\n' "$(getPHPExtensionsDir)" "$installRemoteModule_module" >"$PHP_INI_DIR/conf.d/docker-php-ext-$installRemoteModule_module.ini"
+				enablePhpExtension "$installRemoteModule_module" '' "$(printf 'zend_extension=%s/%s.so' "$(getPHPExtensionsDir)" "$installRemoteModule_module")"
 			else
-				docker-php-ext-enable "$installRemoteModule_module"
+				enablePhpExtension "$installRemoteModule_module"
 			fi
 			;;
 		http | memcached)
 			# http must be loaded after raphf and propro, memcached must be loaded after msgpack
-			docker-php-ext-enable --ini-name "xx-php-ext-$installRemoteModule_module.ini" "$installRemoteModule_module"
+			enablePhpExtension "$installRemoteModule_module" "xx-php-ext-$installRemoteModule_module.ini"
 			;;
 		snuffleupagus)
-			docker-php-ext-enable "$installRemoteModule_module"
-			printf 'sp.configuration_file=%s\n' "$PHP_INI_DIR/conf.d/snuffleupagus.rules" >>"$PHP_INI_DIR/conf.d/docker-php-ext-snuffleupagus.ini"
+			enablePhpExtension "$installRemoteModule_module" '' "$(printf 'extension=%s/%s.so\nsp.configuration_file=%s' "$(getPHPExtensionsDir)" "$installRemoteModule_module" "$PHP_INI_DIR/conf.d/snuffleupagus.rules")"
 			;;
 		*)
-			docker-php-ext-enable "$installRemoteModule_module"
+			enablePhpExtension "$installRemoteModule_module"
 			;;
 	esac
 }
 
-# Configure the PECL package installed
+# Check if a module/helper may be installed using the pecl archive
+#
+# Arguments:
+#   $1: the name of the module
+#
+# Return:
+#   0: true
+#   1: false
+moduleMayUsePecl() {
+	case "$1" in
+		@composer | @fix_letsencrypt)
+			return 1
+			;;
+		blackfire | ioncube_loader | snuffleupagus | sourceguardian | spx | tdlib)
+			return 1
+			;;
+	esac
+	if stringInList "$1" "$BUNDLED_MODULES"; then
+		return 1
+	fi
+	return 0
+}
+
+# Configure the PECL package installer
 #
 # Updates:
 #   PHP_MODULES_TO_INSTALL
@@ -2563,16 +2994,7 @@ installRemoteModule() {
 configureInstaller() {
 	USE_PICKLE=0
 	for PHP_MODULE_TO_INSTALL in $PHP_MODULES_TO_INSTALL; do
-		if test "${PHP_MODULE_TO_INSTALL#@}" != "$PHP_MODULE_TO_INSTALL"; then
-			continue
-		fi
-		if test "$PHP_MODULE_TO_INSTALL" = 'spx'; then
-			continue
-		fi
-		if test "$PHP_MODULE_TO_INSTALL" = 'amqp' && test $PHP_MAJMIN_VERSION -ge 800; then
-			continue
-		fi
-		if ! stringInList "$PHP_MODULE_TO_INSTALL" "$BUNDLED_MODULES"; then
+		if moduleMayUsePecl "$PHP_MODULE_TO_INSTALL"; then
 			if test $PHP_MAJMIN_VERSION -lt 800; then
 				pecl channel-update pecl.php.net || true
 				return
@@ -2704,6 +3126,52 @@ removeStringFromList() {
 	printf '%s' "$removeStringFromList_result"
 }
 
+# Fix the Let's Encrypt CA certificates on old distros
+fixLetsEncrypt() {
+	printf '### FIXING LETS ENCRYPT CA CERTIFICATES ###\n'
+	case "$DISTRO_VERSION" in
+		alpine@3.7 | alpine@3.8)
+			printf -- '- old Alpine Linux detected: we should fix the certificates\n'
+			;;
+		debian@8 | debian@9)
+			printf -- '- old Debian detected: we should fix the certificates\n'
+			if ! grep -q 'mozilla/ISRG_Root_X1.crt' /etc/ca-certificates.conf && grep -q 'mozilla/DST_Root_CA_X3.crt' /etc/ca-certificates.conf; then
+				printf -- '- old ca-certificates package detected\n'
+				fixCACerts_mustUpdate=1
+				if test -d /var/lib/apt/lists; then
+					for fixCACerts_item in $(ls -1 /var/lib/apt/lists); do
+						case "$fixCACerts_item" in
+							partial | lock) ;;
+							*)
+								fixCACerts_mustUpdate=0
+								break
+								;;
+						esac
+					done
+				fi
+				if test $fixCACerts_mustUpdate -eq 1; then
+					printf -- '- refreshing the APT package list\n'
+					DEBIAN_FRONTEND=noninteractive apt-get update -qq
+				fi
+				printf -- '- installing newer ca-certificates package\n'
+				DEBIAN_FRONTEND=noninteractive apt-get install -qqy --no-install-recommends ca-certificates
+			fi
+			;;
+		*)
+			printf -- '- patch not required in this distro version\n'
+			return
+			;;
+	esac
+	if grep -Eq '^mozilla/ISRG_Root_X1\.crt$' /etc/ca-certificates.conf && grep -Eq '^mozilla/DST_Root_CA_X3\.crt$' /etc/ca-certificates.conf; then
+		printf -- '- disabling the DST_Root_CA_X3 certificate\n'
+		sed -i '/^mozilla\/DST_Root_CA_X3/s/^/!/' /etc/ca-certificates.conf
+		printf -- '- refreshing the certificates\n'
+		update-ca-certificates -f
+	else
+		printf -- '- DST_Root_CA_X3 certificate not found or already disabled\n'
+	fi
+}
+
 # Cleanup everything at the end of the execution
 cleanup() {
 	if test -n "$UNNEEDED_PACKAGE_LINKS"; then
@@ -2781,6 +3249,11 @@ if test -z "$PHP_MODULES_TO_INSTALL"; then
 	exit 0
 fi
 
+if stringInList @fix_letsencrypt "$PHP_MODULES_TO_INSTALL"; then
+	# This must be the very first thing we do
+	fixLetsEncrypt
+fi
+
 sortModulesToInstall
 
 docker-php-source extract
@@ -2801,12 +3274,20 @@ if test $USE_PICKLE -gt 1; then
 	buildPickle
 fi
 for PHP_MODULE_TO_INSTALL in $PHP_MODULES_TO_INSTALL; do
-	if test "$PHP_MODULE_TO_INSTALL" = '@composer'; then
-		installComposer
-	elif stringInList "$PHP_MODULE_TO_INSTALL" "$BUNDLED_MODULES"; then
-		installBundledModule "$PHP_MODULE_TO_INSTALL"
-	else
-		installRemoteModule "$PHP_MODULE_TO_INSTALL"
-	fi
+	case "$PHP_MODULE_TO_INSTALL" in
+		@fix_letsencrypt)
+			# Already done: it must be the first thing we do
+			;;
+		@composer)
+			installComposer
+			;;
+		*)
+			if stringInList "$PHP_MODULE_TO_INSTALL" "$BUNDLED_MODULES"; then
+				installBundledModule "$PHP_MODULE_TO_INSTALL"
+			else
+				installRemoteModule "$PHP_MODULE_TO_INSTALL"
+			fi
+			;;
+	esac
 done
 cleanup
