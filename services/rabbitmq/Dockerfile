@@ -76,5 +76,8 @@ RUN if [ -z "${PLUGINS##*,rabbitmq_amqp1_0,*}" ]; then \
     && \
     if [ -z "${PLUGINS##*,rabbitmq_web_mqtt_examples,*}" ]; then \
         printf "y\n" | rabbitmq-plugins enable rabbitmq_web_mqtt_examples; \
-    fi
-
+    fi \
+    && \
+    if [ -z "${PLUGINS##*,rabbitmq_delayed_message_exchange,*}" ]; then \
+        printf "y\n" | rabbitmq-plugins enable rabbitmq_delayed_message_exchange; \
+    fi 
