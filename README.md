@@ -169,7 +169,7 @@ install-php-extensions apcu
 | apcu_bc |  |  | &check; | &check; | &check; | &check; | &check; |  |  |
 | ast |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | bcmath | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
-| blackfire | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |
+| blackfire | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | bz2 | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | calendar | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | cmark |  |  | &check; | &check; | &check; | &check; | &check; |  |  |
@@ -238,7 +238,7 @@ install-php-extensions apcu
 | pspell | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | pthreads[*](#special-requirements-for-pthreads) | &check; | &check; | &check; |  |  |  |  |  |  |
 | raphf | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
-| rdkafka | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |
+| rdkafka | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | recode | &check; | &check; | &check; | &check; | &check; | &check; |  |  |  |
 | redis | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | seaslog | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
@@ -250,7 +250,7 @@ install-php-extensions apcu
 | sockets | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | solr | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | sourceguardian | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |
-| spx |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |
+| spx |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | sqlsrv[*](#special-requirements-for-sqlsrv) |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | ssh2 | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | stomp | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |  |
@@ -271,7 +271,7 @@ install-php-extensions apcu
 | xhprof | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | xlswriter |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | xmldiff | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
-| xmlrpc | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |
+| xmlrpc | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | xsl | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | yac |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | yaml | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
