@@ -20,8 +20,8 @@ explicit_defaults_for_timestamp
 
 slow_query_log
 long_query_time         = 3
-slow-query-log-file     = /var/lib/mysql/mysql.slow.log
-log-error               = /var/lib/mysql/mysql.error.log
+slow-query-log-file     = /var/log/mysql/mysql.slow.log
+log-error               = /var/log/mysql/mysql.error.log
 
 default-time-zone       = '+8:00'
 
