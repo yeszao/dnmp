@@ -128,6 +128,8 @@ services:
     volumes:
       - ${MYSQL_CONF_FILE}:/etc/mysql/conf.d/mysql.cnf:ro
       - ${DATA_DIR}/mysql:/var/lib/mysql/:rw
+      - ${MYSQL_LOG_DIR}:/var/log/mysql/:rw
+
     restart: always
     networks:
       - default
@@ -144,6 +146,7 @@ services:
 #    volumes:
 #      - ${MYSQL5_CONF_FILE}:/etc/mysql/conf.d/mysql.cnf:ro
 #      - ${DATA_DIR}/mysql5:/var/lib/mysql/:rw
+#      - ${MYSQL_LOG5_DIR}:/var/log/mysql/:rw
 #    restart: always
 #    networks:
 #      - default
