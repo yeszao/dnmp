@@ -12,8 +12,7 @@ RUN if [ $CONTAINER_PACKAGE_URL ] ; then sed -i "s/dl-cdn.alpinelinux.org/${CONT
 COPY ./extensions /tmp/extensions
 WORKDIR /tmp/extensions
 RUN chmod +x install.sh \
-    && sh install.sh \
-    && rm -rf /tmp/extensions
+    && sh install.sh
 
 ADD ./extensions/install-php-extensions  /usr/local/bin/
 
@@ -30,8 +29,9 @@ ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so php
 
 
 # Install composer and change it's cache home
-RUN curl -o /usr/bin/composer https://mirrors.aliyun.com/composer/composer.phar \
-    && chmod +x /usr/bin/composer
+RUN chmod +x install-composer.sh \
+    && sh install-composer.sh \
+    && rm -rf /tmp/extensions
 ENV COMPOSER_HOME=/tmp/composer
 
 # php image's www-data user uid & gid are 82, change them to 1000 (primary user)
