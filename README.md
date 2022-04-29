@@ -427,10 +427,10 @@ ini_set('display_errors', 'on');
 3. 重启PHP-FPM容器。
 
 ### 5.3 MySQL日志
-因为MySQL容器中的MySQL使用的是`mysql`用户启动，它无法自行在`/var/log`下的增加日志文件。所以，我们把MySQL的日志放在与data一样的目录，即项目的`mysql`目录下，对应容器中的`/var/lib/mysql/`目录。
+因为MySQL容器中的MySQL使用的是`mysql`用户启动，它无法自行在`/var/log`下的增加日志文件。所以，我们把MySQL的日志放在与data一样的目录，即项目的`mysql`目录下，对应容器中的`/var/log/mysql/`目录。
 ```bash
-slow-query-log-file     = /var/lib/mysql/mysql.slow.log
-log-error               = /var/lib/mysql/mysql.error.log
+slow-query-log-file     = /var/log/mysql/mysql.slow.log
+log-error               = /var/log/mysql/mysql.error.log
 ```
 以上是mysql.conf中的日志文件的配置。
 
