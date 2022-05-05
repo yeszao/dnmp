@@ -989,6 +989,9 @@ buildRequiredPackageLists() {
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libcurl3-gnutls libpq5"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile $buildRequiredPackageLists_libssldev libcurl4-gnutls-dev libpq-dev"
 				;;
+			parle@alpine)
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libstdc++"
+				;;
 			pdo_dblib@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent freetds"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile freetds-dev"
@@ -2788,6 +2791,11 @@ installRemoteModule() {
 				fi
 			fi
 			;;
+		parle)
+			if test -z "$installRemoteModule_version"; then
+				installRemoteModule_version=beta
+			fi
+			;;
 		pcov)
 			if test -z "$installRemoteModule_version"; then
 				if test $PHP_MAJMIN_VERSION -le 700; then
@@ -2806,9 +2814,6 @@ installRemoteModule() {
 			if test -z "$installRemoteModule_version"; then
 				if test $PHP_MAJMIN_VERSION -le 506; then
 					installRemoteModule_version=3.12.4
-				else
-					# See https://github.com/protocolbuffers/protobuf/issues/9724
-					installRemoteModule_version=3.19.4
 				fi
 			fi
 			;;
@@ -2935,7 +2940,7 @@ installRemoteModule() {
 		spx)
 			if test -z "$installRemoteModule_path"; then
 				if test -z "$installRemoteModule_version"; then
-					installRemoteModule_version=6eba1a5839d0ce8dc71148ed723c72fe06c69600
+					installRemoteModule_version=v0.4.12
 				fi
 				if test "${installRemoteModule_version%.*}" = "$installRemoteModule_version"; then
 					installRemoteModule_displayVersion="$installRemoteModule_version"
@@ -2944,7 +2949,6 @@ installRemoteModule() {
 				fi
 				installRemoteModule_src="$(getPackageSource https://codeload.github.com/NoiseByNorthwest/php-spx/tar.gz/$installRemoteModule_version)"
 				cd -- "$installRemoteModule_src"
-				sed -Ei "s/^([ \t]*#define[ \t]+PHP_SPX_VERSION[ \t]+\")0.4.10(\")/\1git--master-$installRemoteModule_displayVersion\2/" src/php_spx.h
 				phpize
 				./configure
 				make -j$(getProcessorCount) install
