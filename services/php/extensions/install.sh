@@ -69,6 +69,20 @@ installExtensionFromTgz()
     docker-php-ext-enable ${extensionName} $2
 }
 
+installExtensionFromTgzEnable()
+{
+    tgzName=$1
+    extensionName="${tgzName%%-*}"
+
+    enb=$2
+    enbStr="${enb}"
+
+    mkdir ${extensionName}
+    tar -xf ${tgzName}.tgz -C ${extensionName} --strip-components=1
+    ( cd ${extensionName} && phpize && ./configure ${enbStr} && make ${MC} && make install )
+
+    docker-php-ext-enable ${extensionName} $3
+}
 
 if [[ -z "${EXTENSIONS##*,pdo_mysql,*}" ]]; then
     echo "---------- Install pdo_mysql ----------"
@@ -515,7 +529,7 @@ if [[ -z "${EXTENSIONS##*,redis,*}" ]]; then
     echo "---------- Install redis ----------"
     isPhpVersionGreaterOrEqual 7 0
     if [[ "$?" = "1" ]]; then
-        installExtensionFromTgz redis-5.2.2
+        installExtensionFromTgzEnable redis-5.2.2 "--enable-redis-msgpack"
     else
         printf "\n" | pecl install redis-4.3.0
         docker-php-ext-enable redis
@@ -604,7 +618,7 @@ if [[ -z "${EXTENSIONS##*,swoole,*}" ]]; then
     isPhpVersionGreaterOrEqual 7 0
 
     if [[ "$?" = "1" ]]; then
-        installExtensionFromTgz swoole-4.5.2
+        installExtensionFromTgzEnable swoole-4.8.6 "--enable-openssl"
     else
         installExtensionFromTgz swoole-2.0.11
     fi
