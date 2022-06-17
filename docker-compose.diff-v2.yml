@@ -25,30 +25,30 @@ services:
     networks:
       extnetwork:
         ipv4_address: 172.18.0.20
-#  php:
-#    build:
-#      context: ./services/php
-#      args:
-#        PHP_VERSION: php:${PHP_VERSION}-fpm-alpine
-#        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
-#        PHP_EXTENSIONS: ${PHP_EXTENSIONS}
-#        TZ: "$TZ"
-#    container_name: php
-#    expose:
-#      - 9501
-#    extra_hosts:
-#      - "www.site1.com:172.17.0.1"
-#    volumes:
-#      - ${SOURCE_DIR}:/www/:rw
-#      - ${PHP_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
-#      - ${PHP_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
-#      - ${PHP_LOG_DIR}:/var/log/php
-#      - ${DATA_DIR}/composer:/tmp/composer
-#    restart: always
-#    cap_add:
-#      - SYS_PTRACE
-#    networks:
-#      - default
+  #  php:
+  #    build:
+  #      context: ./services/php
+  #      args:
+  #        PHP_VERSION: php:${PHP_VERSION}-fpm-alpine
+  #        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
+  #        PHP_EXTENSIONS: ${PHP_EXTENSIONS}
+  #        TZ: "$TZ"
+  #    container_name: php
+  #    expose:
+  #      - 9501
+  #    extra_hosts:
+  #      - "www.site1.com:172.17.0.1"
+  #    volumes:
+  #      - ${SOURCE_DIR}:/www/:rw
+  #      - ${PHP_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
+  #      - ${PHP_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
+  #      - ${PHP_LOG_DIR}:/var/log/php
+  #      - ${DATA_DIR}/composer:/tmp/composer
+  #    restart: always
+  #    cap_add:
+  #      - SYS_PTRACE
+  #    networks:
+  #      - default
 
   php74:
     build:
@@ -105,39 +105,39 @@ services:
       extnetwork:
         ipv4_address: 172.18.0.21
 
-#  php72:
-#    build:
-#      context: ./services/php
-#      args:
-#        PHP_VERSION: php:${PHP72_VERSION}-fpm-alpine
-#        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
-#        PHP_EXTENSIONS: ${PHP72_EXTENSIONS}
-#        TZ: "$TZ"
-#    container_name: php72
-#    expose:
-#      - 9501
-#    extra_hosts:
-#      - "www.site1.com:172.17.0.1"
-#    volumes:
-#      - ${SOURCE_DIR}:/www/:rw
-#      - ${PHP72_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
-#      - ${PHP72_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
-#      - ${PHP72_LOG_DIR}:/var/log/php
-#      - ${DATA_DIR}/composer:/tmp/composer
-#      - ${SUPERVISOR_LOG}:/var/log/supervisor/:rw
-#      - ${SUPERVISOR_CONFIG}:/etc/supervisor/conf.d/:rw
-#      - ${SUPERVISOR_CONF_FILE}:/etc/supervisor/supervisord.conf:ro
-#    restart: always
-#    command:
-#      - /bin/sh
-#      - -c
-#      - |
-#        /usr/local/sbin/php-fpm -D
-#        supervisord -n -c /etc/supervisor/supervisord.conf
-#    cap_add:
-#      - SYS_PTRACE
-#    networks:
-#      - default
+  #  php72:
+  #    build:
+  #      context: ./services/php
+  #      args:
+  #        PHP_VERSION: php:${PHP72_VERSION}-fpm-alpine
+  #        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
+  #        PHP_EXTENSIONS: ${PHP72_EXTENSIONS}
+  #        TZ: "$TZ"
+  #    container_name: php72
+  #    expose:
+  #      - 9501
+  #    extra_hosts:
+  #      - "www.site1.com:172.17.0.1"
+  #    volumes:
+  #      - ${SOURCE_DIR}:/www/:rw
+  #      - ${PHP72_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
+  #      - ${PHP72_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
+  #      - ${PHP72_LOG_DIR}:/var/log/php
+  #      - ${DATA_DIR}/composer:/tmp/composer
+  #      - ${SUPERVISOR_LOG}:/var/log/supervisor/:rw
+  #      - ${SUPERVISOR_CONFIG}:/etc/supervisor/conf.d/:rw
+  #      - ${SUPERVISOR_CONF_FILE}:/etc/supervisor/supervisord.conf:ro
+  #    restart: always
+  #    command:
+  #      - /bin/sh
+  #      - -c
+  #      - |
+  #        /usr/local/sbin/php-fpm -D
+  #        supervisord -n -c /etc/supervisor/supervisord.conf
+  #    cap_add:
+  #      - SYS_PTRACE
+  #    networks:
+  #      - default
 
   php56:
     build:
@@ -172,41 +172,41 @@ services:
       extnetwork:
         ipv4_address: 172.18.0.22
 
-#  php54:
-#    build:
-#      context: ./services/php54
-#      args:
-#        PHP_VERSION: php:${PHP54_VERSION}-fpm
-#        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
-#        PHP_EXTENSIONS: ${PHP54_EXTENSIONS}
-#        TZ: "$TZ"
-#    container_name: php54
-#    volumes:
-#      - ${SOURCE_DIR}:/www/:rw
-#      - ${PHP54_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
-#      - ${PHP54_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
-#      - ${PHP54_LOG_DIR}:/var/log/php
-#      - ${DATA_DIR}/composer:/tmp/composer
-#    restart: always
-#    cap_add:
-#      - SYS_PTRACE
-#    networks:
-#      - default
+  #  php54:
+  #    build:
+  #      context: ./services/php54
+  #      args:
+  #        PHP_VERSION: php:${PHP54_VERSION}-fpm
+  #        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
+  #        PHP_EXTENSIONS: ${PHP54_EXTENSIONS}
+  #        TZ: "$TZ"
+  #    container_name: php54
+  #    volumes:
+  #      - ${SOURCE_DIR}:/www/:rw
+  #      - ${PHP54_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
+  #      - ${PHP54_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
+  #      - ${PHP54_LOG_DIR}:/var/log/php
+  #      - ${DATA_DIR}/composer:/tmp/composer
+  #    restart: always
+  #    cap_add:
+  #      - SYS_PTRACE
+  #    networks:
+  #      - default
 
-#  mysql:
-#    image: mysql:${MYSQL_VERSION}
-#    container_name: mysql
-#    ports:
-#      - "${MYSQL_HOST_PORT}:3306"
-#    volumes:
-#      - ${MYSQL_CONF_FILE}:/etc/mysql/conf.d/mysql.cnf:ro
-#      - ${DATA_DIR}/mysql:/var/lib/mysql/:rw
-#    restart: always
-#    networks:
-#      - default
-#    environment:
-#      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
-#      TZ: "$TZ"
+  #  mysql:
+  #    image: mysql:${MYSQL_VERSION}
+  #    container_name: mysql
+  #    ports:
+  #      - "${MYSQL_HOST_PORT}:3306"
+  #    volumes:
+  #      - ${MYSQL_CONF_FILE}:/etc/mysql/conf.d/mysql.cnf:ro
+  #      - ${DATA_DIR}/mysql:/var/lib/mysql/:rw
+  #    restart: always
+  #    networks:
+  #      - default
+  #    environment:
+  #      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+  #      TZ: "$TZ"
 
   mysql5:
     image: mysql:${MYSQL5_VERSION}
@@ -223,24 +223,24 @@ services:
       MYSQL_ROOT_PASSWORD: "${MYSQL5_ROOT_PASSWORD}"
       TZ: "$TZ"
 
-#  openresty:
-#    image:  openresty/openresty:${OPENRESTY_VERSION}
-#    container_name: openresty
-#    ports:
-#       - "${OPENRESTY_HTTP_HOST_PORT}:80"
-#       - "${OPENRESTY_HTTPS_HOST_PORT}:443"
-#    volumes:
-#       - ${SOURCE_DIR}:/www/:rw
-#       - ${OPENRESTY_CONFD_DIR}:/etc/nginx/conf.d/:ro
-#       - ${OPENRESTY_SSL_CERTIFICATE_DIR}:/ssl:rw
-#       - ${OPENRESTY_CONF_FILE}:/usr/local/openresty/nginx/conf/nginx.conf:ro
-#       - ${OPENRESTY_FASTCGI_PHP_CONF}:/usr/local/openresty/nginx/conf/fastcgi-php.conf:ro
-#       - ${OPENRESTY_CONF_FASTCGIPARAMS_FILE}:/usr/local/openresty/nginx/conf/fastcgi_params:ro
-#       - ${OPENRESTY_LOG_DIR}:/var/log/nginx/:rw
-#    environment:
-#      TZ: "$TZ"
-#    networks:
-#      - default
+  #  openresty:
+  #    image:  openresty/openresty:${OPENRESTY_VERSION}
+  #    container_name: openresty
+  #    ports:
+  #       - "${OPENRESTY_HTTP_HOST_PORT}:80"
+  #       - "${OPENRESTY_HTTPS_HOST_PORT}:443"
+  #    volumes:
+  #       - ${SOURCE_DIR}:/www/:rw
+  #       - ${OPENRESTY_CONFD_DIR}:/etc/nginx/conf.d/:ro
+  #       - ${OPENRESTY_SSL_CERTIFICATE_DIR}:/ssl:rw
+  #       - ${OPENRESTY_CONF_FILE}:/usr/local/openresty/nginx/conf/nginx.conf:ro
+  #       - ${OPENRESTY_FASTCGI_PHP_CONF}:/usr/local/openresty/nginx/conf/fastcgi-php.conf:ro
+  #       - ${OPENRESTY_CONF_FASTCGIPARAMS_FILE}:/usr/local/openresty/nginx/conf/fastcgi_params:ro
+  #       - ${OPENRESTY_LOG_DIR}:/var/log/nginx/:rw
+  #    environment:
+  #      TZ: "$TZ"
+  #    networks:
+  #      - default
 
   redis:
     image: redis:${REDIS_VERSION}
@@ -257,15 +257,15 @@ services:
     networks:
       - default
 
-#  memcached:
-#    image: memcached:${MEMCACHED_VERSION}
-#    container_name: memcached
-#    ports:
-#      - "${MEMCACHED_HOST_PORT}:11211"
-#    environment:
-#       MEMCACHED_CACHE_SIZE: "${MEMCACHED_CACHE_SIZE}"
-#    networks:
-#      - default
+  #  memcached:
+  #    image: memcached:${MEMCACHED_VERSION}
+  #    container_name: memcached
+  #    ports:
+  #      - "${MEMCACHED_HOST_PORT}:11211"
+  #    environment:
+  #       MEMCACHED_CACHE_SIZE: "${MEMCACHED_CACHE_SIZE}"
+  #    networks:
+  #      - default
 
   rabbitmq:
     image: rabbitmq:${RABBITMQ_VERSION}
@@ -275,127 +275,127 @@ services:
       - "${RABBITMQ_HOST_PORT_C}:5672"
       - "${RABBITMQ_HOST_PORT_S}:15672"
     environment:
-       TZ: "$TZ"
-       RABBITMQ_DEFAULT_USER: "${RABBITMQ_DEFAULT_USER}"
-       RABBITMQ_DEFAULT_PASS: "${RABBITMQ_DEFAULT_PASS}"
+      TZ: "$TZ"
+      RABBITMQ_DEFAULT_USER: "${RABBITMQ_DEFAULT_USER}"
+      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_DEFAULT_PASS}"
     networks:
-          - default
+      - default
 
-#  phpmyadmin:
-#    image: phpmyadmin/phpmyadmin:latest
-#    container_name: phpmyadmin
-#    ports:
-#      - "${PHPMYADMIN_HOST_PORT}:80"
-#    volumes:
-#      - ${PHPMYADMIN_USER_CONF_FILE}:/etc/phpmyadmin/config.user.inc.php:ro
-#      - ${PHPMYADMIN_PHP_CONF_FILE}:/usr/local/etc/php/conf.d/php-phpmyadmin.ini:ro
-#    networks:
-#      - default
-#    environment:
-#      - PMA_HOST=mysql
-#      - PMA_PORT=3306
-#      - TZ=$TZ
+  #  phpmyadmin:
+  #    image: phpmyadmin/phpmyadmin:latest
+  #    container_name: phpmyadmin
+  #    ports:
+  #      - "${PHPMYADMIN_HOST_PORT}:80"
+  #    volumes:
+  #      - ${PHPMYADMIN_USER_CONF_FILE}:/etc/phpmyadmin/config.user.inc.php:ro
+  #      - ${PHPMYADMIN_PHP_CONF_FILE}:/usr/local/etc/php/conf.d/php-phpmyadmin.ini:ro
+  #    networks:
+  #      - default
+  #    environment:
+  #      - PMA_HOST=mysql
+  #      - PMA_PORT=3306
+  #      - TZ=$TZ
 
-#  phpredisadmin:
-#    image: erikdubbelboer/phpredisadmin:latest
-#    container_name: phpredisadmin
-#    ports:
-#      - "${REDISMYADMIN_HOST_PORT}:80"
-#    networks:
-#      - default
-#    environment:
-#      - REDIS_1_HOST=redis
-#      - REDIS_1_PORT=6379
-#      - TZ=$TZ
+  #  phpredisadmin:
+  #    image: erikdubbelboer/phpredisadmin:latest
+  #    container_name: phpredisadmin
+  #    ports:
+  #      - "${REDISMYADMIN_HOST_PORT}:80"
+  #    networks:
+  #      - default
+  #    environment:
+  #      - REDIS_1_HOST=redis
+  #      - REDIS_1_PORT=6379
+  #      - TZ=$TZ
 
-#  mongodb:
-#    image: mongo:${MONGODB_VERSION}
-#    container_name: mongodb
-#    environment:
-#        MONGO_INITDB_ROOT_USERNAME: "${MONGODB_INITDB_ROOT_USERNAME}"
-#        MONGO_INITDB_ROOT_PASSWORD: "${MONGODB_INITDB_ROOT_PASSWORD}"
-#        TZ: "$TZ"
-#    volumes:
-#      - ${DATA_DIR}/mongo:/data/db:rw
-#      - ${DATA_DIR}/mongo_key:/mongo:rw
-#    ports:
-#       - "${MONGODB_HOST_PORT}:27017"
-#    networks:
-#       - default
-#    command:
-#       --auth
+  #  mongodb:
+  #    image: mongo:${MONGODB_VERSION}
+  #    container_name: mongodb
+  #    environment:
+  #        MONGO_INITDB_ROOT_USERNAME: "${MONGODB_INITDB_ROOT_USERNAME}"
+  #        MONGO_INITDB_ROOT_PASSWORD: "${MONGODB_INITDB_ROOT_PASSWORD}"
+  #        TZ: "$TZ"
+  #    volumes:
+  #      - ${DATA_DIR}/mongo:/data/db:rw
+  #      - ${DATA_DIR}/mongo_key:/mongo:rw
+  #    ports:
+  #       - "${MONGODB_HOST_PORT}:27017"
+  #    networks:
+  #       - default
+  #    command:
+  #       --auth
 
-#  adminmongo:
-#    image: mrvautin/adminmongo
-#    container_name: adminmongo
-#    ports:
-#      - "${ADMINMONGO_HOST_PORT}:1234"
-#    environment:
-#      - HOST=0.0.0.0
-#      - DB_HOST=mongodb
-#      - DB_PORT=27017
-#    networks:
-#      - default
+  #  adminmongo:
+  #    image: mrvautin/adminmongo
+  #    container_name: adminmongo
+  #    ports:
+  #      - "${ADMINMONGO_HOST_PORT}:1234"
+  #    environment:
+  #      - HOST=0.0.0.0
+  #      - DB_HOST=mongodb
+  #      - DB_PORT=27017
+  #    networks:
+  #      - default
 
-#  elasticsearch:
-#    build:
-#      context: ./services/elasticsearch
-#      args:
-#        ELASTICSEARCH_VERSION: ${ELASTICSEARCH_VERSION}
-#        ELASTICSEARCH_PLUGINS: ${ELASTICSEARCH_PLUGINS}
-#    container_name: elasticsearch
-#    environment:
-#      - TZ=$TZ
-#      - discovery.type=single-node
-#      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-#    volumes:
-#      - ${DATA_DIR}/esdata:/usr/share/elasticsearch/data
-#      - ${ELASTICSEARCH_CONF_FILE}:/usr/share/elasticsearch/config/elasticsearch.yml
-#    hostname: elasticsearch
-#    restart: always
-#    ports:
-#      - "${ELASTICSEARCH_HOST_PORT_C}:9200"
-#      - "${ELASTICSEARCH_HOST_PORT_S}:9300"
+  #  elasticsearch:
+  #    build:
+  #      context: ./services/elasticsearch
+  #      args:
+  #        ELASTICSEARCH_VERSION: ${ELASTICSEARCH_VERSION}
+  #        ELASTICSEARCH_PLUGINS: ${ELASTICSEARCH_PLUGINS}
+  #    container_name: elasticsearch
+  #    environment:
+  #      - TZ=$TZ
+  #      - discovery.type=single-node
+  #      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+  #    volumes:
+  #      - ${DATA_DIR}/esdata:/usr/share/elasticsearch/data
+  #      - ${ELASTICSEARCH_CONF_FILE}:/usr/share/elasticsearch/config/elasticsearch.yml
+  #    hostname: elasticsearch
+  #    restart: always
+  #    ports:
+  #      - "${ELASTICSEARCH_HOST_PORT_C}:9200"
+  #      - "${ELASTICSEARCH_HOST_PORT_S}:9300"
 
-#  kibana:
-#    image: kibana:${KIBANA_VERSION}
-#    container_name: kibana
-#    environment:
-#      TZ: "$TZ"
-#      elasticsearch.hosts: http://elasticsearch:9200
-#      I18N_LOCALE: "${KIBANA_I18N_LOCALE}"
-#    hostname: kibana
-#    depends_on:
-#      - elasticsearch
-#    restart: always
-#    ports:
-#      - "${KIBANA_HOST}:5601"
+  #  kibana:
+  #    image: kibana:${KIBANA_VERSION}
+  #    container_name: kibana
+  #    environment:
+  #      TZ: "$TZ"
+  #      elasticsearch.hosts: http://elasticsearch:9200
+  #      I18N_LOCALE: "${KIBANA_I18N_LOCALE}"
+  #    hostname: kibana
+  #    depends_on:
+  #      - elasticsearch
+  #    restart: always
+  #    ports:
+  #      - "${KIBANA_HOST}:5601"
 
-#  logstash:
-#    image: logstash:${LOGSTASH_VERSION}
-#    container_name: logstash
-#    hostname: logstash
-#    restart: always
-#    depends_on:
-#      - elasticsearch
-#    environment:
-#      TZ: "$TZ"
-#    ports:
-#      - "${LOGSTASH_HOST_PORT_C}:9600"
-#      - "${LOGSTASH_HOST_PORT_S}:5044"
+  #  logstash:
+  #    image: logstash:${LOGSTASH_VERSION}
+  #    container_name: logstash
+  #    hostname: logstash
+  #    restart: always
+  #    depends_on:
+  #      - elasticsearch
+  #    environment:
+  #      TZ: "$TZ"
+  #    ports:
+  #      - "${LOGSTASH_HOST_PORT_C}:9600"
+  #      - "${LOGSTASH_HOST_PORT_S}:5044"
 
-#  node:
-#    image: node:${NODE_VERSION}
-#    environment:
-#      - NODE_ENV=production
-#    volumes:
-#      - ${SOURCE_DIR}:/www/:rw
-#    expose:
-#      - "8081"
-#    networks:
-#      - default
-#    stdin_open: true
-#    tty: true
+  #  node:
+  #    image: node:${NODE_VERSION}
+  #    environment:
+  #      - NODE_ENV=production
+  #    volumes:
+  #      - ${SOURCE_DIR}:/www/:rw
+  #    expose:
+  #      - "8081"
+  #    networks:
+  #      - default
+  #    stdin_open: true
+  #    tty: true
 
 
   supervisor:

@@ -525,6 +525,12 @@ if [[ -z "${EXTENSIONS##*,amqp,*}" ]]; then
     installExtensionFromTgz amqp-1.10.2
 fi
 
+
+if [[ -z "${EXTENSIONS##*,hprose,*}" ]]; then
+    echo "---------- Install hprose ----------"
+	  docker-php-ext-install ${MC} hprose
+fi
+
 if [[ -z "${EXTENSIONS##*,redis,*}" ]]; then
     echo "---------- Install redis ----------"
     isPhpVersionGreaterOrEqual 7 0
