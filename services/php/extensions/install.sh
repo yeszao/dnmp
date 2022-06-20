@@ -372,8 +372,13 @@ fi
 
 if [[ -z "${EXTENSIONS##*,msgpack,*}" ]]; then
     echo "---------- Install msgpack ----------"
-    printf "\n" | pecl install msgpack
-    docker-php-ext-enable msgpack
+    isPhpVersionGreaterOrEqual 7 0
+    if [[ "$?" = "1" ]]; then
+      printf "\n" | pecl install msgpack
+      docker-php-ext-enable msgpack
+    else
+      installExtensionFromTgz msgpack-0.5.7
+    fi
 fi
 
 if [[ -z "${EXTENSIONS##*,igbinary,*}" ]]; then
@@ -528,7 +533,8 @@ fi
 
 if [[ -z "${EXTENSIONS##*,hprose,*}" ]]; then
     echo "---------- Install hprose ----------"
-	  docker-php-ext-install ${MC} hprose
+	  # docker-php-ext-install ${MC} hprose
+    installExtensionFromTgz hprose-1.8.0
 fi
 
 if [[ -z "${EXTENSIONS##*,redis,*}" ]]; then
