@@ -23,8 +23,8 @@ RUN apk --no-cache add tzdata \
     && echo "$TZ" > /etc/timezone
 
 
-# Fix: https://github.com/docker-library/php/issues/240
-RUN apk add gnu-libiconv libstdc++ --update-cache --repository http://${CONTAINER_PACKAGE_URL}/alpine/edge/testing/ --allow-untrusted
+# Fix: https://github.com/docker-library/php/issues/1121
+RUN apk add --no-cache --repository http://${CONTAINER_PACKAGE_URL}/alpine/v3.13/community/ gnu-libiconv=1.15-r3
 ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so php
 
 
