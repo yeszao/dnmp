@@ -522,7 +522,6 @@ if [[ -z "${EXTENSIONS##*,amqp,*}" ]]; then
     && apk add rabbitmq-c-dev \
     && printf '\n' | pecl install amqp \
     && docker-php-ext-enable amqp \
-    && rm -rf /tmp/pear \
     && apk del .phpize-deps-configure
     
 fi
