@@ -513,8 +513,18 @@ fi
 
 if [[ -z "${EXTENSIONS##*,amqp,*}" ]]; then
     echo "---------- Install amqp ----------"
-    apk add --no-cache rabbitmq-c-dev
-    docker-php-ext-enable amqp
+    apk add --no-cache -U autoconf
+    apk add --no-cache -U gcc
+    apk add --no-cache -U linux-headers
+    apk add --no-cache -U libc-dev
+
+    apk add --no-cache --update --virtual .phpize-deps-configure $PHPIZE_DEPS \
+    && apk add rabbitmq-c-dev \
+    && printf '\n' | pecl install amqp \
+    && docker-php-ext-enable amqp \
+    && rm -rf /tmp/pear \
+    && apk del .phpize-deps-configure
+    
 fi
 
 if [[ -z "${EXTENSIONS##*,redis,*}" ]]; then
