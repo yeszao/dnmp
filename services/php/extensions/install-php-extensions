@@ -130,6 +130,9 @@ normalizePHPModuleName() {
 			;;
 	esac
 	case "$normalizePHPModuleName_name" in
+		datadog_trace)
+			normalizePHPModuleName_name=ddtrace
+			;;
 		ioncube | ioncube\ loader)
 			normalizePHPModuleName_name='ioncube_loader'
 			;;
@@ -166,6 +169,9 @@ normalizePHPModuleName() {
 getPeclModuleName() {
 	normalizePHPModuleName_name="$1"
 	case "$normalizePHPModuleName_name" in
+		ddtrace)
+			normalizePHPModuleName_name=datadog_trace
+			;;
 		http)
 			normalizePHPModuleName_name=pecl_http
 			;;
@@ -602,6 +608,10 @@ buildRequiredPackageLists() {
 			else
 				buildRequiredPackageLists_libssldev='libretls-dev'
 			fi
+			buildRequiredPackageLists_icuPersistent=''
+			if test $DISTRO_MAJMIN_VERSION -ge 316; then
+				buildRequiredPackageLists_icuPersistent='icu-data-full'
+			fi
 			;;
 		debian@9)
 			buildRequiredPackageLists_libssldev='libssl1.0-dev'
@@ -641,6 +651,13 @@ buildRequiredPackageLists() {
 				;;
 			cmark@debian)
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile cmake"
+				;;
+			ddtrace@alpine)
+				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile curl-dev"
+				;;
+			ddtrace@debian)
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent curl"
+				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libcurl4-openssl-dev"
 				;;
 			dba@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent db"
@@ -811,7 +828,7 @@ buildRequiredPackageLists() {
 					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libidn"
 					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libidn-dev"
 				else
-					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent icu-libs libidn"
+					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent icu-libs $buildRequiredPackageLists_icuPersistent libidn"
 					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile icu-dev libidn-dev"
 				fi
 				;;
@@ -857,7 +874,7 @@ buildRequiredPackageLists() {
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile firebird-dev libib-util"
 				;;
 			intl@alpine)
-				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent icu-libs"
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent icu-libs $buildRequiredPackageLists_icuPersistent"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile icu-dev"
 				;;
 			intl@debian)
@@ -888,6 +905,14 @@ buildRequiredPackageLists() {
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent liblua5.1-0"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile liblua5.1-0-dev"
 				;;
+			lz4@alpine)
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent lz4-libs"
+				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile lz4-dev"
+				;;
+			lz4@debian)
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent liblz4-1"
+				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile liblz4-dev"
+				;;
 			maxminddb@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libmaxminddb"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libmaxminddb-dev"
@@ -897,9 +922,8 @@ buildRequiredPackageLists() {
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libmaxminddb-dev"
 				;;
 			memprof@alpine)
-				# Only available in testing
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent judy"
-				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile judy-dev"
+				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile judy-dev bsd-compat-headers"
 				;;
 			memprof@debian)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libjudydebian1"
@@ -935,7 +959,7 @@ buildRequiredPackageLists() {
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile $buildRequiredPackageLists_libssldev libsasl2-dev"
 				;;
 			mongodb@alpine)
-				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent icu-libs libsasl $buildRequiredPackageLists_libssl snappy"
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent icu-libs $buildRequiredPackageLists_icuPersistent libsasl $buildRequiredPackageLists_libssl snappy"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile icu-dev cyrus-sasl-dev snappy-dev $buildRequiredPackageLists_libssldev zlib-dev"
 				;;
 			mongodb@debian)
@@ -1021,6 +1045,9 @@ buildRequiredPackageLists() {
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libpq5"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libpq-dev"
 				;;
+			php_trie@alpine)
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libstdc++"
+				;;
 			pspell@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent aspell-libs"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile aspell-dev"
@@ -1082,6 +1109,14 @@ buildRequiredPackageLists() {
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libsmbclient"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libsmbclient-dev"
 				;;
+			snappy@alpine)
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent snappy"
+				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile snappy-dev"
+				;;
+			snappy@debian)
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent ^libsnappy1(v[0-9]+)?$"
+				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libsnappy-dev"
+				;;
 			snmp@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent net-snmp-libs"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile net-snmp-dev"
@@ -1102,6 +1137,11 @@ buildRequiredPackageLists() {
 				;;
 			soap@debian)
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libxml2-dev"
+				;;
+			sockets@alpine)
+				if test $PHP_MAJMIN_VERSION -ge 802; then
+					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile linux-headers"
+				fi
 				;;
 			sodium@alpine | libsodium@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libsodium"
@@ -1325,7 +1365,9 @@ buildRequiredPackageLists() {
 		resetIFS
 		for buildRequiredPackageLists_package in $buildRequiredPackageLists_packages; do
 			if ! stringInList "$buildRequiredPackageLists_package" "$PACKAGES_PERSISTENT_NEW"; then
-				PACKAGES_VOLATILE="$PACKAGES_VOLATILE $buildRequiredPackageLists_package"
+				if test "$buildRequiredPackageLists_package" != icu-data-en || ! stringInList icu-data-full "$PACKAGES_PERSISTENT_NEW"; then
+					PACKAGES_VOLATILE="$PACKAGES_VOLATILE $buildRequiredPackageLists_package"
+				fi
 			fi
 		done
 		PACKAGES_VOLATILE="${PACKAGES_VOLATILE# }"
@@ -2478,7 +2520,7 @@ installRemoteModule() {
 					addConfigureOption with-event-ns no
 				fi
 				# openssl installation prefix
-				addConfigureOption with-openssl-dir no
+				addConfigureOption with-openssl-dir yes
 			elif test $(compareVersions "$installRemoteModule_version" 1.7.6) -ge 0; then
 				# Enable internal debugging in Event
 				addConfigureOption enable-event-debug no
@@ -2656,6 +2698,20 @@ installRemoteModule() {
 				fi
 			fi
 			;;
+		lz4)
+			if test -z "$installRemoteModule_path"; then
+				if test -z "$installRemoteModule_version"; then
+					installRemoteModule_version=0.4.3
+				fi
+				installRemoteModule_src="$(getPackageSource https://github.com/kjdev/php-ext-lz4/archive/refs/tags/$installRemoteModule_version.tar.gz)"
+				cd "$installRemoteModule_src"
+				phpize
+				./configure --with-lz4-includedir=/usr
+				make -j$(getProcessorCount) install
+				cd - >/dev/null
+				installRemoteModule_manuallyInstalled=1
+			fi
+			;;
 		lzf)
 			if test -z "$installRemoteModule_version"; then
 				if test $PHP_MAJMIN_VERSION -lt 702; then
@@ -2828,6 +2884,13 @@ installRemoteModule() {
 				fi
 			fi
 			;;
+		php_trie)
+			if ! test -f /usr/local/include/hat-trie/include/tsl/htrie_map.h; then
+				installRemoteModule_src="$(getPackageSource https://codeload.github.com/Tessil/hat-trie/tar.gz/v0.6.0)"
+				mkdir -p /usr/local/include/hat-trie
+				mv "$installRemoteModule_src/include" /usr/local/include/hat-trie
+			fi
+			;;
 		propro)
 			if test -z "$installRemoteModule_version"; then
 				if test $PHP_MAJMIN_VERSION -le 506; then
@@ -2922,6 +2985,20 @@ installRemoteModule() {
 				fi
 				# Enable zstd compression support?
 				addConfigureOption 'enable-redis-zstd' 'yes'
+			fi
+			;;
+		snappy)
+			if test -z "$installRemoteModule_path"; then
+				if test -z "$installRemoteModule_version"; then
+					installRemoteModule_version=0.2.1
+				fi
+				installRemoteModule_src="$(getPackageSource https://github.com/kjdev/php-ext-snappy/archive/refs/tags/$installRemoteModule_version.tar.gz)"
+				cd "$installRemoteModule_src"
+				phpize
+				./configure --with-snappy-includedir=/usr
+				make -j$(getProcessorCount) install
+				cd - >/dev/null
+				installRemoteModule_manuallyInstalled=1
 			fi
 			;;
 		snuffleupagus)
@@ -3234,6 +3311,21 @@ installRemoteModule() {
 				fi
 			fi
 			;;
+		xdiff)
+			if test -z "$installRemoteModule_version"; then
+				if test $PHP_MAJMIN_VERSION -le 506; then
+					installRemoteModule_version=1.5.2
+				fi
+			fi
+			if ! test -f /usr/local/lib/libxdiff.* && ! test -f /usr/lib/libxdiff.* && ! test -f /usr/lib/x86_64*/libxdiff.*; then
+				installRemoteModule_src="$(getPackageSource http://www.xmailserver.org/libxdiff-0.23.tar.gz)"
+				cd -- "$installRemoteModule_src"
+				./configure --disable-shared --disable-dependency-tracking --with-pic
+				make -j$(getProcessorCount)
+				make install
+				cd - >/dev/null
+			fi
+			;;
 		xhprof)
 			if test -z "$installRemoteModule_version"; then
 				if test $PHP_MAJMIN_VERSION -le 506; then
@@ -3471,7 +3563,7 @@ installPeclPackage() {
 		fi
 		cat "$CONFIGURE_FILE" | MAKE="make -j$(getCompilationProcessorCount $1)" CPPFLAGS="${3:-}" pecl install "$installPeclPackage_path"
 	else
-		MAKE="make -j$(getCompilationProcessorCount $1)" CPPFLAGS="${3:-}" /tmp/pickle install --tmp-dir=/tmp/pickle.tmp --no-interaction --version-override='' --with-configure-options "$CONFIGURE_FILE" -- "$installPeclPackage_path"
+		MAKEFLAGS="-j$(getCompilationProcessorCount $1)" CPPFLAGS="${3:-}" /tmp/pickle install --tmp-dir=/tmp/pickle.tmp --no-interaction --version-override='' --with-configure-options "$CONFIGURE_FILE" -- "$installPeclPackage_path"
 	fi
 }
 
@@ -3644,7 +3736,7 @@ esac
 setPHPVersionVariables
 setPHPPreinstalledModules
 case "$PHP_MAJMIN_VERSION" in
-	505 | 506 | 700 | 701 | 702 | 703 | 704 | 800 | 801) ;;
+	505 | 506 | 700 | 701 | 702 | 703 | 704 | 800 | 801 | 802) ;;
 	*)
 		printf "### ERROR: Unsupported PHP version: %s.%s ###\n" $((PHP_MAJMIN_VERSION / 100)) $((PHP_MAJMIN_VERSION % 100))
 		;;
