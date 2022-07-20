@@ -50,6 +50,61 @@ services:
   #    networks:
   #      - default
 
+  php80:
+    build:
+      context: ./services/php80
+      args:
+        PHP_VERSION: php:${PHP80_VERSION}-fpm-alpine3.15
+        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
+        PHP_EXTENSIONS: ${PHP80_EXTENSIONS}
+        TZ: "$TZ"
+    container_name: php80
+    expose:
+      - 9501
+      - 9502
+      - 9503
+      - 9504
+      - 9505
+      - 9511
+      - 9512
+      - 9513
+      - 9514
+      - 9515
+    ports:
+      - "9601:9501"
+      - "9602:9502"
+      - "9603:9503"
+      - "9604:9504"
+      - "9605:9505"
+      - "9611:9511"
+      - "9612:9512"
+      - "9613:9513"
+      - "9614:9514"
+      - "9615:9515"
+    extra_hosts:
+      - "www.site1.com:172.17.0.1"
+    volumes:
+      - ${SOURCE_DIR}:/www/:rw
+      - ${PHP80_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
+      - ${PHP80_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
+      - ${PHP80_LOG_DIR}:/var/log/php
+      - ${DATA_DIR}/composer:/tmp/composer
+      - ${SUPERVISOR_LOG}:/var/log/supervisor/:rw
+      - ${SUPERVISOR_CONFIG}:/etc/supervisor/conf.d/:rw
+      - ${SUPERVISOR_CONF_FILE}:/etc/supervisor/supervisord.conf:ro
+    restart: always
+    command:
+      - /bin/sh
+      - -c
+      - |
+        /usr/local/sbin/php-fpm -D
+        supervisord -n -c /etc/supervisor/supervisord.conf
+    cap_add:
+      - SYS_PTRACE
+    networks:
+      extnetwork:
+        ipv4_address: 172.18.0.31
+
   php74:
     build:
       context: ./services/php
