@@ -374,8 +374,7 @@ if [[ -z "${EXTENSIONS##*,msgpack,*}" ]]; then
     echo "---------- Install msgpack ----------"
     isPhpVersionGreaterOrEqual 7 0
     if [[ "$?" = "1" ]]; then
-      printf "\n" | pecl install msgpack
-      docker-php-ext-enable msgpack
+      installExtensionFromTgz msgpack-2.1.2
     else
       installExtensionFromTgz msgpack-0.5.7
     fi
@@ -541,7 +540,7 @@ if [[ -z "${EXTENSIONS##*,redis,*}" ]]; then
     echo "---------- Install redis ----------"
     isPhpVersionGreaterOrEqual 7 0
     if [[ "$?" = "1" ]]; then
-        installExtensionFromTgzEnable redis-5.2.2 "--enable-redis-msgpack"
+        installExtensionFromTgzEnable redis-5.3.7 "--enable-redis-msgpack"
     else
         printf "\n" | pecl install redis-4.3.0
         docker-php-ext-enable redis
