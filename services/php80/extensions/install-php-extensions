@@ -570,6 +570,17 @@ sortModulesToInstall() {
 	fi
 }
 
+# Expand the IPE_ASPELL_LANGUAGES environment variable into apk/apt package names
+expandASpellDictionaries() {
+	expandASpellDictionaries_languages="${IPE_ASPELL_LANGUAGES:-en}"
+	expandASpellDictionaries_result=''
+	resetIFS
+	for expandASpellDictionaries_language in $expandASpellDictionaries_languages; do
+		expandASpellDictionaries_result="$expandASpellDictionaries_result aspell-$expandASpellDictionaries_language"
+	done
+	printf '%s' "${expandASpellDictionaries_result# }"
+}
+
 # Get the required APT/APK packages for a specific PHP version and for the list of module handles
 #
 # Arguments:
@@ -610,7 +621,12 @@ buildRequiredPackageLists() {
 			fi
 			buildRequiredPackageLists_icuPersistent=''
 			if test $DISTRO_MAJMIN_VERSION -ge 316; then
-				buildRequiredPackageLists_icuPersistent='icu-data-full'
+				case "${IPE_ICU_EN_ONLY:-}" in
+					1 | y* | Y*) ;;
+					*)
+						buildRequiredPackageLists_icuPersistent='icu-data-full'
+						;;
+				esac
 			fi
 			;;
 		debian@9)
@@ -1049,11 +1065,11 @@ buildRequiredPackageLists() {
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libstdc++"
 				;;
 			pspell@alpine)
-				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent aspell-libs"
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent aspell-libs $(expandASpellDictionaries)"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile aspell-dev"
 				;;
 			pspell@debian)
-				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libaspell15"
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libaspell15 $(expandASpellDictionaries)"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libpspell-dev"
 				;;
 			rdkafka@alpine)
@@ -1192,10 +1208,21 @@ buildRequiredPackageLists() {
 			swoole@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent postgresql-libs libstdc++ $buildRequiredPackageLists_libssl"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile curl-dev postgresql-dev linux-headers $buildRequiredPackageLists_libssldev"
+				if test $PHP_MAJMIN_VERSION -ge 702; then
+					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent c-ares"
+					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile c-ares-dev"
+				fi
 				;;
 			swoole@debian)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libcurl3-gnutls libpq5"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile $buildRequiredPackageLists_libssldev libcurl4-gnutls-dev libpq-dev"
+				if test $PHP_MAJMIN_VERSION -ge 702; then
+					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libc-ares2"
+					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libc-ares-dev"
+				fi
+				if test $PHP_MAJMIN_VERSION -ge 800; then
+					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile zlib1g-dev"
+				fi
 				;;
 			sybase_ct@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent freetds"
@@ -1264,6 +1291,11 @@ buildRequiredPackageLists() {
 				;;
 			wddx@debian)
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libxml2-dev"
+				;;
+			xdebug@alpine)
+				if test $PHP_MAJMIN_VERSION -ge 800; then
+					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile linux-headers"
+				fi
 				;;
 			xlswriter@alpine)
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile zlib-dev"
@@ -2410,6 +2442,13 @@ installRemoteModule() {
 			# apcu_bc must be loaded after apcu
 			installRemoteModule_ini_basename="xx-php-ext-$installRemoteModule_module"
 			;;
+		ast)
+			if test -z "$installRemoteModule_version"; then
+				if test $PHP_MAJMIN_VERSION -le 701; then
+					installRemoteModule_version=1.0.16
+				fi
+			fi
+			;;
 		blackfire)
 			case $(uname -m) in
 				i386 | i686 | x86)
@@ -2471,6 +2510,13 @@ installRemoteModule() {
 			if test -z "$installRemoteModule_version"; then
 				if test $PHP_MAJMIN_VERSION -le 704; then
 					installRemoteModule_version=0.3.1
+				fi
+			fi
+			;;
+		ddtrace)
+			if test -z "$installRemoteModule_version"; then
+				if test $PHP_MAJMIN_VERSION -lt 700; then
+					installRemoteModule_version=0.75.0
 				fi
 			fi
 			;;
@@ -2623,6 +2669,13 @@ installRemoteModule() {
 				case "$DISTRO_VERSION" in
 					alpine@3.13)
 						installRemoteModule_cppflags='-Wno-maybe-uninitialized'
+						;;
+				esac
+			fi
+			if test -z "$installRemoteModule_version"; then
+				case "$DISTRO_VERSION" in
+					debian@8)
+						installRemoteModule_version=1.46.3
 						;;
 				esac
 			fi
@@ -3111,6 +3164,8 @@ installRemoteModule() {
 					installRemoteModule_version=4.3.6
 				elif test $PHP_MAJMIN_VERSION -le 701; then
 					installRemoteModule_version=4.5.10
+				elif test $PHP_MAJMIN_VERSION -le 704; then
+					installRemoteModule_version=4.8.11
 				fi
 			fi
 			if php --ri sockets >/dev/null 2>/dev/null; then
@@ -3127,7 +3182,18 @@ installRemoteModule() {
 					fi
 					;;
 			esac
-			if test -z "$installRemoteModule_version" || test $(compareVersions "$installRemoteModule_version" 4.6.1) -ge 0; then
+			if test -z "$installRemoteModule_version" || test $(compareVersions "$installRemoteModule_version" 5.0.0) -ge 0; then
+				# enable sockets supports?
+				addConfigureOption enable-sockets $installRemoteModule_sockets
+				# enable openssl support?
+				addConfigureOption enable-openssl $installRemoteModule_openssl
+				# enable mysqlnd support?
+				addConfigureOption enable-mysqlnd yes
+				# enable curl support?
+				addConfigureOption enable-swoole-curl yes
+				# enable cares support?
+				addConfigureOption enable-cares yes
+			elif test $(compareVersions "$installRemoteModule_version" 4.6.1) -ge 0; then
 				# enable sockets supports?
 				addConfigureOption enable-sockets $installRemoteModule_sockets
 				# enable openssl support?
@@ -3139,11 +3205,15 @@ installRemoteModule() {
 				# enable json support?
 				addConfigureOption enable-swoole-json yes
 				# enable curl support?
-				if test $PHP_MAJMINPAT_VERSION -ne 80000 || test -z "$installRemoteModule_version" || test $(compareVersions "$installRemoteModule_version" 4.6.1) -ge 0; then
+				if test $PHP_MAJMINPAT_VERSION -ne 80000 || test $(compareVersions "$installRemoteModule_version" 4.6.1) -ge 0; then
 					addConfigureOption enable-swoole-curl yes
 				else
 					# https://github.com/swoole/swoole-src/issues/3977#issuecomment-754755521
 					addConfigureOption enable-swoole-curl no
+				fi
+				if test $(compareVersions "$installRemoteModule_version" 4.8.11) -ge 0; then
+					# enable cares support?
+					addConfigureOption enable-cares yes
 				fi
 			elif test $(compareVersions "$installRemoteModule_version" 4.4.0) -ge 0; then
 				# enable sockets supports?
