@@ -219,11 +219,11 @@ set_error_handler(
 $xpath = new DOMXpath($doc);
 $xpath->registerNamespace('v20', 'http://pear.php.net/dtd/package-2.0');
 $xpath->registerNamespace('v21', 'http://pear.php.net/dtd/package-2.1');
-if ($xpath->query('/v20:package/v20:dependencies')->count() === 1) {
+if ($xpath->query('/v20:package/v20:dependencies')->length === 1) {
 	$ns = 'v20:';
-} elseif ($xpath->query('/v21:package/v21:dependencies')->count() === 1) {
+} elseif ($xpath->query('/v21:package/v21:dependencies')->length === 1) {
 	$ns = 'v21:';
-} elseif ($xpath->query('/package')->count() === 1) {
+} elseif ($xpath->query('/package')->length === 1) {
 	$ns = '';
 } else {
 	fwrite(STDERR, "Unsupported namespace of the XML of package version details\n");
@@ -1116,6 +1116,9 @@ buildRequiredPackageLists() {
 							;;
 					esac
 				fi
+				;;
+			simdjson@alpine)
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libstdc++"
 				;;
 			smbclient@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libsmbclient"
@@ -2924,6 +2927,8 @@ installRemoteModule() {
 			if test -z "$installRemoteModule_version"; then
 				if test $PHP_MAJMIN_VERSION -le 701; then
 					installRemoteModule_version=0.8.3
+				elif test $PHP_MAJMIN_VERSION -le 704; then
+					installRemoteModule_version=1.1.4
 				fi
 			fi
 			;;
@@ -2957,6 +2962,9 @@ installRemoteModule() {
 			if test -z "$installRemoteModule_version"; then
 				if test $PHP_MAJMIN_VERSION -le 506; then
 					installRemoteModule_version=3.12.4
+				else
+					# see https://github.com/protocolbuffers/protobuf/issues/10619
+					installRemoteModule_version=3.21.6
 				fi
 			fi
 			;;
@@ -3100,7 +3108,7 @@ installRemoteModule() {
 		spx)
 			if test -z "$installRemoteModule_path"; then
 				if test -z "$installRemoteModule_version"; then
-					installRemoteModule_version=v0.4.12
+					installRemoteModule_version=v0.4.13
 				fi
 				if test "${installRemoteModule_version%.*}" = "$installRemoteModule_version"; then
 					installRemoteModule_displayVersion="$installRemoteModule_version"
