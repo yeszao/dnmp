@@ -607,6 +607,9 @@ fi
 
 if [[ -z "${EXTENSIONS##*,swoole,*}" ]]; then
     echo "---------- Install swoole ----------"
+    # Fix: Refer to the line containing "swoole@alpine)" in file "./install-php-extensions"
+    apk add --no-cache libstdc++
+
     isPhpVersionGreaterOrEqual 7 0
 
     if [[ "$?" = "1" ]]; then
