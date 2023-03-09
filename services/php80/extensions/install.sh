@@ -391,7 +391,7 @@ if [[ -z "${EXTENSIONS##*,protobuf,*}" ]]; then
     isPhpVersionGreaterOrEqual 8 0
     if [[ "$?" = "1" ]]; then
         echo "---------- Install protobuf ----------"
-        printf "\n" | pecl install protobuf-3.22.1
+        printf "\n" | pecl install protobuf
         docker-php-ext-enable protobuf
     else
         echo "yar requires PHP >= 8.0.0, installed version is ${PHP_VERSION}"
@@ -540,7 +540,7 @@ fi
 if [[ -z "${EXTENSIONS##*,memcached,*}" ]]; then
     echo "---------- Install memcached ----------"
     apk add --no-cache libmemcached-dev zlib-dev
-    pecl install memcached-3.2.0
+    pecl install memcached-3.2.3
     docker-php-ext-enable memcached
 fi
 
@@ -552,8 +552,7 @@ fi
 
 if [[ -z "${EXTENSIONS##*,xdebug,*}" ]]; then
     echo "---------- Install xdebug ----------"
-    pecl install xdebug
-    docker-php-ext-enable xdebug
+    installExtensionFromTgz xdebug-3.2.0
 fi
 
 if [[ -z "${EXTENSIONS##*,event,*}" ]]; then
