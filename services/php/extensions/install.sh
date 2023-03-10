@@ -70,7 +70,7 @@ installExtensionFromTgz()
     tar -xf ${tgzName}.tgz -C ${extensionName} --strip-components=1
     ( cd ${extensionName} && phpize && ./configure ${para1} && make ${MC} && make install )
 
-    docker-php-ext-enable ${extensionName} $2
+    docker-php-ext-enable ${extensionName}
 }
 
 
