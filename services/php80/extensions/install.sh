@@ -585,7 +585,7 @@ fi
 if [[ -z "${EXTENSIONS##*,swoole,*}" ]]; then
     echo "---------- Install swoole ----------"    
     isPhpVersionGreaterOrEqual 8 0
-    if [[ "$?" != "1" ]]; then
+    if [[ "$?" = "1" ]]; then
         installExtensionFromTgz swoole-5.0.2  
     fi
 fi
