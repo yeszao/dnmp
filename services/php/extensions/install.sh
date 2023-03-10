@@ -60,11 +60,15 @@ isPhpVersionGreaterOrEqual()
 installExtensionFromTgz()
 {
     tgzName=$1
+    para1= 
     extensionName="${tgzName%%-*}"
-
+    
+    if [  $2 ]; then  
+        para1=$2
+    fi  
     mkdir ${extensionName}
     tar -xf ${tgzName}.tgz -C ${extensionName} --strip-components=1
-    ( cd ${extensionName} && phpize && ./configure && make ${MC} && make install )
+    ( cd ${extensionName} && phpize && ./configure ${para1} && make ${MC} && make install )
 
     docker-php-ext-enable ${extensionName} $2
 }
