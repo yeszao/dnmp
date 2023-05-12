@@ -593,7 +593,9 @@ fi
 
 if [[ -z "${EXTENSIONS##*,mongodb,*}" ]]; then
     echo "---------- Install mongodb ----------"
+    apk add --no-cache openssl-dev
     installExtensionFromTgz mongodb-1.7.4
+    docker-php-ext-configure mongodb --with-mongodb-ssl=openssl 
 fi
 
 if [[ -z "${EXTENSIONS##*,yaf,*}" ]]; then
@@ -617,7 +619,7 @@ if [[ -z "${EXTENSIONS##*,swoole,*}" ]]; then
     isPhpVersionGreaterOrEqual 7 0
 
     if [[ "$?" = "1" ]]; then
-        installExtensionFromTgz swoole-4.5.2
+        installExtensionFromTgz swoole-4.5.2 --enable-openssl
     else
         installExtensionFromTgz swoole-2.0.11
     fi
