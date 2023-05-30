@@ -566,6 +566,8 @@ sortModulesToInstall() {
 	checkRequiredModule relay msgpack
 	# relay requires igbinary
 	checkRequiredModule relay igbinary
+	# pq requires raphf
+	checkRequiredModule pq raphf
 	# Some module installation may use sockets if available: move it before other modules
 	if stringInList 'sockets' "$PHP_MODULES_TO_INSTALL"; then
 		PHP_MODULES_TO_INSTALL="$(removeStringFromList 'sockets' "$PHP_MODULES_TO_INSTALL")"
@@ -594,6 +596,12 @@ sortModulesToInstall() {
 	if stringInList 'apcu' "$PHP_MODULES_TO_INSTALL"; then
 		PHP_MODULES_TO_INSTALL="$(removeStringFromList 'apcu' "$PHP_MODULES_TO_INSTALL")"
 		PHP_MODULES_TO_INSTALL="apcu $PHP_MODULES_TO_INSTALL"
+		PHP_MODULES_TO_INSTALL="${PHP_MODULES_TO_INSTALL% }"
+	fi
+	# Some module installation may use raphf if available: move it before other modules
+	if stringInList 'raphf' "$PHP_MODULES_TO_INSTALL"; then
+		PHP_MODULES_TO_INSTALL="$(removeStringFromList 'raphf' "$PHP_MODULES_TO_INSTALL")"
+		PHP_MODULES_TO_INSTALL="raphf $PHP_MODULES_TO_INSTALL"
 		PHP_MODULES_TO_INSTALL="${PHP_MODULES_TO_INSTALL% }"
 	fi
 	# In any case, first of all, we need to install composer
@@ -1094,11 +1102,11 @@ buildRequiredPackageLists() {
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libfbclient2"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile firebird-dev libib-util"
 				;;
-			pgsql@alpine | pdo_pgsql@alpine)
+			pgsql@alpine | pdo_pgsql@alpine | pq@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent postgresql-libs"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile postgresql-dev"
 				;;
-			pgsql@debian | pdo_pgsql@debian)
+			pgsql@debian | pdo_pgsql@debian | pq@debian)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libpq5"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libpq-dev"
 				;;
@@ -2518,6 +2526,13 @@ installRemoteModule() {
 				fi
 			fi
 			;;
+		bitset)
+			if test -z "$installRemoteModule_version"; then
+				if test $PHP_MAJMIN_VERSION -le 506; then
+					installRemoteModule_version=2.0.4
+				fi
+			fi
+			;;
 		blackfire)
 			case $(uname -m) in
 				i386 | i686 | x86)
@@ -2755,7 +2770,7 @@ installRemoteModule() {
 			fi
 			if test -z "$installRemoteModule_version"; then
 				# See https://github.com/protocolbuffers/protobuf/issues/10619
-				installRemoteModule_version=1.53.0
+				installRemoteModule_version=1.55.0
 			fi
 			if test -z "$installRemoteModule_version" || test "$installRemoteModule_version" = 1.35.0; then
 				case "$DISTRO_VERSION" in
@@ -3038,7 +3053,16 @@ installRemoteModule() {
 			;;
 		parle)
 			if test -z "$installRemoteModule_version"; then
-				installRemoteModule_version=beta
+				if test $PHP_MAJMIN_VERSION -lt 704; then
+					installRemoteModule_version=0.8.3
+				else
+					installRemoteModule_version=beta
+				fi
+			fi
+			installRemoteModule_version="$(resolvePeclStabilityVersion "$installRemoteModule_module" "$installRemoteModule_version")"
+			if test -z "$installRemoteModule_version" || test $(compareVersions "$installRemoteModule_version" 0.8.4) -ge 0; then
+				# Enable internal UTF-32 support in parle
+				addConfigureOption enable-parle-utf32 yes
 			fi
 			;;
 		pcov)
@@ -3055,6 +3079,10 @@ installRemoteModule() {
 				mv "$installRemoteModule_src/include" /usr/local/include/hat-trie
 			fi
 			;;
+		pq)
+			# pq must be loaded after raphf
+			installRemoteModule_ini_basename="xx-php-ext-$installRemoteModule_module"
+			;;
 		propro)
 			if test -z "$installRemoteModule_version"; then
 				if test $PHP_MAJMIN_VERSION -le 506; then
@@ -3068,7 +3096,7 @@ installRemoteModule() {
 					installRemoteModule_version=3.12.4
 				else
 					# See https://github.com/protocolbuffers/protobuf/issues/10619
-					installRemoteModule_version=3.22.3
+					installRemoteModule_version=3.23.2
 				fi
 			fi
 			;;
@@ -3170,8 +3198,27 @@ installRemoteModule() {
 					installRemoteModule_hardware=x86-64
 					;;
 			esac
-			printf 'Downloading relay v%s (%s)... ' "$installRemoteModule_version" "$installRemoteModule_hardware"
-			installRemoteModule_url="https://builds.r2.relay.so/v${installRemoteModule_version}/relay-v${installRemoteModule_version}-php${PHP_MAJDOTMIN_VERSION}-${DISTRO}-${installRemoteModule_hardware}.tar.gz"
+			installRemoteModule_distro="$DISTRO"
+			installRemoteModule_flags=''
+			case "$DISTRO" in
+				alpine)
+					if test $DISTRO_MAJMIN_VERSION -lt 317; then
+						installRemoteModule_distro=alpine3.9
+					else
+						installRemoteModule_distro=alpine3.17
+					fi
+					;;
+				debian)
+					case "$(dpkg -l 'libssl*' | grep -E '^ii ' | cut -d' ' -f3)" in
+						libssl3*)
+							installRemoteModule_flags=+libssl3
+							;;
+					esac
+					;;
+			esac
+			# See https://relay.so/builds
+			installRemoteModule_url="https://builds.r2.relay.so/v${installRemoteModule_version}/relay-v${installRemoteModule_version}-php${PHP_MAJDOTMIN_VERSION}-${installRemoteModule_distro}-${installRemoteModule_hardware}${installRemoteModule_flags}.tar.gz"
+			printf 'Downloading relay v%s (%s) from %s... ' "$installRemoteModule_version" "$installRemoteModule_hardware" "$installRemoteModule_url"
 			installRemoteModule_src="$(getPackageSource $installRemoteModule_url)"
 			echo 'done.'
 			cp -- "$installRemoteModule_src/relay-pkg.so" "$PHP_EXTDIR/relay.so"
@@ -3276,8 +3323,6 @@ installRemoteModule() {
 			if test -z "$installRemoteModule_version"; then
 				if test $PHP_MAJMIN_VERSION -le 506; then
 					installRemoteModule_version=0.13
-				else
-					installRemoteModule_version=beta
 				fi
 			fi
 			;;
@@ -3908,7 +3953,12 @@ invokeAptGetUpdate() {
 		return
 	fi
 	IPE_APTGET_INSTALLOPTIONS=''
-	if ! grep -q 'VERSION="8 (jessie)"' /etc/os-release; then
+	invokeAptGetUpdate_fixdistro=''
+	if grep -q 'VERSION="8 (jessie)"' /etc/os-release; then
+		invokeAptGetUpdate_fixdistro=jessie
+	elif grep -q 'VERSION="9 (stretch)"' /etc/os-release; then
+		invokeAptGetUpdate_fixdistro=stretch
+	else
 		IPE_APTGETUPDATE_ALREADY=y
 		DEBIAN_FRONTEND=noninteractive apt-get update -q
 		return
@@ -3920,7 +3970,7 @@ invokeAptGetUpdate() {
 	if test -z "${IPE_DEB_ARCHIVE_SECURITY:-}"; then
 		IPE_DEB_ARCHIVE_SECURITY=http://archive.kernel.org/debian-archive/debian-security
 	fi
-	sed -ri "s;^(\s*deb\s+http://(httpredir|deb).debian.org/debian\s+jessie-updates\b.*);#\1;" /etc/apt/sources.list
+	sed -ri "s;^(\s*deb\s+http://(httpredir|deb).debian.org/debian\s+$invokeAptGetUpdate_fixdistro-updates\b.*);#\1;" /etc/apt/sources.list
 	sed -ri "s;^(\s*deb\s+)http://(httpredir|deb).debian.org;\1$IPE_DEB_ARCHIVE;" /etc/apt/sources.list
 	sed -ri "s;^(\s*deb\s+)http://security.debian.org/debian-security;\1$IPE_DEB_ARCHIVE_SECURITY;" /etc/apt/sources.list
 	sed -ri "s;^(\s*deb\s+)http://security.debian.org;\1$IPE_DEB_ARCHIVE_SECURITY;" /etc/apt/sources.list
