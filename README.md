@@ -169,9 +169,11 @@ install-php-extensions apcu
 | apcu_bc |  |  | &check; | &check; | &check; | &check; | &check; |  |  |  |
 | ast |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | bcmath | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
-| blackfire | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |
+| bitset | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
+| blackfire | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | bz2 | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | calendar | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
+| cassandra[*](#special-requirements-for-cassandra) |  |  |  |  | &check; | &check; | &check; | &check; | &check; | &check; |
 | cmark |  |  | &check; | &check; | &check; | &check; | &check; |  |  |  |
 | csv |  |  |  |  |  | &check; | &check; | &check; | &check; | &check; |
 | dba | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
@@ -205,6 +207,7 @@ install-php-extensions apcu
 | ioncube_loader | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  | &check; |  |
 | jsmin | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |  |  |
 | json_post | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
+| jsonpath |  |  |  |  |  |  | &check; | &check; | &check; | &check; |
 | ldap | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | luasandbox | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | lz4[*](#special-requirements-for-lz4) |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
@@ -213,7 +216,7 @@ install-php-extensions apcu
 | maxminddb |  |  |  |  | &check; | &check; | &check; | &check; | &check; | &check; |
 | mcrypt | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | memcache | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
-| memcached | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
+| memcached[*](#special-requirements-for-memcached) | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | memprof[*](#special-requirements-for-memprof) | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | mongo | &check; | &check; |  |  |  |  |  |  |  |  |
 | mongodb | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
@@ -228,6 +231,7 @@ install-php-extensions apcu
 | opcache | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | opencensus |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | openswoole |  |  |  |  | &check; | &check; | &check; | &check; | &check; | &check; |
+| opentelemetry |  |  |  |  |  |  |  | &check; | &check; | &check; |
 | parallel[*](#special-requirements-for-parallel) |  |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | parle[*](#special-requirements-for-parle) |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | pcntl | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
@@ -241,6 +245,8 @@ install-php-extensions apcu
 | pdo_sqlsrv[*](#special-requirements-for-pdo_sqlsrv) |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | pgsql | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | php_trie |  |  |  |  |  | &check; | &check; | &check; | &check; | &check; |
+| pkcs11 |  |  |  |  |  |  | &check; | &check; | &check; | &check; |
+| pq |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | propro | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |  |  |
 | protobuf | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | pspell | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
@@ -249,18 +255,19 @@ install-php-extensions apcu
 | rdkafka | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | recode | &check; | &check; | &check; | &check; | &check; | &check; |  |  |  |  |
 | redis | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
+| relay |  |  |  |  |  |  | &check; | &check; | &check; | &check; |
 | seaslog | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | shmop | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | simdjson[*](#special-requirements-for-simdjson) |  |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | smbclient | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | snappy | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | snmp | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
-| snuffleupagus |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |
+| snuffleupagus |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | soap | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | sockets | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | sodium[*](#special-requirements-for-sodium) |  | &check; | &check; | &check; |  |  |  |  |  |  |
-| solr | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |  |
-| sourceguardian | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |
+| solr | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
+| sourceguardian | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | spx |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | sqlsrv[*](#special-requirements-for-sqlsrv) |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | ssh2 | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
@@ -276,6 +283,7 @@ install-php-extensions apcu
 | uopz | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | uploadprogress | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | uuid | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
+| uv |  |  |  |  |  |  |  | &check; | &check; | &check; |
 | vips[*](#special-requirements-for-vips) |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | wddx | &check; | &check; | &check; | &check; | &check; | &check; |  |  |  |  |
 | xdebug | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
@@ -290,10 +298,11 @@ install-php-extensions apcu
 | yar | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |
 | zephir_parser |  |  | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | zip | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
-| zookeeper | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |  |
+| zmq | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
+| zookeeper | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 | zstd | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; | &check; |
 
-*Number of supported extensions: 128*
+*Number of supported extensions: 137*
 
 此扩展来自[https://github.com/mlocati/docker-php-extension-installer](https://github.com/mlocati/docker-php-extension-installer)
 参考示例文件
