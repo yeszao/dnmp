@@ -60,15 +60,13 @@ isPhpVersionGreaterOrEqual()
 installExtensionFromTgz()
 {
     tgzName=$1
-    para1= 
-    extensionName="${tgzName%%-*}"
-    
-    if [  $2 ]; then  
-        para1=$2
-    fi  
+    result=""
+    extensionName="${tgzName%%-*}" 
+    shift 1
+    result=$@
     mkdir ${extensionName}
     tar -xf ${tgzName}.tgz -C ${extensionName} --strip-components=1
-    ( cd ${extensionName} && phpize && ./configure ${para1} && make ${MC} && make install )
+    ( cd ${extensionName} && phpize && ./configure ${result} && make ${MC} && make install )
 
     docker-php-ext-enable ${extensionName}
 }
@@ -619,7 +617,7 @@ if [[ -z "${EXTENSIONS##*,swoole,*}" ]]; then
     isPhpVersionGreaterOrEqual 7 0
 
     if [[ "$?" = "1" ]]; then
-        installExtensionFromTgz swoole-4.5.2 --enable-openssl
+        installExtensionFromTgz swoole-4.5.2 --enable-openssl--enable-swoole-curl
     else
         installExtensionFromTgz swoole-2.0.11
     fi
