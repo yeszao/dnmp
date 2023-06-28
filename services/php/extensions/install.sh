@@ -621,7 +621,7 @@ if [[ -z "${EXTENSIONS##*,swoole,*}" ]]; then
     isPhpVersionGreaterOrEqual 7 0
 
     if [[ "$?" = "1" ]]; then
-        installExtensionFromTgz swoole-4.5.2 --enable-openssl
+        installExtensionFromTgz swoole-4.8.11 --enable-openssl
     else
         installExtensionFromTgz swoole-2.0.11
     fi
