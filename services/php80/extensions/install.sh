@@ -568,7 +568,11 @@ if [[ -z "${EXTENSIONS##*,event,*}" ]]; then
     fi
 
     echo "---------- Install event again ----------"
-    installExtensionFromTgz event-3.0.5  "--ini-name event.ini"
+    mkdir event
+    tar -xf event-3.0.8.tgz -C event --strip-components=1
+    cd event && phpize && ./configure && make  && make install
+
+    docker-php-ext-enable --ini-name event.ini event
 fi
 
 if [[ -z "${EXTENSIONS##*,mongodb,*}" ]]; then
@@ -591,7 +595,7 @@ if [[ -z "${EXTENSIONS##*,swoole,*}" ]]; then
     apk add --no-cache libstdc++
     isPhpVersionGreaterOrEqual 8 0
     if [[ "$?" = "1" ]]; then
-        installExtensionFromTgz swoole-5.0.2 --enable-openssl
+        installExtensionFromTgz swoole-5.0.2 --enable-openssl --enable-http2
     fi
 fi
 
