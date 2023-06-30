@@ -16,7 +16,7 @@ php () {
         --rm \
         --volume $PWD:/www:rw \
         --workdir /www \
-        dnmp_php php "$@"
+        dnmp-php php "$@"
 }
 
 # php5.6 cli
@@ -29,7 +29,7 @@ php56 () {
         --rm \
         --volume $PWD:/www:rw \
         --workdir /www \
-        dnmp_php56 php "$@"
+        dnmp-php56 php "$@"
 }
 
 # php5.4 cli
@@ -42,7 +42,7 @@ php54 () {
         --rm \
         --volume $PWD:/www:rw \
         --workdir /www \
-        dnmp_php54 php "$@"
+        dnmp-php54 php "$@"
 }
 
 # php7 composer
@@ -57,7 +57,7 @@ composer () {
         --volume ~/dnmp/data/composer:/tmp/composer \
         --volume $(pwd):/app \
         --workdir /app \
-        dnmp_php composer "$@"
+        dnmp-php composer "$@"
 }
 
 # php5.6 composer
@@ -72,7 +72,7 @@ composer56 () {
         --volume ~/dnmp/data/composer:/tmp/composer \
         --volume $(pwd):/app \
         --workdir /app \
-        dnmp_php56 composer "$@"
+        dnmp-php56 composer "$@"
 }
 
 # php5.4 composer
@@ -87,5 +87,5 @@ composer54 () {
         --volume ~/dnmp/data/composer:/tmp/composer \
         --volume $(pwd):/app \
         --workdir /app \
-        dnmp_php54 composer "$@"
+        dnmp-php54 composer "$@"
 }
