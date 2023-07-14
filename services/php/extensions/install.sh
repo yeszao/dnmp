@@ -66,9 +66,15 @@ installExtensionFromTgz()
     result=$@
     mkdir ${extensionName}
     tar -xf ${tgzName}.tgz -C ${extensionName} --strip-components=1
-    ( cd ${extensionName} && phpize && ./configure ${result} && make ${MC} && make install )
 
-    docker-php-ext-enable ${extensionName}
+    # support php extension phalcon3.4
+    if [ "$extensionName" = "cphalcon" ]; then
+      ( cd ${extensionName}/build/php7/64bits && phpize && ./configure ${result} && make ${MC} && make install )
+      docker-php-ext-enable phalcon
+    else
+      ( cd ${extensionName} && phpize && ./configure ${result} && make ${MC} && make install )
+      docker-php-ext-enable ${extensionName}
+    fi
 }
 
 
@@ -698,7 +704,8 @@ if [[ -z "${EXTENSIONS##*,phalcon,*}" ]]; then
         docker-php-ext-enable psr
         docker-php-ext-enable phalcon
     else
-        echo "---------- PHP Version>= 7.2----------"
+        installExtensionFromTgz cphalcon-3.4.4
+        # echo "---------- PHP Version>= 7.2----------"
     fi
 fi
 
