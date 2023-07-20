@@ -3157,7 +3157,7 @@ installRemoteModule() {
 					installRemoteModule_version=3.12.4
 				else
 					# See https://github.com/protocolbuffers/protobuf/issues/10619
-					installRemoteModule_version=3.23.3
+					installRemoteModule_version=3.23.4
 				fi
 			fi
 			;;
@@ -4116,25 +4116,27 @@ cleanup() {
 			fi
 		done
 	fi
-	if test -n "$PACKAGES_VOLATILE"; then
-		printf '### REMOVING UNNEEDED PACKAGES ###\n'
-		case "$DISTRO" in
-			alpine)
+	case "$DISTRO" in
+		alpine)
+			if stringInList icu-libs "${PACKAGES_PERSISTENT_NEW:-}" && stringInList icu-data-en "${PACKAGES_PERSISTENT_NEW:-}"; then
+				apk del icu-data-en >/dev/null 2>&1 || true
+			fi
+			if test -n "$PACKAGES_VOLATILE"; then
+				printf '### REMOVING UNNEEDED PACKAGES ###\n'
 				apk del --purge $PACKAGES_VOLATILE
-				;;
-			debian)
+			fi
+			;;
+		debian)
+			if test -n "$PACKAGES_VOLATILE"; then
+				printf '### REMOVING UNNEEDED PACKAGES ###\n'
 				DEBIAN_FRONTEND=noninteractive apt-get remove --purge -y $PACKAGES_VOLATILE
-				;;
-		esac
-	fi
-	if test -n "$PACKAGES_PREVIOUS"; then
-		case "$DISTRO" in
-			debian)
+			fi
+			if test -n "$PACKAGES_PREVIOUS"; then
 				printf '### RESTORING PREVIOUSLY INSTALLED PACKAGES ###\n'
 				DEBIAN_FRONTEND=noninteractive apt-get install -qqy --no-install-recommends --no-upgrade $IPE_APTGET_INSTALLOPTIONS $PACKAGES_PREVIOUS
-				;;
-		esac
-	fi
+			fi
+			;;
+	esac
 	docker-php-source delete
 	rm -rf /tmp/src
 	rm -rf /tmp/pickle
@@ -4225,4 +4227,3 @@ for PHP_MODULE_TO_INSTALL in $PHP_MODULES_TO_INSTALL; do
 	esac
 done
 cleanup
-
