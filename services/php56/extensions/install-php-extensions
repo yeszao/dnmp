@@ -21,7 +21,7 @@ if ! which docker-php-ext-configure >/dev/null || ! which docker-php-ext-enable 
 	exit 1
 fi
 
-IPE_VERSION=2.1.35
+IPE_VERSION=master
 
 StandWithUkraine() {
 	if test -t 1 && ! grep -Eq '^VERSION=.*jessie' /etc/os-release; then
@@ -1188,6 +1188,9 @@ buildRequiredPackageLists() {
 					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libssl1.1"
 				fi
 				;;
+			seasclick@alpine)
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libstdc++"
+				;;
 			simdjson@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libstdc++"
 				;;
@@ -1639,6 +1642,9 @@ getModuleFullPath() {
 	case "$1" in
 		apcu_bc)
 			getModuleFullPath_path="$PHP_EXTDIR/apc.so"
+			;;
+		seasclick)
+			getModuleFullPath_path="$PHP_EXTDIR/SeasClick.so"
 			;;
 		*)
 			getModuleFullPath_path="$PHP_EXTDIR/$1.so"
@@ -2831,7 +2837,7 @@ installRemoteModule() {
 			fi
 			if test -z "$installRemoteModule_version"; then
 				# See https://github.com/protocolbuffers/protobuf/issues/10619
-				installRemoteModule_version=1.56.0
+				installRemoteModule_version=1.57.0
 			fi
 			if test -z "$installRemoteModule_version" || test "$installRemoteModule_version" = 1.35.0; then
 				case "$DISTRO_VERSION" in
@@ -3157,7 +3163,7 @@ installRemoteModule() {
 					installRemoteModule_version=3.12.4
 				else
 					# See https://github.com/protocolbuffers/protobuf/issues/10619
-					installRemoteModule_version=3.23.3
+					installRemoteModule_version=3.24.0
 				fi
 			fi
 			;;
@@ -3287,6 +3293,13 @@ installRemoteModule() {
 			installRemoteModule_ini_extra="$(grep -vE '^[ \t]*extension[ \t]*=' $installRemoteModule_src/relay.ini)"
 			installRemoteModule_manuallyInstalled=1
 			;;
+		seasclick)
+			if test -z "$installRemoteModule_version"; then
+				if test $PHP_MAJMIN_VERSION -le 506; then
+					installRemoteModule_version=0.1.0
+				fi
+			fi
+			;;
 		snappy)
 			if test -z "$installRemoteModule_path"; then
 				if test -z "$installRemoteModule_version"; then
@@ -3345,7 +3358,7 @@ installRemoteModule() {
 		spx)
 			if test -z "$installRemoteModule_path"; then
 				if test -z "$installRemoteModule_version"; then
-					installRemoteModule_version=v0.4.13
+					installRemoteModule_version=v0.4.14
 				fi
 				if test "${installRemoteModule_version%.*}" = "$installRemoteModule_version"; then
 					installRemoteModule_displayVersion="$installRemoteModule_version"
@@ -3607,6 +3620,53 @@ installRemoteModule() {
 				fi
 			fi
 			;;
+		tideways)
+			case "$DISTRO" in
+				alpine)
+					case $(uname -m) in
+						aarch64 | arm64 | armv8)
+							installRemoteModule_architecture=alpine-arm64
+							;;
+						*)
+							installRemoteModule_architecture=alpine
+							;;
+					esac
+					;;
+				debian)
+					case $(uname -m) in
+						aarch64 | arm64 | armv8)
+							installRemoteModule_architecture=arm64
+							;;
+						*)
+							installRemoteModule_architecture=x86_64
+							;;
+					esac
+					;;
+			esac
+			installRemoteModule_url="$(curl -sSLf -o - https://tideways.com/profiler/downloads | grep -Eo "\"[^\"]+/tideways-php-([0-9]+\.[0-9]+\.[0-9]+)-$installRemoteModule_architecture.tar.gz\"" | cut -d'"' -f2)"
+			printf 'Downloading tideways from %s\n' "$installRemoteModule_url"
+			installRemoteModule_src="$(getPackageSource $installRemoteModule_url)"
+			if test -d "$installRemoteModule_src/dist"; then
+				installRemoteModule_src="$installRemoteModule_src/dist"
+			fi
+			installRemoteModule_src="$installRemoteModule_src/tideways-php"
+			case "$DISTRO" in
+				alpine)
+					installRemoteModule_src="$installRemoteModule_src-alpine"
+					;;
+			esac
+			installRemoteModule_src="$installRemoteModule_src-$PHP_MAJDOTMIN_VERSION"
+			if test $PHP_THREADSAFE -eq 1; then
+				installRemoteModule_src="$installRemoteModule_src-zts"
+			fi
+			installRemoteModule_src="$installRemoteModule_src.so"
+			if ! test -f "$installRemoteModule_src"; then
+				echo 'tideways does not support the current environment' >&2
+				exit 1
+			fi
+			mv "$installRemoteModule_src" $(getPHPExtensionsDir)/tideways.so
+			installRemoteModule_manuallyInstalled=1
+			;;
 		uopz)
 			if test -z "$installRemoteModule_version"; then
 				if test $PHP_MAJMIN_VERSION -le 506; then
@@ -3838,7 +3898,7 @@ moduleMayUsePecl() {
 		@composer | @fix_letsencrypt)
 			return 1
 			;;
-		blackfire | geos | ioncube_loader | snuffleupagus | sourceguardian | spx | tdlib)
+		blackfire | geos | ioncube_loader | snuffleupagus | sourceguardian | spx | tdlib | tideways)
 			return 1
 			;;
 	esac
@@ -4116,25 +4176,27 @@ cleanup() {
 			fi
 		done
 	fi
-	if test -n "$PACKAGES_VOLATILE"; then
-		printf '### REMOVING UNNEEDED PACKAGES ###\n'
-		case "$DISTRO" in
-			alpine)
+	case "$DISTRO" in
+		alpine)
+			if stringInList icu-libs "${PACKAGES_PERSISTENT_NEW:-}" && stringInList icu-data-en "${PACKAGES_PERSISTENT_NEW:-}"; then
+				apk del icu-data-en >/dev/null 2>&1 || true
+			fi
+			if test -n "$PACKAGES_VOLATILE"; then
+				printf '### REMOVING UNNEEDED PACKAGES ###\n'
 				apk del --purge $PACKAGES_VOLATILE
-				;;
-			debian)
+			fi
+			;;
+		debian)
+			if test -n "$PACKAGES_VOLATILE"; then
+				printf '### REMOVING UNNEEDED PACKAGES ###\n'
 				DEBIAN_FRONTEND=noninteractive apt-get remove --purge -y $PACKAGES_VOLATILE
-				;;
-		esac
-	fi
-	if test -n "$PACKAGES_PREVIOUS"; then
-		case "$DISTRO" in
-			debian)
+			fi
+			if test -n "$PACKAGES_PREVIOUS"; then
 				printf '### RESTORING PREVIOUSLY INSTALLED PACKAGES ###\n'
 				DEBIAN_FRONTEND=noninteractive apt-get install -qqy --no-install-recommends --no-upgrade $IPE_APTGET_INSTALLOPTIONS $PACKAGES_PREVIOUS
-				;;
-		esac
-	fi
+			fi
+			;;
+	esac
 	docker-php-source delete
 	rm -rf /tmp/src
 	rm -rf /tmp/pickle
