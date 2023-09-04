@@ -348,7 +348,10 @@ if [[ -z "${EXTENSIONS##*,imagick,*}" ]]; then
     echo "---------- Install imagick ----------"
 	apk add --no-cache file-dev
 	apk add --no-cache imagemagick-dev
-    printf "\n" | pecl install imagick-3.4.4
+    apk add --no-cache autoconf
+    apk add --no-cache g++
+    apk add --no-cache make
+    printf "\n" | pecl install imagick
     docker-php-ext-enable imagick
 fi
 
