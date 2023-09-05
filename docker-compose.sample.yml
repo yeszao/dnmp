@@ -76,6 +76,44 @@ services:
 #    networks:
 #      - default
 
+#  php81:
+#    image: php81
+#    build:
+#      context: ./services/php81
+#      args:
+#        PHP_VERSION: php:${PHP81_VERSION}-fpm-alpine
+#        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
+#        PHP_EXTENSIONS: ${PHP81_EXTENSIONS}
+#        TZ: "$TZ"
+#    container_name: php81
+#    expose:
+#      - 9501
+#    volumes:
+#      - ${SOURCE_DIR}:/www/:rw
+#      - ${PHP81_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
+#      - ${PHP81_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
+#      - ${PHP81_LOG_DIR}:/var/log/php
+#      - ${DATA_DIR}/composer:/tmp/composer
+#    restart: always
+#    cap_add:
+#      - SYS_PTRACE
+#    networks:
+#      - default
+#
+#  supervisor-php81:
+#    image: php81
+#    container_name: supervisor-php81
+#    depends_on:
+#      - php81
+#    volumes:
+#      - ${SOURCE_DIR}:/www/:rw
+#      - ${SUPERVISOR_LOG}:/var/log/supervisor/:rw
+#      - ${SUPERVISOR_CONFIG}:/etc/supervisor/conf.d/:rw
+#      - ${SUPERVISOR_CONF_FILE}:/etc/supervisor/supervisord.conf:ro
+#    networks:
+#      - default
+#    command: supervisord -c /etc/supervisor/supervisord.conf
+    
 #  php56:
 #    build:
 #      context: ./services/php
