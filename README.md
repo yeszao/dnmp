@@ -548,6 +548,10 @@ docker0: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500
 
 ### 8.6 SQLSTATE[HY000] [1130] Host '172.19.0.2' is not allowed to connect to this MySQL server
 1. 目前使用mysql-server `8.0.28`以上的版本,php版本需要`7.4.7`以上才能连接
+
+### 8.7 Docker是如何生成容器名
+[在不指定容器名称时,是如何生成容器名](https://pet2cattle.com/2022/08/docker-container-names-generator)
+
 ## License
 MIT
 
