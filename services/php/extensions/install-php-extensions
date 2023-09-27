@@ -1171,6 +1171,10 @@ buildRequiredPackageLists() {
 							;;
 					esac
 					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile zstd-dev"
+					if test $PHP_MAJMIN_VERSION -ge 702; then
+						buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent lz4-libs"
+						buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile lz4-dev"
+					fi
 				fi
 				;;
 			redis@debian)
@@ -1187,6 +1191,10 @@ buildRequiredPackageLists() {
 							buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libzstd-dev"
 							;;
 					esac
+				fi
+				if test $PHP_MAJMIN_VERSION -ge 702; then
+					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent liblz4-1"
+					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile liblz4-dev"
 				fi
 				;;
 			relay@alpine)
@@ -1324,23 +1332,38 @@ buildRequiredPackageLists() {
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile git cmake gperf zlib1g-dev $buildRequiredPackageLists_libssldev"
 				;;
 			tensor@alpine)
-				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent lapack libexecinfo openblas"
-				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile lapack-dev libexecinfo-dev openblas-dev"
-				if test $DISTRO_MAJMIN_VERSION -le 310; then
-					if ! stringInList --force-overwrite "$IPE_APK_FLAGS"; then
-						IPE_APK_FLAGS="$IPE_APK_FLAGS --force-overwrite"
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent openblas"
+				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile lapack-dev openblas-dev"
+				if test $DISTRO_MAJMIN_VERSION -le 317; then
+					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent lapack"
+					if test $DISTRO_MAJMIN_VERSION -le 316; then
+						buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libexecinfo"
+						buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libexecinfo-dev"
+						if test $DISTRO_MAJMIN_VERSION -le 310; then
+							if ! stringInList --force-overwrite "$IPE_APK_FLAGS"; then
+								IPE_APK_FLAGS="$IPE_APK_FLAGS --force-overwrite"
+							fi
+						fi
 					fi
+				else
+					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent liblapack"
 				fi
 				;;
 			tensor@debian)
-				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent liblapacke libopenblas-base"
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent liblapacke"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile liblapack-dev libopenblas-dev liblapacke-dev"
-				if test $DISTRO_VERSION_NUMBER -ge 11; then
-					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent gfortran-10"
-					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libgfortran-10-dev"
-				elif test $DISTRO_VERSION_NUMBER -ge 10; then
-					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent gfortran-8"
+				if test $DISTRO_VERSION_NUMBER -le 9; then
+					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent gfortran-6 libopenblas-base"
+					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libgfortran-6-dev"
+				elif test $DISTRO_VERSION_NUMBER -le 10; then
+					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent gfortran-8 libopenblas-base"
 					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libgfortran-8-dev"
+				elif test $DISTRO_VERSION_NUMBER -le 11; then
+					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent gfortran-10 libopenblas-base"
+					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libgfortran-10-dev"
+				else
+					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent gfortran-12 libopenblas0"
+					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libgfortran-12-dev"
 				fi
 				;;
 			tidy@alpine)
@@ -1974,16 +1997,24 @@ isMicrosoftSqlServerODBCInstalled() {
 }
 
 # Install the Microsoft SQL Server ODBC Driver
+# see https://learn.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server
 installMicrosoftSqlServerODBC() {
 	printf 'Installing the Microsoft SQL Server ODBC Driver\n'
 	case "$DISTRO" in
 		alpine)
-			# https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server#alpine17
 			rm -rf /tmp/src/msodbcsql.apk
 			if test $PHP_MAJMIN_VERSION -le 703; then
 				curl -sSLf -o /tmp/src/msodbcsql.apk https://download.microsoft.com/download/e/4/e/e4e67866-dffd-428c-aac7-8d28ddafb39b/msodbcsql17_17.9.1.1-1_amd64.apk
 			else
-				curl -sSLf -o /tmp/src/msodbcsql.apk https://download.microsoft.com/download/b/9/f/b9f3cce4-3925-46d4-9f46-da08869c6486/msodbcsql18_18.0.1.1-1_amd64.apk
+				case $(uname -m) in
+					aarch64 | arm64 | armv8)
+						installMicrosoftSqlServerODBC_arch=arm64
+						;;
+					*)
+						installMicrosoftSqlServerODBC_arch=amd64
+						;;
+				esac
+				curl -sSLf -o /tmp/src/msodbcsql.apk https://download.microsoft.com/download/3/5/5/355d7943-a338-41a7-858d-53b259ea33f5/msodbcsql18_18.3.1.1-1_$installMicrosoftSqlServerODBC_arch.apk
 			fi
 			printf '\n' | apk add --allow-untrusted /tmp/src/msodbcsql.apk
 			rm -rf /tmp/src/msodbcsql.apk
@@ -1992,8 +2023,6 @@ installMicrosoftSqlServerODBC() {
 			if test $DISTRO_VERSION_NUMBER -eq 12; then
 				DISTRO_VERSION_NUMBER=11
 			fi
-
-			# https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server#debian17
 			printf -- '- installing the Microsoft APT key\n'
 			if test $DISTRO_VERSION_NUMBER -eq 11; then
 				curl -sSLf -o /etc/apt/trusted.gpg.d/microsoft.asc https://packages.microsoft.com/keys/microsoft.asc
@@ -2017,7 +2046,6 @@ installMicrosoftSqlServerODBC() {
 			else
 				DEBIAN_FRONTEND=noninteractive ACCEPT_EULA=Y apt-get install -qqy --no-install-recommends $IPE_APTGET_INSTALLOPTIONS '^msodbcsql[0-9]+$'
 			fi
-
 			if test $DISTRO_VERSION_NUMBER -eq 11; then
 				setDistro
 			fi
@@ -2855,10 +2883,6 @@ installRemoteModule() {
 					esac
 				fi
 			fi
-			if test -z "$installRemoteModule_version"; then
-				# See https://github.com/protocolbuffers/protobuf/issues/10619
-				installRemoteModule_version=1.57.0
-			fi
 			if test -z "$installRemoteModule_version" || test "$installRemoteModule_version" = 1.35.0; then
 				case "$DISTRO_VERSION" in
 					alpine@3.13)
@@ -3181,9 +3205,6 @@ installRemoteModule() {
 			if test -z "$installRemoteModule_version"; then
 				if test $PHP_MAJMIN_VERSION -le 506; then
 					installRemoteModule_version=3.12.4
-				else
-					# See https://github.com/protocolbuffers/protobuf/issues/10619
-					installRemoteModule_version=3.24.2
 				fi
 			fi
 			;;
@@ -3241,19 +3262,21 @@ installRemoteModule() {
 			if test -z "$installRemoteModule_version"; then
 				if test $PHP_MAJMIN_VERSION -le 506; then
 					installRemoteModule_version=4.3.0
+				elif test $PHP_MAJMIN_VERSION -le 701; then
+					installRemoteModule_version=5.3.7
 				fi
 			else
 				installRemoteModule_version="$(resolvePeclStabilityVersion "$installRemoteModule_module" "$installRemoteModule_version")"
 			fi
 			# Enable igbinary serializer support?
 			if php --ri igbinary >/dev/null 2>/dev/null; then
-				addConfigureOption 'enable-redis-igbinary' 'yes'
+				addConfigureOption enable-redis-igbinary yes
 			else
-				addConfigureOption 'enable-redis-igbinary' 'no'
+				addConfigureOption enable-redis-igbinary no
 			fi
 			# Enable lzf compression support?
-			addConfigureOption 'enable-redis-lzf' 'yes'
-			if test -z "$installRemoteModule_version" || test $(compareVersions "$installRemoteModule_version" '5.0.0') -ge 0; then
+			addConfigureOption enable-redis-lzf yes
+			if test -z "$installRemoteModule_version" || test $(compareVersions "$installRemoteModule_version" 5.0.0) -ge 0; then
 				if ! test -e /usr/include/zstd.h || ! test -e /usr/lib/libzstd.so -o -e "/usr/lib/$TARGET_TRIPLET/libzstd.so"; then
 					installRemoteModule_zstdVersion=1.4.4
 					installRemoteModule_zstdVersionMajor=$(echo $installRemoteModule_zstdVersion | cut -d. -f1)
@@ -3269,7 +3292,19 @@ installRemoteModule() {
 					cd - >/dev/null
 				fi
 				# Enable zstd compression support?
-				addConfigureOption 'enable-redis-zstd' 'yes'
+				addConfigureOption enable-redis-zstd yes
+				if test -z "$installRemoteModule_version" || test $(compareVersions "$installRemoteModule_version" 6.0.0) -ge 0; then
+					# Enable msgpack serializer support?
+					if php --ri msgpack >/dev/null 2>/dev/null; then
+						addConfigureOption enable-redis-msgpack yes
+					else
+						addConfigureOption enable-redis-msgpack no
+					fi
+					# Enable lz4 compression?
+					addConfigureOption enable-redis-lz4 yes
+					# Use system liblz4?
+					addConfigureOption with-liblz4 yes
+				fi
 			fi
 			;;
 		relay)
@@ -3337,7 +3372,11 @@ installRemoteModule() {
 		snuffleupagus)
 			if test -z "$installRemoteModule_path"; then
 				if test -z "$installRemoteModule_version"; then
-					installRemoteModule_version=0.9.0
+					if test $PHP_MAJMIN_VERSION -le 704; then
+						installRemoteModule_version=0.9.0
+					else
+						installRemoteModule_version=0.10.0
+					fi
 				fi
 				installRemoteModule_src="$(getPackageSource https://codeload.github.com/jvoisin/snuffleupagus/tar.gz/v$installRemoteModule_version)"
 				cd "$installRemoteModule_src/src"
@@ -3639,6 +3678,15 @@ installRemoteModule() {
 					installRemoteModule_version=2.2.3
 				fi
 			fi
+			case "$DISTRO" in
+				alpine)
+					if test $DISTRO_MAJMIN_VERSION -ge 315 && test $DISTRO_MAJMIN_VERSION -le 317; then
+						if test -e /usr/lib/liblapacke.so.3 && ! test -e /usr/lib/liblapacke.so; then
+							ln -s /usr/lib/liblapacke.so.3 /usr/lib/liblapacke.so
+						fi
+					fi
+					;;
+			esac
 			;;
 		tideways)
 			case "$DISTRO" in
