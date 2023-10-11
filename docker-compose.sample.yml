@@ -78,7 +78,7 @@ services:
 
 #  php56:
 #    build:
-#      context: ./services/php
+#      context: ./services/php56
 #      args:
 #        PHP_VERSION: php:${PHP56_VERSION}-fpm-alpine
 #        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
