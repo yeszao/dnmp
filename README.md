@@ -2,17 +2,27 @@ DNMP（Docker + Nginx/Openresty + MySQL5,8 + PHP5,7,8 + Redis + ElasticSearch + 
 
 > 使用前最好提前阅读一遍[目录](#目录)，以便快速上手，遇到问题也能及时排除。
 
-QQ交流群：
+
+<details>
+<summary>项目地址</summary>
+
+- [GitHub 地址](https://github.com/yeszao/dnmp)
+- [Gitee 地址](https://gitee.com/yeszao/dnmp)
+
+</details>
+
+<details>
+<summary>QQ交流群</summary>
+
 - 1群：**572041090**（已满）
 - 2群：**300723526**（已满）
 - 3群：**878913761**（已满）
 - 4群：**850756381**（有位）
+</details>
 
-**[[ENGLISH]](README-en.md)** -
-[**[GitHub地址]**](https://github.com/yeszao/dnmp) -
-[**[Gitee地址]**](https://gitee.com/yeszao/dnmp)
+<details>
+<summary>DNMP项目特点</summary>
 
-DNMP项目特点：
 1. `100%`开源
 2. `100%`遵循Docker标准
 3. 支持**多版本PHP**共存，可任意切换（PHP5.4、PHP5.6、PHP7.1、PHP7.2、PHP7.3、PHP7.4、PHP8.0)
@@ -29,9 +39,11 @@ DNMP项目特点：
     - 辅助工具：Kibana、Logstash、phpMyAdmin、phpRedisAdmin、AdminMongo
 10. 实际项目中应用，确保`100%`可用
 11. 所有镜像源于[Docker官方仓库](https://hub.docker.com)，安全可靠
-11. 一次配置，**Windows、Linux、MacOs**皆可用
-12. 支持快速安装扩展命令 `install-php-extensions apcu`
-13. 支持安装certbot获取免费https用的SSL证书
+12. 一次配置，**Windows、Linux、MacOs**皆可用
+13. 支持快速安装扩展命令 `install-php-extensions apcu`
+14. 支持安装certbot获取免费https用的SSL证书
+
+</details>
 
 # 目录
 - [1.目录结构](#1目录结构)
