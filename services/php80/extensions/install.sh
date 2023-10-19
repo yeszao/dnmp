@@ -61,7 +61,7 @@ installExtensionFromTgz()
 {
     tgzName=$1
     result=""
-    extensionName="${tgzName%%-*}" 
+    extensionName="${tgzName%%-*}"
     shift 1
     result=$@
     mkdir ${extensionName}
@@ -525,7 +525,7 @@ if [[ -z "${EXTENSIONS##*,amqp,*}" ]]; then
     && printf '\n' | pecl install amqp \
     && docker-php-ext-enable amqp \
     && apk del .phpize-deps-configure
-    
+
 fi
 
 if [[ -z "${EXTENSIONS##*,redis,*}" ]]; then
@@ -542,7 +542,7 @@ fi
 if [[ -z "${EXTENSIONS##*,memcached,*}" ]]; then
     echo "---------- Install memcached ----------"
     apk add --no-cache libmemcached-dev zlib-dev
-    pecl install memcached-3.2.3
+    pecl install memcached-3.2.0
     docker-php-ext-enable memcached
 fi
 
@@ -579,8 +579,8 @@ if [[ -z "${EXTENSIONS##*,mongodb,*}" ]]; then
     echo "---------- Install mongodb ----------"
     apk add --no-cache openssl-dev
     installExtensionFromTgz mongodb-1.15.2
-    docker-php-ext-configure mongodb --with-mongodb-ssl=openssl 
-    docker-php-ext-enable mongodb    
+    docker-php-ext-configure mongodb --with-mongodb-ssl=openssl
+    docker-php-ext-enable mongodb
 fi
 
 if [[ -z "${EXTENSIONS##*,yaf,*}" ]]; then
@@ -591,7 +591,7 @@ fi
 
 
 if [[ -z "${EXTENSIONS##*,swoole,*}" ]]; then
-    echo "---------- Install swoole ----------"    
+    echo "---------- Install swoole ----------"
     apk add --no-cache libstdc++
     isPhpVersionGreaterOrEqual 8 0
     if [[ "$?" = "1" ]]; then
