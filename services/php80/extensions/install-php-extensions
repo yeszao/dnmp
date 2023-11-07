@@ -715,18 +715,11 @@ buildRequiredPackageLists() {
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile cmake"
 				;;
 			ddtrace@alpine)
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libgcc"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile curl-dev"
-				if test $DISTRO_MAJMIN_VERSION -ge 317; then
-					# Alpine 3.17 is the minimum version that comes with cargo 1.64.0+
-					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile cargo"
-				fi
 				;;
 			ddtrace@debian)
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libcurl4-openssl-dev"
-				if test $DISTRO_MAJMIN_VERSION -ge 1200; then
-					# Debian bookworm is the minimum version that comes with cargo 1.64.0+
-					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile cargo"
-				fi
 				;;
 			dba@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent db"
@@ -1032,6 +1025,9 @@ buildRequiredPackageLists() {
 			memcached@debian)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libmemcachedutil2"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libmemcached-dev zlib1g-dev"
+				if test $DISTRO_MAJMIN_VERSION -ge 12; then
+					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile $buildRequiredPackageLists_libssldev"
+				fi
 				;;
 			mongo@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libsasl $buildRequiredPackageLists_libssl"
@@ -1621,6 +1617,10 @@ expandInstalledSystemPackageName() {
 # Output:
 #   The number of processor cores available
 getProcessorCount() {
+	if test -n "${IPE_PROCESSOR_COUNT:-}"; then
+		echo $IPE_PROCESSOR_COUNT
+		return
+	fi
 	if command -v nproc >/dev/null 2>&1; then
 		nproc
 	else
@@ -2020,9 +2020,6 @@ installMicrosoftSqlServerODBC() {
 			rm -rf /tmp/src/msodbcsql.apk
 			;;
 		debian)
-			if test $DISTRO_VERSION_NUMBER -eq 12; then
-				DISTRO_VERSION_NUMBER=11
-			fi
 			printf -- '- installing the Microsoft APT key\n'
 			if test $DISTRO_VERSION_NUMBER -eq 11; then
 				curl -sSLf -o /etc/apt/trusted.gpg.d/microsoft.asc https://packages.microsoft.com/keys/microsoft.asc
@@ -2040,14 +2037,11 @@ installMicrosoftSqlServerODBC() {
 			printf -- '- installing the APT package\n'
 			if test $PHP_MAJMIN_VERSION -le 703; then
 				DEBIAN_FRONTEND=noninteractive ACCEPT_EULA=Y apt-get install -qqy --no-install-recommends $IPE_APTGET_INSTALLOPTIONS msodbcsql17
-			elif test $DISTRO_VERSION_NUMBER -ge 9 && test $DISTRO_VERSION_NUMBER -le 11; then
-				# On Debian 9 and 11 we have both msodbcsql17 and msodbcsql18: let's install just one
+			elif test $DISTRO_VERSION_NUMBER -ge 9 && test $DISTRO_VERSION_NUMBER -le 12; then
+				# On Debian 9 to 12 we have both msodbcsql17 and msodbcsql18: let's install just one
 				DEBIAN_FRONTEND=noninteractive ACCEPT_EULA=Y apt-get install -qqy --no-install-recommends $IPE_APTGET_INSTALLOPTIONS msodbcsql18
 			else
 				DEBIAN_FRONTEND=noninteractive ACCEPT_EULA=Y apt-get install -qqy --no-install-recommends $IPE_APTGET_INSTALLOPTIONS '^msodbcsql[0-9]+$'
-			fi
-			if test $DISTRO_VERSION_NUMBER -eq 11; then
-				setDistro
 			fi
 			;;
 	esac
@@ -2286,6 +2280,25 @@ installSourceGuardian() {
 	printf 'Unable to find a SourceGuardian compatible with PHP %s or PHP %s.\nAvailable SourceGuardian versions:\n' "$PHP_MAJDOTMINDOTPAT_VERSION" "$PHP_MAJDOTMIN_VERSION" >&2
 	ls -1 "$installSourceGuardian_dir" | grep -E '^ixed\..*\.lin$' | sed -E 's/^[^0-9]+([0-9]+(\.[0-9]+)*).*$/\1/' | sort | uniq >&2
 	exit 1
+}
+
+# Install Cargo (if not yet installed)
+installCargo() {
+	if command -v cargo >/dev/null; then
+		return
+	fi
+	printf '# Installing cargo\n'
+	case "$DISTRO" in
+		alpine)
+			# see https://github.com/hyperledger/indy-vdr/issues/69#issuecomment-998104850
+			export RUSTFLAGS='-C target-feature=-crt-static'
+			;;
+	esac
+	curl https://sh.rustup.rs -sSf | sh -s -- -y -q
+	. "$HOME/.cargo/env"
+	if test -z "${IPE_UNINSTALL_CARGO:-}"; then
+		IPE_UNINSTALL_CARGO=y
+	fi
 }
 
 # Install a bundled PHP module given its handle
@@ -2698,26 +2711,7 @@ installRemoteModule() {
 				if test $PHP_MAJMIN_VERSION -lt 700; then
 					installRemoteModule_version=0.75.0
 				else
-					case "$DISTRO" in
-						alpine)
-							if test $DISTRO_MAJMIN_VERSION -lt 317; then
-								# Alpine 3.17 is the minimum version that comes with cargo 1.64.0+
-								installRemoteModule_version=0.87.2
-							elif test $DISTRO_MAJMIN_VERSION -lt 318; then
-								# Alpine 3.18 is the minimum version that comes with cargo 1.71.0+
-								installRemoteModule_version=0.89.0
-							fi
-							;;
-						debian)
-							if test $DISTRO_MAJMIN_VERSION -lt 1200; then
-								# Debian bookworm is the minimum version that comes with cargo 1.64.0+
-								installRemoteModule_version=0.87.2
-							elif test $DISTRO_MAJMIN_VERSION -le 1300; then
-								# Newer ddtrace versions require cargo 1.71.0+, but bookworm comes with cargo 1.65.0
-								installRemoteModule_version=0.89.0
-							fi
-							;;
-					esac
+					installCargo
 				fi
 			fi
 			;;
@@ -3203,8 +3197,10 @@ installRemoteModule() {
 			;;
 		protobuf)
 			if test -z "$installRemoteModule_version"; then
-				if test $PHP_MAJMIN_VERSION -le 506; then
+				if test $PHP_MAJMIN_VERSION -lt 700; then
 					installRemoteModule_version=3.12.4
+				elif test $PHP_MAJMIN_VERSION -lt 800; then
+					installRemoteModule_version=3.24.4
 				fi
 			fi
 			;;
@@ -4236,6 +4232,10 @@ fixLetsEncrypt() {
 
 # Cleanup everything at the end of the execution
 cleanup() {
+	if test "${IPE_UNINSTALL_CARGO:-}" = y; then
+		. "$HOME/.cargo/env"
+		rustup self uninstall -y
+	fi
 	if test -n "$UNNEEDED_PACKAGE_LINKS"; then
 		printf '### REMOVING UNNEEDED PACKAGE LINKS ###\n'
 		for cleanup_link in $UNNEEDED_PACKAGE_LINKS; do
@@ -4301,7 +4301,7 @@ esac
 setPHPVersionVariables
 setPHPPreinstalledModules
 case "$PHP_MAJMIN_VERSION" in
-	505 | 506 | 700 | 701 | 702 | 703 | 704 | 800 | 801 | 802) ;;
+	505 | 506 | 700 | 701 | 702 | 703 | 704 | 800 | 801 | 802 | 803) ;;
 	*)
 		printf "### ERROR: Unsupported PHP version: %s.%s ###\n" $((PHP_MAJMIN_VERSION / 100)) $((PHP_MAJMIN_VERSION % 100))
 		;;
