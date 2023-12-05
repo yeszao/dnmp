@@ -371,19 +371,40 @@ resolveWantedPHPModuleVersion() {
 		printf '%s' "$resolveWantedPHPModuleVersion_raw"
 		return
 	fi
+	case "$resolveWantedPHPModuleVersion_afterCaret" in
+		?*@snapshot | ?*@devel | ?*@alpha | ?*@beta | ?*@stable)
+			resolveWantedPHPModuleVersion_wantedStability="${resolveWantedPHPModuleVersion_afterCaret##*@}"
+			resolveWantedPHPModuleVersion_wantedVersion="${resolveWantedPHPModuleVersion_afterCaret%@*}"
+			;;
+		*)
+			resolveWantedPHPModuleVersion_wantedStability=''
+			resolveWantedPHPModuleVersion_wantedVersion="$resolveWantedPHPModuleVersion_afterCaret"
+			;;
+	esac
 	resolveWantedPHPModuleVersion_xml="$(curl -sSLf "http://pecl.php.net/rest/r/$1/allreleases.xml")"
-	resolveWantedPHPModuleVersion_versions="$(printf '%s' "$resolveWantedPHPModuleVersion_xml" | tr -s ' \t\r\n' ' ' | sed -r 's# *<#\n<#g' | grep '<v>' | sed 's#<v>##g' | sed 's# ##g')"
+	# remove line endings, collapse spaces
+	resolveWantedPHPModuleVersion_versions="$(printf '%s' "$resolveWantedPHPModuleVersion_xml" | tr -s ' \t\r\n' ' ')"
+	# one line per release (eg <r><v>1.2.3</v><s>stable</s></r>)
+	resolveWantedPHPModuleVersion_versions="$(printf '%s' "$resolveWantedPHPModuleVersion_versions" | sed -r 's#<r#\n<r#g')"
+	if test -n "$resolveWantedPHPModuleVersion_wantedStability"; then
+		# keep the lines with the wanted stability
+		resolveWantedPHPModuleVersion_versions="$(printf '%s' "$resolveWantedPHPModuleVersion_versions" | grep "<s>$resolveWantedPHPModuleVersion_wantedStability</s>")"
+	fi
+	# remove everything's up to '<v>' (included)
+	resolveWantedPHPModuleVersion_versions="$(printf '%s' "$resolveWantedPHPModuleVersion_versions" | sed 's#^.*<v>##')"
+	# keep just the versions
+	resolveWantedPHPModuleVersion_versions="$(printf '%s' "$resolveWantedPHPModuleVersion_versions" | cut -d'<' -f1)"
 	resetIFS
 	for resolveWantedPHPModuleVersion_version in $resolveWantedPHPModuleVersion_versions; do
-		resolveWantedPHPModuleVersion_suffix="${resolveWantedPHPModuleVersion_version#$resolveWantedPHPModuleVersion_afterCaret}"
-		if test "$resolveWantedPHPModuleVersion_version" != "${resolveWantedPHPModuleVersion_version#$resolveWantedPHPModuleVersion_afterCaret.}"; then
+		resolveWantedPHPModuleVersion_suffix="${resolveWantedPHPModuleVersion_version#$resolveWantedPHPModuleVersion_wantedVersion}"
+		if test "$resolveWantedPHPModuleVersion_version" != "${resolveWantedPHPModuleVersion_version#$resolveWantedPHPModuleVersion_wantedVersion.}"; then
 			# Example: looking for 1.0, found 1.0.1
 			printf '%s' "$resolveWantedPHPModuleVersion_version"
 			return
 		fi
 	done
 	for resolveWantedPHPModuleVersion_version in $resolveWantedPHPModuleVersion_versions; do
-		resolveWantedPHPModuleVersion_suffix="${resolveWantedPHPModuleVersion_version#$resolveWantedPHPModuleVersion_afterCaret}"
+		resolveWantedPHPModuleVersion_suffix="${resolveWantedPHPModuleVersion_version#$resolveWantedPHPModuleVersion_wantedVersion}"
 		if test "$resolveWantedPHPModuleVersion_version" = "$resolveWantedPHPModuleVersion_suffix"; then
 			continue
 		fi
@@ -1039,10 +1060,18 @@ buildRequiredPackageLists() {
 			mongodb@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent icu-libs $buildRequiredPackageLists_icuPersistent libsasl $buildRequiredPackageLists_libssl snappy"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile icu-dev cyrus-sasl-dev snappy-dev $buildRequiredPackageLists_libssldev zlib-dev"
+				if test $PHP_MAJMIN_VERSION -ge 704; then
+					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent zstd-libs"
+					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile zstd-dev"
+				fi
 				;;
 			mongodb@debian)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent ^libsnappy[0-9]+(v[0-9]+)?$ ^libicu[0-9]+$"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libicu-dev libsasl2-dev libsnappy-dev $buildRequiredPackageLists_libssldev zlib1g-dev"
+				if test $PHP_MAJMIN_VERSION -ge 704; then
+					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent ^libzstd[0-9]*$"
+					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libzstd-dev"
+				fi
 				;;
 			mosquitto@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent mosquitto-libs"
@@ -1198,6 +1227,9 @@ buildRequiredPackageLists() {
 				if test $DISTRO_MAJMIN_VERSION -ge 317; then
 					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libssl1.1"
 				fi
+				;;
+			saxon@debian)
+				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_volatile unzip"
 				;;
 			seasclick@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libstdc++"
@@ -2815,7 +2847,7 @@ installRemoteModule() {
 			case "$DISTRO" in
 				alpine)
 					if ! test -e /usr/local/include/libgearman/gearman.h || ! test -e /usr/local/lib/libgearman.so; then
-						installRemoteModule_src="$(getPackageSource https://github.com/gearman/gearmand/releases/download/1.1.20/gearmand-1.1.20.tar.gz)"
+						installRemoteModule_src="$(getPackageSource https://github.com/gearman/gearmand/releases/download/1.1.21/gearmand-1.1.21.tar.gz)"
 						cd -- "$installRemoteModule_src"
 						./configure
 						make -j$(getProcessorCount) install-binPROGRAMS
@@ -3076,7 +3108,33 @@ installRemoteModule() {
 					installRemoteModule_version=1.9.2
 				elif test $PHP_MAJMIN_VERSION -le 701; then
 					installRemoteModule_version=1.11.1
+				elif test $PHP_MAJMIN_VERSION -le 703; then
+					installRemoteModule_version=1.16.2
 				fi
+			fi
+			if test -z "$installRemoteModule_version" || test $(compareVersions "$installRemoteModule_version" 1.17.0) -ge 0; then
+				# Enable developer flags? (yes/no)
+				addConfigureOption enable-mongodb-developer-flags no
+				# Enable code coverage? (yes/no)
+				addConfigureOption enable-mongodb-coverage no
+				# Use system libraries for libbson, libmongoc, and libmongocrypt? (yes/no)
+				addConfigureOption with-mongodb-system-libs no
+				# Enable client-side encryption? (auto/yes/no)
+				addConfigureOption with-mongodb-client-side-encryption yes
+				# Enable Snappy for compression? (auto/yes/no)
+				addConfigureOption with-mongodb-snappy yes
+				# Enable zlib for compression? (auto/system/bundled/no)
+				addConfigureOption with-mongodb-zlib yes
+				# Enable zstd for compression? (auto/yes/no)
+				addConfigureOption with-mongodb-zstd yes
+				# Enable SASL for Kerberos authentication? (auto/cyrus/no)
+				addConfigureOption with-mongodb-sasl yes
+				# Enable crypto and TLS? (auto/openssl/libressl/darwin/no)
+				addConfigureOption with-mongodb-ssl yes
+				# Use system crypto profile (OpenSSL only)? (yes/no)
+				addConfigureOption enable-mongodb-crypto-system-profile yes
+				# Use bundled or system utf8proc for SCRAM-SHA-256 SASLprep? (bundled/system)
+				addConfigureOption with-mongodb-utf8proc bundled
 			fi
 			;;
 		mosquitto)
@@ -3107,6 +3165,8 @@ installRemoteModule() {
 			if test -z "$installRemoteModule_version"; then
 				if test $PHP_MAJMIN_VERSION -lt 704; then
 					installRemoteModule_version=4.10.0
+				elif test $PHP_MAJMIN_VERSION -lt 801; then
+					installRemoteModule_version=22.0.0
 				fi
 			else
 				installRemoteModule_version="$(resolvePeclStabilityVersion "$installRemoteModule_module" "$installRemoteModule_version")"
@@ -3118,28 +3178,28 @@ installRemoteModule() {
 				installRemoteModule_sockets=no
 			fi
 			installRemoteModule_openssl=yes
-			# enable sockets supports?
+			# enable sockets supports? (v < 22.1.0) / enable coroutine sockets? (v >= 22.1.0)
 			addConfigureOption enable-sockets $installRemoteModule_sockets
 			# enable openssl support?
 			addConfigureOption enable-openssl $installRemoteModule_openssl
 			# enable http2 support?
 			addConfigureOption enable-http2 yes
-			# enable mysqlnd support?
+			# enable mysqlnd support? (v < 22.1.0) / enable coroutine mysqlnd? (v >= 22.1.0)
 			addConfigureOption enable-mysqlnd yes
-			if test -z "$installRemoteModule_version" || test $(compareVersions "$installRemoteModule_version" '22.8.0') -ge 0; then
-				#enable hook curl support?
-				addConfigureOption enable-hook-curl yes
-				# enable postgres support?
-				addConfigureOption with-postgres yes
-			else
+			if test -n "$installRemoteModule_version" && test $(compareVersions "$installRemoteModule_version" '22.0.0') -lt 0; then
 				# enable json support?
 				addConfigureOption enable-swoole-json yes
 				# enable curl support?
 				addConfigureOption enable-swoole-curl yes
-				if test -z "$installRemoteModule_version" || test $(compareVersions "$installRemoteModule_version" '4.8.0') -ge 0; then
+				if test $(compareVersions "$installRemoteModule_version" '4.8.0') -ge 0; then
 					# enable postgres support?
 					addConfigureOption with-postgres yes
 				fi
+			else
+				#enable hook curl support? (v < 22.1.0) / enable coroutine curl? (v >= 22.1.0)
+				addConfigureOption enable-hook-curl yes
+				# enable postgres support? (v < 22.1.0) / enable coroutine postgres? (v >= 22.1.0)
+				addConfigureOption with-postgres yes
 			fi
 			;;
 		opentelemetry)
@@ -3342,6 +3402,45 @@ installRemoteModule() {
 			cp -- "$installRemoteModule_src/relay-pkg.so" "$PHP_EXTDIR/relay.so"
 			sed -i "s/00000000-0000-0000-0000-000000000000/$(cat /proc/sys/kernel/random/uuid)/" "$PHP_EXTDIR/relay.so"
 			installRemoteModule_ini_extra="$(grep -vE '^[ \t]*extension[ \t]*=' $installRemoteModule_src/relay.ini)"
+			installRemoteModule_manuallyInstalled=1
+			;;
+		saxon)
+			if test -z "$installRemoteModule_version"; then
+				if test $PHP_MAJMIN_VERSION -le 506; then
+					installRemoteModule_version='11.6'
+				else
+					installRemoteModule_version='12.3'
+				fi
+			fi
+			installRemoteModule_majorVersion="${installRemoteModule_version%%.*}"
+			if test "$installRemoteModule_majorVersion" -ge 12; then
+				case $(uname -m) in
+					aarch64 | arm64 | armv8)
+						installRemoteModule_url=https://downloads.saxonica.com/SaxonC/EE/${installRemoteModule_majorVersion}/libsaxon-EEC-linux-aarch64-v${installRemoteModule_version}.zip
+						;;
+					*)
+						installRemoteModule_url=https://downloads.saxonica.com/SaxonC/EE/${installRemoteModule_majorVersion}/libsaxon-EEC-linux-x86_64-v${installRemoteModule_version}.zip
+						;;
+				esac
+			else
+				installRemoteModule_url=https://downloads.saxonica.com/SaxonC/EE/${installRemoteModule_majorVersion}/libsaxon-EEC-setup64-v${installRemoteModule_version}.zip
+			fi
+			installRemoteModule_dir="$(getPackageSource $installRemoteModule_url)"
+			if ! test -f /usr/lib/libsaxon-*.so; then
+				if test "$installRemoteModule_majorVersion" -ge 12; then
+					cp $installRemoteModule_dir/libs/nix/*.so /usr/lib/
+				else
+					cp $installRemoteModule_dir/*.so /usr/lib/
+				fi
+				ldconfig || true
+			fi
+			set -x
+			cd "$installRemoteModule_dir/Saxon.C.API"
+			exit
+			phpize
+			./configure --enable-saxon
+			make -j$(getProcessorCount) install
+			cd - >/dev/null
 			installRemoteModule_manuallyInstalled=1
 			;;
 		seasclick)
@@ -3760,6 +3859,15 @@ installRemoteModule() {
 			if test -z "$installRemoteModule_version"; then
 				if test $PHP_MAJMIN_VERSION -lt 800; then
 					installRemoteModule_version=0.2.4
+				else
+					installRemoteModule_version=beta
+				fi
+			fi
+			;;
+		vld)
+			if test -z "$installRemoteModule_version"; then
+				if test $PHP_MAJMIN_VERSION -lt 700; then
+					installRemoteModule_version=0.14.0
 				else
 					installRemoteModule_version=beta
 				fi
@@ -4337,6 +4445,7 @@ fi
 if test $USE_PICKLE -gt 1; then
 	buildPickle
 fi
+
 for PHP_MODULE_TO_INSTALL in $PHP_MODULES_TO_INSTALL; do
 	case "$PHP_MODULE_TO_INSTALL" in
 		@fix_letsencrypt)
