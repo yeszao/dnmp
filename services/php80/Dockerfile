@@ -4,7 +4,7 @@ FROM ${PHP_VERSION}
 ARG TZ
 ARG PHP_EXTENSIONS
 ARG CONTAINER_PACKAGE_URL
-
+ARG COMPOSER_URL
 
 RUN if [ "${CONTAINER_PACKAGE_URL}" != "" ] ; then sed -i "s/dl-cdn.alpinelinux.org/${CONTAINER_PACKAGE_URL}/g" /etc/apk/repositories ; fi
 
@@ -29,7 +29,7 @@ ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so php
 
 
 # Install composer and change it's cache home
-RUN curl -o /usr/bin/composer https://mirrors.aliyun.com/composer/composer.phar \
+RUN curl -o /usr/bin/composer https://${COMPOSER_URL}/composer/composer.phar \
     && chmod +x /usr/bin/composer
 ENV COMPOSER_HOME=/tmp/composer
 
