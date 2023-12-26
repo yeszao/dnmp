@@ -671,7 +671,7 @@ buildRequiredPackageLists() {
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile $PHPIZE_DEPS"
 			fi
 			if test -z "$(apk info 2>/dev/null | grep -E ^libssl)"; then
-				buildRequiredPackageLists_libssl='libssl1.0'
+				buildRequiredPackageLists_libssl='^libssl[0-9]+(\.[0-9]+)*$'
 			elif test -z "$(apk info 2>/dev/null | grep -E '^libressl.*-libtls')" && test -z "$(apk info 2>/dev/null | grep -E '^libressl.*-libssl')" && test -z "$(apk info 2>/dev/null | grep -E '^libretls-')"; then
 				buildRequiredPackageLists_libssl=$(apk search -q libressl*-libtls)
 			else
@@ -941,6 +941,9 @@ buildRequiredPackageLists() {
 			imagick@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent imagemagick libgomp"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile imagemagick-dev"
+				if [ $DISTRO_MAJMIN_VERSION -ge 319 ]; then
+					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent ghostscript libheif libjxl libraw librsvg"
+				fi
 				;;
 			imagick@debian)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent ^libmagickwand-6.q16-[0-9]+$ ^libmagickcore-6.q16-[0-9]+-extra$"
@@ -1225,7 +1228,7 @@ buildRequiredPackageLists() {
 			relay@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent lz4-libs zstd-libs"
 				if test $DISTRO_MAJMIN_VERSION -ge 317; then
-					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libssl1.1"
+					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent $buildRequiredPackageLists_libssl"
 				fi
 				;;
 			saxon@debian)
@@ -2765,8 +2768,10 @@ installRemoteModule() {
 			;;
 		ds)
 			if test -z "$installRemoteModule_version"; then
-				if test $PHP_MAJMIN_VERSION -le 702; then
+				if test $PHP_MAJMIN_VERSION -lt 703; then
 					installRemoteModule_version=1.3.0
+				elif test $PHP_MAJMIN_VERSION -lt 704; then
+					installRemoteModule_version=1.4.0
 				fi
 			fi
 			;;
@@ -2984,6 +2989,13 @@ installRemoteModule() {
 				fi
 			fi
 			;;
+		jsonpath)
+			if test -z "$installRemoteModule_version"; then
+				if test $PHP_MAJMIN_VERSION -lt 800; then
+					installRemoteModule_version=1.0.1
+				fi
+			fi
+			;;
 		luasandbox)
 			if test -z "$installRemoteModule_version"; then
 				if test $PHP_MAJMIN_VERSION -lt 702; then
@@ -3178,28 +3190,88 @@ installRemoteModule() {
 				installRemoteModule_sockets=no
 			fi
 			installRemoteModule_openssl=yes
-			# enable sockets supports? (v < 22.1.0) / enable coroutine sockets? (v >= 22.1.0)
-			addConfigureOption enable-sockets $installRemoteModule_sockets
-			# enable openssl support?
-			addConfigureOption enable-openssl $installRemoteModule_openssl
-			# enable http2 support?
-			addConfigureOption enable-http2 yes
-			# enable mysqlnd support? (v < 22.1.0) / enable coroutine mysqlnd? (v >= 22.1.0)
-			addConfigureOption enable-mysqlnd yes
-			if test -n "$installRemoteModule_version" && test $(compareVersions "$installRemoteModule_version" '22.0.0') -lt 0; then
+			if test -n "$installRemoteModule_version" && test $(compareVersions "$installRemoteModule_version" 22.1.2) -ge 0; then
+				# enable coroutine sockets?
+				addConfigureOption enable-sockets $installRemoteModule_sockets
+				# enable openssl support?
+				addConfigureOption enable-openssl $installRemoteModule_openssl
+				# enable http2 protocol?
+				addConfigureOption enable-http2 yes
+				# enable coroutine mysqlnd?
+				addConfigureOption enable-mysqlnd yes
+				# enable coroutine curl?
+				addConfigureOption enable-hook-curl yes
+				# enable coroutine postgres?
+				addConfigureOption with-postgres yes
+			elif test $(compareVersions "$installRemoteModule_version" 22.1.1) -ge 0; then
+				# enable c-ares support?
+				addConfigureOption enable-cares yes
+				# enable coroutine sockets?
+				addConfigureOption enable-sockets $installRemoteModule_sockets
+				# enable openssl support?
+				addConfigureOption enable-openssl $installRemoteModule_openssl
+				# enable http2 protocol?
+				addConfigureOption enable-http2 yes
+				# enable coroutine mysqlnd?
+				addConfigureOption enable-mysqlnd yes
+				# enable coroutine curl?
+				addConfigureOption enable-hook-curl yes
+				# enable coroutine postgres?
+				addConfigureOption with-postgres yes
+			elif test $(compareVersions "$installRemoteModule_version" 22.1.0) -ge 0; then
+				# enable coroutine sockets?
+				addConfigureOption enable-sockets $installRemoteModule_sockets
+				# enable openssl support?
+				addConfigureOption enable-openssl $installRemoteModule_openssl
+				# enable http2 protocol?
+				addConfigureOption enable-http2 yes
+				# enable coroutine mysqlnd?
+				addConfigureOption enable-mysqlnd yes
+				# enable coroutine curl?
+				addConfigureOption enable-hook-curl yes
+				# enable coroutine postgres?
+				addConfigureOption with-postgres yes
+			elif test $(compareVersions "$installRemoteModule_version" 22.0.0) -ge 0; then
+				# enable sockets supports?
+				addConfigureOption enable-sockets $installRemoteModule_sockets
+				# enable openssl support?
+				addConfigureOption enable-openssl $installRemoteModule_openssl
+				# enable http2 support?
+				addConfigureOption enable-http2 yes
+				# enable mysqlnd support?
+				addConfigureOption enable-mysqlnd yes
+				# enable hook curl support?
+				addConfigureOption enable-hook-curl yes
+				# enable postgres support?
+				addConfigureOption with-postgres yes
+			elif test $(compareVersions "$installRemoteModule_version" 4.8.0) -ge 0; then
+				# enable sockets supports?
+				addConfigureOption enable-sockets $installRemoteModule_sockets
+				# enable openssl support?
+				addConfigureOption enable-openssl $installRemoteModule_openssl
+				# enable http2 support?
+				addConfigureOption enable-http2 yes
+				# enable mysqlnd support?
+				addConfigureOption enable-mysqlnd yes
 				# enable json support?
 				addConfigureOption enable-swoole-json yes
 				# enable curl support?
 				addConfigureOption enable-swoole-curl yes
-				if test $(compareVersions "$installRemoteModule_version" '4.8.0') -ge 0; then
-					# enable postgres support?
-					addConfigureOption with-postgres yes
-				fi
-			else
-				#enable hook curl support? (v < 22.1.0) / enable coroutine curl? (v >= 22.1.0)
-				addConfigureOption enable-hook-curl yes
-				# enable postgres support? (v < 22.1.0) / enable coroutine postgres? (v >= 22.1.0)
+				# enable postgres support?
 				addConfigureOption with-postgres yes
+			else
+				# enable sockets supports?
+				addConfigureOption enable-sockets $installRemoteModule_sockets
+				# enable openssl support?
+				addConfigureOption enable-openssl $installRemoteModule_openssl
+				# enable http2 support?
+				addConfigureOption enable-http2 yes
+				# enable mysqlnd support?
+				addConfigureOption enable-mysqlnd yes
+				# enable json support?
+				addConfigureOption enable-swoole-json yes
+				# enable curl support?
+				addConfigureOption enable-swoole-curl yes
 			fi
 			;;
 		opentelemetry)
@@ -3598,6 +3670,12 @@ installRemoteModule() {
 					fi
 					;;
 			esac
+			if test $PHP_MAJMIN_VERSION -eq 803; then
+				# see https://github.com/swoole/docker-swoole/issues/45
+				installRemoteModule_curl=no
+			else
+				installRemoteModule_curl=yes
+			fi
 			if test -z "$installRemoteModule_version" || test $(compareVersions "$installRemoteModule_version" 5.0.1) -ge 0; then
 				# enable sockets supports?
 				addConfigureOption enable-sockets $installRemoteModule_sockets
@@ -3606,7 +3684,7 @@ installRemoteModule() {
 				# enable mysqlnd support?
 				addConfigureOption enable-mysqlnd yes
 				# enable curl support?
-				addConfigureOption enable-swoole-curl yes
+				addConfigureOption enable-swoole-curl $installRemoteModule_curl
 				# enable cares support?
 				addConfigureOption enable-cares yes
 				# enable brotli support?
@@ -3619,7 +3697,7 @@ installRemoteModule() {
 				# enable mysqlnd support?
 				addConfigureOption enable-mysqlnd yes
 				# enable curl support?
-				addConfigureOption enable-swoole-curl yes
+				addConfigureOption enable-swoole-curl $installRemoteModule_curl
 				# enable cares support?
 				addConfigureOption enable-cares yes
 			elif test $(compareVersions "$installRemoteModule_version" 4.8.11) -ge 0; then
@@ -3634,7 +3712,7 @@ installRemoteModule() {
 				# enable json support?
 				addConfigureOption enable-swoole-json yes
 				# enable curl support?
-				addConfigureOption enable-swoole-curl yes
+				addConfigureOption enable-swoole-curl $installRemoteModule_curl
 				# enable cares support?
 				addConfigureOption enable-cares yes
 			elif test $(compareVersions "$installRemoteModule_version" 4.6.1) -ge 0; then
@@ -3649,7 +3727,7 @@ installRemoteModule() {
 				# enable json support?
 				addConfigureOption enable-swoole-json yes
 				# enable curl support?
-				addConfigureOption enable-swoole-curl yes
+				addConfigureOption enable-swoole-curl $installRemoteModule_curl
 			elif test $(compareVersions "$installRemoteModule_version" 4.4.0) -ge 0; then
 				# enable sockets supports?
 				addConfigureOption enable-sockets $installRemoteModule_sockets
