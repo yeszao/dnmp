@@ -357,74 +357,81 @@ getModuleSourceCodePath() {
 	fi
 }
 
-# Get the wanted PHP module version, resolving it if it starts with '^'
+# Get the actual PHP module version, resolving it if it starts with '^'
 #
 # Arguments:
-#   $1: the name of the module to be normalized
+#   $1: the name of the module
+#   $2: the wanted version (optional, if omitted we'll use getWantedPHPModuleVersion)
 #
 # Output:
 #   The version to be used
-resolveWantedPHPModuleVersion() {
-	resolveWantedPHPModuleVersion_raw="$(getWantedPHPModuleVersion "$1")"
-	resolveWantedPHPModuleVersion_afterCaret="${resolveWantedPHPModuleVersion_raw#^}"
-	if test "$resolveWantedPHPModuleVersion_raw" = "$resolveWantedPHPModuleVersion_afterCaret"; then
-		printf '%s' "$resolveWantedPHPModuleVersion_raw"
+resolvePHPModuleVersion() {
+	resolvePHPModuleVersion_module="$1"
+	if test $# -lt 2; then
+		resolvePHPModuleVersion_raw="$(getWantedPHPModuleVersion "$installRemoteModule_module")"
+	else
+		resolvePHPModuleVersion_raw="$2"
+	fi
+	resolvePHPModuleVersion_afterCaret="${resolvePHPModuleVersion_raw#^}"
+	if test "$resolvePHPModuleVersion_raw" = "$resolvePHPModuleVersion_afterCaret"; then
+		printf '%s' "$resolvePHPModuleVersion_raw"
 		return
 	fi
-	case "$resolveWantedPHPModuleVersion_afterCaret" in
+	case "$resolvePHPModuleVersion_afterCaret" in
 		?*@snapshot | ?*@devel | ?*@alpha | ?*@beta | ?*@stable)
-			resolveWantedPHPModuleVersion_wantedStability="${resolveWantedPHPModuleVersion_afterCaret##*@}"
-			resolveWantedPHPModuleVersion_wantedVersion="${resolveWantedPHPModuleVersion_afterCaret%@*}"
+			resolvePHPModuleVersion_wantedStability="${resolvePHPModuleVersion_afterCaret##*@}"
+			resolvePHPModuleVersion_wantedVersion="${resolvePHPModuleVersion_afterCaret%@*}"
 			;;
 		*)
-			resolveWantedPHPModuleVersion_wantedStability=''
-			resolveWantedPHPModuleVersion_wantedVersion="$resolveWantedPHPModuleVersion_afterCaret"
+			resolvePHPModuleVersion_wantedStability=''
+			resolvePHPModuleVersion_wantedVersion="$resolvePHPModuleVersion_afterCaret"
 			;;
 	esac
-	resolveWantedPHPModuleVersion_xml="$(curl -sSLf "http://pecl.php.net/rest/r/$1/allreleases.xml")"
+	resolvePHPModuleVersion_peclModule="$(getPeclModuleName "$resolvePHPModuleVersion_module")"
+	resolvePHPModuleVersion_xml="$(curl -sSLf "http://pecl.php.net/rest/r/$resolvePHPModuleVersion_peclModule/allreleases.xml")"
 	# remove line endings, collapse spaces
-	resolveWantedPHPModuleVersion_versions="$(printf '%s' "$resolveWantedPHPModuleVersion_xml" | tr -s ' \t\r\n' ' ')"
+	resolvePHPModuleVersion_versions="$(printf '%s' "$resolvePHPModuleVersion_xml" | tr -s ' \t\r\n' ' ')"
 	# one line per release (eg <r><v>1.2.3</v><s>stable</s></r>)
-	resolveWantedPHPModuleVersion_versions="$(printf '%s' "$resolveWantedPHPModuleVersion_versions" | sed -r 's#<r#\n<r#g')"
-	if test -n "$resolveWantedPHPModuleVersion_wantedStability"; then
+	resolvePHPModuleVersion_versions="$(printf '%s' "$resolvePHPModuleVersion_versions" | sed -r 's#<r#\n<r#g')"
+	if test -n "$resolvePHPModuleVersion_wantedStability"; then
 		# keep the lines with the wanted stability
-		resolveWantedPHPModuleVersion_versions="$(printf '%s' "$resolveWantedPHPModuleVersion_versions" | grep "<s>$resolveWantedPHPModuleVersion_wantedStability</s>")"
+		resolvePHPModuleVersion_versions="$(printf '%s' "$resolvePHPModuleVersion_versions" | grep "<s>$resolvePHPModuleVersion_wantedStability</s>")"
 	fi
 	# remove everything's up to '<v>' (included)
-	resolveWantedPHPModuleVersion_versions="$(printf '%s' "$resolveWantedPHPModuleVersion_versions" | sed 's#^.*<v>##')"
+	resolvePHPModuleVersion_versions="$(printf '%s' "$resolvePHPModuleVersion_versions" | sed 's#^.*<v>##')"
 	# keep just the versions
-	resolveWantedPHPModuleVersion_versions="$(printf '%s' "$resolveWantedPHPModuleVersion_versions" | cut -d'<' -f1)"
+	resolvePHPModuleVersion_versions="$(printf '%s' "$resolvePHPModuleVersion_versions" | cut -d'<' -f1)"
 	resetIFS
-	for resolveWantedPHPModuleVersion_version in $resolveWantedPHPModuleVersion_versions; do
-		resolveWantedPHPModuleVersion_suffix="${resolveWantedPHPModuleVersion_version#$resolveWantedPHPModuleVersion_wantedVersion}"
-		if test "$resolveWantedPHPModuleVersion_version" != "${resolveWantedPHPModuleVersion_version#$resolveWantedPHPModuleVersion_wantedVersion.}"; then
+	for resolvePHPModuleVersion_version in $resolvePHPModuleVersion_versions; do
+		resolvePHPModuleVersion_suffix="${resolvePHPModuleVersion_version#$resolvePHPModuleVersion_wantedVersion}"
+		if test "$resolvePHPModuleVersion_version" != "${resolvePHPModuleVersion_version#$resolvePHPModuleVersion_wantedVersion.}"; then
 			# Example: looking for 1.0, found 1.0.1
-			printf '%s' "$resolveWantedPHPModuleVersion_version"
+			printf '%s' "$resolvePHPModuleVersion_version"
 			return
 		fi
 	done
-	for resolveWantedPHPModuleVersion_version in $resolveWantedPHPModuleVersion_versions; do
-		resolveWantedPHPModuleVersion_suffix="${resolveWantedPHPModuleVersion_version#$resolveWantedPHPModuleVersion_wantedVersion}"
-		if test "$resolveWantedPHPModuleVersion_version" = "$resolveWantedPHPModuleVersion_suffix"; then
+	for resolvePHPModuleVersion_version in $resolvePHPModuleVersion_versions; do
+		resolvePHPModuleVersion_suffix="${resolvePHPModuleVersion_version#$resolvePHPModuleVersion_wantedVersion}"
+		if test "$resolvePHPModuleVersion_version" = "$resolvePHPModuleVersion_suffix"; then
 			continue
 		fi
-		if test -z "$resolveWantedPHPModuleVersion_suffix"; then
+		if test -z "$resolvePHPModuleVersion_suffix"; then
 			# Example: looking for 1.0, found exactly it
-			printf '%s' "$resolveWantedPHPModuleVersion_version"
+			printf '%s' "$resolvePHPModuleVersion_version"
 			return
 		fi
-		case "$resolveWantedPHPModuleVersion_suffix" in
+		case "$resolvePHPModuleVersion_suffix" in
 			[0-9])
 				# Example: looking for 1.1, but this is 1.10
 				;;
 			*)
 				# Example: looking for 1.1, this is 1.1rc1
-				printf '%s' "$resolveWantedPHPModuleVersion_version"
+				printf '%s' "$resolvePHPModuleVersion_version"
 				return
 				;;
 		esac
 	done
-	printf 'Unable to find a version of "%s" compatible with "%s"\nAvailable versions are:\n%s\n' "$1" "$resolveWantedPHPModuleVersion_raw" "$resolveWantedPHPModuleVersion_versions" >&2
+	printf 'Unable to find a version of "%s" compatible with "%s"\nAvailable versions are:\n%s\n' "$resolvePHPModuleVersion_module" "$resolvePHPModuleVersion_raw" "$resolvePHPModuleVersion_versions" >&2
 	exit 1
 }
 
@@ -443,7 +450,8 @@ resolvePeclStabilityVersion() {
 			return
 			;;
 	esac
-	peclStabilityFlagToVersion_url="http://pecl.php.net/rest/r/$1/$2.txt"
+	resolvePeclStabilityVersion_peclModule="$(getPeclModuleName "$1")"
+	peclStabilityFlagToVersion_url="http://pecl.php.net/rest/r/$resolvePeclStabilityVersion_peclModule/$2.txt"
 	if ! peclStabilityFlagToVersion_result="$(curl -sSLf "$peclStabilityFlagToVersion_url")"; then
 		peclStabilityFlagToVersion_result=''
 	fi
@@ -811,6 +819,12 @@ buildRequiredPackageLists() {
 			ffi@debian)
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libffi-dev"
 				;;
+			ftp@alpine)
+				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile $buildRequiredPackageLists_libssldev"
+				;;
+			ftp@debian)
+				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile $buildRequiredPackageLists_libssldev"
+				;;
 			gd@alpine)
 				buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent freetype libjpeg-turbo libpng libxpm"
 				buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile freetype-dev libjpeg-turbo-dev libpng-dev libxpm-dev"
@@ -848,7 +862,10 @@ buildRequiredPackageLists() {
 					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent ^libwebp[0-9]+$"
 					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libwebp-dev"
 					if test $PHP_MAJMIN_VERSION -ge 801; then
-						if ! isLibaomInstalled || ! isLibdav1dInstalled || ! isLibyuvInstalled || ! isLibavifInstalled; then
+						if test $DISTRO_VERSION_NUMBER -ge 12; then
+							buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent ^libavif[0-9]+$ ^libaom[0-9]+$ ^libdav1d[0-9]+$"
+							buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libavif-dev libaom-dev libdav1d-dev"
+						elif ! isLibaomInstalled || ! isLibdav1dInstalled || ! isLibyuvInstalled || ! isLibavifInstalled; then
 							case "${IPE_GD_WITHOUTAVIF:-}" in
 								1 | y* | Y*) ;;
 								*)
@@ -2039,7 +2056,7 @@ installMicrosoftSqlServerODBC() {
 		alpine)
 			rm -rf /tmp/src/msodbcsql.apk
 			if test $PHP_MAJMIN_VERSION -le 703; then
-				curl -sSLf -o /tmp/src/msodbcsql.apk https://download.microsoft.com/download/e/4/e/e4e67866-dffd-428c-aac7-8d28ddafb39b/msodbcsql17_17.9.1.1-1_amd64.apk
+				curl -sSLf -o /tmp/src/msodbcsql.apk https://download.microsoft.com/download/e/4/e/e4e67866-dffd-428c-aac7-8d28ddafb39b/msodbcsql17_17.10.5.1-1_amd64.apk
 			else
 				case $(uname -m) in
 					aarch64 | arm64 | armv8)
@@ -2049,7 +2066,7 @@ installMicrosoftSqlServerODBC() {
 						installMicrosoftSqlServerODBC_arch=amd64
 						;;
 				esac
-				curl -sSLf -o /tmp/src/msodbcsql.apk https://download.microsoft.com/download/3/5/5/355d7943-a338-41a7-858d-53b259ea33f5/msodbcsql18_18.3.1.1-1_$installMicrosoftSqlServerODBC_arch.apk
+				curl -sSLf -o /tmp/src/msodbcsql.apk https://download.microsoft.com/download/3/5/5/355d7943-a338-41a7-858d-53b259ea33f5/msodbcsql18_18.3.2.1-1_$installMicrosoftSqlServerODBC_arch.apk
 			fi
 			printf '\n' | apk add --allow-untrusted /tmp/src/msodbcsql.apk
 			rm -rf /tmp/src/msodbcsql.apk
@@ -2088,7 +2105,7 @@ installMicrosoftSqlServerODBC() {
 #   0 (true)
 #   1 (false)
 isLibaomInstalled() {
-	if ! test -f /usr/local/lib/libaom.so && ! test -f /usr/lib/libaom.so; then
+	if ! test -f /usr/local/lib/libaom.so && ! test -f /usr/lib/libaom.so && ! test -f /usr/lib/x86_64*/libaom.so; then
 		return 1
 	fi
 	if ! test -f /usr/local/include/aom/aom_codec.h && ! test -f /usr/include/aom/aom_codec.h; then
@@ -2100,7 +2117,18 @@ isLibaomInstalled() {
 # Install libaom
 installLibaom() {
 	printf 'Installing libaom\n'
-	installLibaom_dir="$(getPackageSource https://aomedia.googlesource.com/aom/+archive/v3.3.0.tar.gz)"
+	installLibaom_version=3.8.1
+	case "$DISTRO_VERSION" in
+		debian@10)
+			case $(uname -m) in
+				aarch* | arm*)
+					#see https://bugs.chromium.org/p/aomedia/issues/detail?id=3543
+					installLibaom_version=3.5.0
+					;;
+			esac
+			;;
+	esac
+	installLibaom_dir="$(getPackageSource https://aomedia.googlesource.com/aom/+archive/v$installLibaom_version.tar.gz)"
 	mkdir -- "$installLibaom_dir/my.build"
 	cd -- "$installLibaom_dir/my.build"
 	cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=1 -DENABLE_DOCS=0 -DENABLE_EXAMPLES=0 -DENABLE_TESTDATA=0 -DENABLE_TESTS=0 -DENABLE_TOOLS=0 -DCMAKE_INSTALL_LIBDIR:PATH=lib ..
@@ -2127,7 +2155,7 @@ isLibdav1dInstalled() {
 # Install libdav1d
 installLibdav1d() {
 	printf 'Installing libdav1d\n'
-	installLibdav1d_dir="$(getPackageSource https://code.videolan.org/videolan/dav1d/-/archive/0.9.2/dav1d-0.9.2.tar.gz)"
+	installLibdav1d_dir="$(getPackageSource https://github.com/videolan/dav1d/archive/refs/tags/1.3.0.tar.gz)"
 	mkdir -- "$installLibdav1d_dir/build"
 	cd -- "$installLibdav1d_dir/build"
 	meson --buildtype release -Dprefix=/usr ..
@@ -2145,7 +2173,7 @@ installLibdav1d() {
 #   0 (true)
 #   1 (false)
 isLibyuvInstalled() {
-	if ! test -f /usr/local/lib/libyuv.so && ! test -f /usr/lib/libyuv.so && ! test -f /usr/lib/x86_64*/libyuv.so; then
+	if ! test -f /usr/local/lib/libyuv.so && ! test -f /usr/lib/libyuv.so && ! test -f /usr/lib/x86_64*/libyuv.so && ! test -f /usr/lib/x86_64*/libyuv.so.*; then
 		return 1
 	fi
 	if ! test -f /usr/local/include/libyuv.h && ! test -f /usr/include/libyuv.h; then
@@ -2157,7 +2185,7 @@ isLibyuvInstalled() {
 # Install libyuv
 installLibyuv() {
 	printf 'Installing libyuv\n'
-	installLibyuv_dir="$(getPackageSource https://chromium.googlesource.com/libyuv/libyuv/+archive/25d0a5110be796eef47004412baf43333d9ecf26.tar.gz)"
+	installLibyuv_dir="$(getPackageSource https://chromium.googlesource.com/libyuv/libyuv/+archive/d359a9f922af840b043535d43cf9d38b220d102e.tar.gz)"
 	mkdir -- "$installLibyuv_dir/build"
 	cd -- "$installLibyuv_dir/build"
 	cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr -B. ..
@@ -2183,7 +2211,7 @@ isLibavifInstalled() {
 # Install libavif
 installLibavif() {
 	printf 'Installing libavif\n'
-	installLibavif_dir="$(getPackageSource https://codeload.github.com/AOMediaCodec/libavif/tar.gz/refs/tags/v0.9.3)"
+	installLibavif_dir="$(getPackageSource https://codeload.github.com/AOMediaCodec/libavif/tar.gz/refs/tags/v1.0.3)"
 	mkdir -- "$installLibavif_dir/build"
 	cd -- "$installLibavif_dir/build"
 	cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DAVIF_CODEC_AOM=ON -DCMAKE_INSTALL_LIBDIR:PATH=lib
@@ -2401,6 +2429,9 @@ EOF
 				cd - >/dev/null
 			fi
 			;;
+		ftp)
+			docker-php-ext-configure ftp --with-openssl-dir=/usr
+			;;
 		gd)
 			if test $PHP_MAJMIN_VERSION -le 506; then
 				docker-php-ext-configure gd --with-gd --with-jpeg-dir --with-png-dir --with-zlib-dir --with-xpm-dir --with-freetype-dir --enable-gd-native-ttf --with-vpx-dir
@@ -2415,6 +2446,11 @@ EOF
 				case "$DISTRO" in
 					alpine)
 						if test $DISTRO_MAJMIN_VERSION -ge 315; then
+							installBundledModule_tmp=1
+						fi
+						;;
+					debian)
+						if test $DISTRO_VERSION_NUMBER -ge 12; then
 							installBundledModule_tmp=1
 						fi
 						;;
@@ -2623,7 +2659,7 @@ getPackageSource() {
 installRemoteModule() {
 	installRemoteModule_module="$1"
 	printf '### INSTALLING REMOTE MODULE %s ###\n' "$installRemoteModule_module"
-	installRemoteModule_version="$(resolveWantedPHPModuleVersion "$installRemoteModule_module")"
+	installRemoteModule_version="$(resolvePHPModuleVersion "$installRemoteModule_module")"
 	installRemoteModule_path="$(getModuleSourceCodePath "$installRemoteModule_module")"
 	rm -rf "$CONFIGURE_FILE"
 	installRemoteModule_manuallyInstalled=0
@@ -2716,7 +2752,7 @@ installRemoteModule() {
 				if test $(compareVersions "$(cmake --version | head -n1 | sed -E 's/^.* //')" '3.7') -lt 0; then
 					installRemoteModule_tmp=0.29.0
 				else
-					installRemoteModule_tmp=0.30.3
+					installRemoteModule_tmp=0.31.0
 				fi
 				cd "$(getPackageSource https://github.com/commonmark/cmark/archive/$installRemoteModule_tmp.tar.gz)"
 				make -s -j$(getProcessorCount) cmake_build
@@ -2745,9 +2781,12 @@ installRemoteModule() {
 			if test -z "$installRemoteModule_version"; then
 				if test $PHP_MAJMIN_VERSION -lt 700; then
 					installRemoteModule_version=0.75.0
-				else
-					installCargo
 				fi
+			else
+				installRemoteModule_version="$(resolvePeclStabilityVersion "$installRemoteModule_module" "$installRemoteModule_version")"
+			fi
+			if test -z "$installRemoteModule_version" || test $(compareVersions "$installRemoteModule_version" 0.75.0) -ge 0; then
+				installCargo
 			fi
 			;;
 		decimal)
@@ -3478,8 +3517,8 @@ installRemoteModule() {
 			;;
 		saxon)
 			if test -z "$installRemoteModule_version"; then
-				if test $PHP_MAJMIN_VERSION -le 506; then
-					installRemoteModule_version='11.6'
+				if test $PHP_MAJMIN_VERSION -ge 800; then
+					installRemoteModule_version='12.4.2'
 				else
 					installRemoteModule_version='12.3'
 				fi
@@ -3506,9 +3545,7 @@ installRemoteModule() {
 				fi
 				ldconfig || true
 			fi
-			set -x
 			cd "$installRemoteModule_dir/Saxon.C.API"
-			exit
 			phpize
 			./configure --enable-saxon
 			make -j$(getProcessorCount) install
@@ -3586,7 +3623,7 @@ installRemoteModule() {
 		spx)
 			if test -z "$installRemoteModule_path"; then
 				if test -z "$installRemoteModule_version"; then
-					installRemoteModule_version=v0.4.14
+					installRemoteModule_version=v0.4.15
 				fi
 				if test "${installRemoteModule_version%.*}" = "$installRemoteModule_version"; then
 					installRemoteModule_displayVersion="$installRemoteModule_version"
@@ -3618,6 +3655,8 @@ installRemoteModule() {
 					installRemoteModule_version=5.9.0
 				elif test $PHP_MAJMIN_VERSION -le 704; then
 					installRemoteModule_version=5.10.1
+				elif test $PHP_MAJMIN_VERSION -le 800; then
+					installRemoteModule_version=5.11.1
 				fi
 			fi
 			;;
@@ -3654,6 +3693,9 @@ installRemoteModule() {
 					installRemoteModule_version=4.5.10
 				elif test $PHP_MAJMIN_VERSION -le 704; then
 					installRemoteModule_version=4.8.11
+				elif test $PHP_BITS -eq 32; then
+					# See https://github.com/swoole/swoole-src/issues/5198#issuecomment-1820162178
+					installRemoteModule_version="$(resolvePHPModuleVersion "$installRemoteModule_module" '^5.0')"
 				fi
 			else
 				installRemoteModule_version="$(resolvePeclStabilityVersion "$installRemoteModule_module" "$installRemoteModule_version")"
