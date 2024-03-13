@@ -289,6 +289,8 @@ services:
 #    volumes:
 #      - ${DATA_DIR}/esdata:/usr/share/elasticsearch/data
 #      - ${ELASTICSEARCH_CONF_FILE}:/usr/share/elasticsearch/config/elasticsearch.yml
+#      - ${ELASTICSEARCH_JVM_CONF_FILE}:/usr/share/elasticsearch/config/jvm.options
+#      - ${ELASTICSEARCH_LOG4J2_CONF_FILE}:/usr/share/elasticsearch/config/log4j2.properties
 #    hostname: elasticsearch
 #    restart: always
 #    ports:
