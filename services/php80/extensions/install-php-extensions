@@ -2002,11 +2002,11 @@ installOracleInstantClient() {
 		mv "$installOracleInstantClient_src" "$ORACLE_INSTANTCLIENT_LIBPATH"
 		echo 'done.'
 	fi
-	if ! test -e "$ORACLE_INSTANTCLIENT_LIBPATH/sdk"; then
+	if ! test -e "$ORACLE_INSTANTCLIENT_LIBPATH/sdk" && ! test -L "$ORACLE_INSTANTCLIENT_LIBPATH/sdk"; then
 		printf 'Downloading Oracle Instant SDK v%s... ' "$installOracleInstantClient_version"
 		installOracleInstantClient_src="$(getPackageSource $installOracleInstantClient_sdk)"
 		ln -sf "$installOracleInstantClient_src/sdk" "$ORACLE_INSTANTCLIENT_LIBPATH/sdk"
-		UNNEEDED_PACKAGE_LINKS="$UNNEEDED_PACKAGE_LINKS '$ORACLE_INSTANTCLIENT_LIBPATH/sdk'"
+		UNNEEDED_PACKAGE_LINKS="$UNNEEDED_PACKAGE_LINKS $ORACLE_INSTANTCLIENT_LIBPATH/sdk"
 		echo 'done.'
 	fi
 	case "$DISTRO" in
@@ -2988,6 +2988,12 @@ installRemoteModule() {
 				fi
 			fi
 			;;
+		imap)
+			# Include Kerberos Support
+			addConfigureOption with-kerberos yes
+			# Include SSL Support
+			addConfigureOption with-imap-ssl yes
+			;;
 		inotify)
 			if test -z "$installRemoteModule_version"; then
 				if test $PHP_MAJMIN_VERSION -le 506; then
@@ -3207,6 +3213,14 @@ installRemoteModule() {
 				fi
 			fi
 			;;
+		oci8 | pdo_oci)
+			installOracleInstantClient
+			if test "$installRemoteModule_module" = oci8; then
+				addConfigureOption with-oci8 "instantclient,$ORACLE_INSTANTCLIENT_LIBPATH"
+			elif test "$installRemoteModule_module" = pdo_oci; then
+				addConfigureOption with-pdo-oci "instantclient,$ORACLE_INSTANTCLIENT_LIBPATH"
+			fi
+			;;
 		opencensus)
 			if test -z "$installRemoteModule_version"; then
 				installRemoteModule_version=alpha
@@ -3372,6 +3386,8 @@ installRemoteModule() {
 					installRemoteModule_version=3.12.4
 				elif test $PHP_MAJMIN_VERSION -lt 800; then
 					installRemoteModule_version=3.24.4
+				elif test $PHP_MAJMIN_VERSION -lt 801; then
+					installRemoteModule_version=3.25.3
 				fi
 			fi
 			;;
