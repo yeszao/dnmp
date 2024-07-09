@@ -7,6 +7,7 @@ ARG CONTAINER_PACKAGE_URL
 
 RUN rm /etc/apt/sources.list
 
+#https://lists.debian.org/debian-devel-announce/2023/02/msg00004.html
 RUN echo deb http://archive.debian.org/debian-security jessie/updates main >> /etc/apt/sources.list \
     && echo deb http://archive.debian.org/debian jessie main >>  /etc/apt/sources.list
     
