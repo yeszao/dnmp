@@ -5,11 +5,12 @@ ARG TZ
 ARG PHP_EXTENSIONS
 ARG CONTAINER_PACKAGE_URL
 
+RUN rm /etc/apt/sources.list
 
-RUN sed -i "s/httpredir.debian.org/${CONTAINER_PACKAGE_URL}/g" /etc/apt/sources.list \
-    && sed -i "s/security.debian.org/${CONTAINER_PACKAGE_URL}\/debian-security/g" /etc/apt/sources.list \
-    && apt-get update
-
+RUN echo deb http://archive.debian.org/debian-security jessie/updates main >> /etc/apt/sources.list \
+    && echo deb http://archive.debian.org/debian jessie main >>  /etc/apt/sources.list
+    
+RUN apt-get update 
 
 COPY ./extensions /tmp/extensions
 WORKDIR /tmp/extensions
@@ -19,7 +20,7 @@ RUN chmod +x install.sh \
 
 
 # Install composer and change it's cache home
-RUN curl -o /usr/bin/composer https://getcomposer.org/download/1.10.27/composer.phar \
+RUN curl -ko  /usr/bin/composer https://getcomposer.org/download/1.10.27/composer.phar \
     && chmod +x /usr/bin/composer
 ENV COMPOSER_HOME=/tmp/composer
 
