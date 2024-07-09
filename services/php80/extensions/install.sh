@@ -597,7 +597,7 @@ if [[ -z "${EXTENSIONS##*,swoole,*}" ]]; then
     apk add --no-cache libstdc++
     isPhpVersionGreaterOrEqual 8 0
     if [[ "$?" = "1" ]]; then
-        installExtensionFromTgz swoole-5.0.2 --enable-openssl --enable-http2
+        installExtensionFromTgz swoole-5.1.3 --enable-openssl --enable-http2
     fi
 fi
 
