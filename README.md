@@ -111,14 +111,15 @@ DNMP（Docker + Nginx/Openresty + MySQL5,8 + PHP5,7,8 + Redis + ElasticSearch + 
 ### 4. 拷贝并命名配置文件（Windows系统请用`copy`命令），启动：
     ```
     $ cd dnmp                                           # 进入项目目录
-    $ cp env.sample .env                                # 复制环境变量文件
+    $ cp env.sample .env                                # 复制环境变量文件。note:安装php扩展请查看文档中的3.2小节
     $ cp docker-compose.sample.yml docker-compose.yml   # 复制 docker-compose 配置文件。默认启动3个服务：
                                                         # Nginx、PHP7和MySQL8。要开启更多其他服务，如Redis、
                                                         # PHP5.6、PHP5.4、MongoDB，ElasticSearch等，请删
                                                         # 除服务块前的注释
     $ docker-compose up                                 # 启动
     ```
-### 5. 在浏览器中访问：`http://localhost`或`https://localhost`(自签名HTTPS演示)就能看到效果，PHP代码在文件`./www/localhost/index.php`。
+#### 5. 在浏览器中访问：`http://localhost`或`https://localhost`(自签名HTTPS演示)就能看到效果，PHP代码在文件`./www/localhost/index.php`。
+
 
 ## 3.PHP和扩展
 ### 3.1 切换Nginx使用的PHP版本
