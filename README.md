@@ -572,6 +572,10 @@ docker0: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500
 ### 8.7 Docker是如何生成容器名
 [在不指定容器名称时,是如何生成容器名](https://pet2cattle.com/2022/08/docker-container-names-generator)
 
+
+## 感谢 Navicat 对开源项目的赞助
+[![navicat](https://s1.locimg.com/2024/09/12/e6e96ae680447.png)](https://www.navicat.com/)
+
 ## License
 MIT
 
