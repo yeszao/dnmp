@@ -12,7 +12,7 @@ fi
 
 
 RUN apt-get update \
-    && apt-get install -y tzdata \
+    && apt-get install -y tzdata curl \
     && ln -fs /usr/share/zoneinfo/${TZ} /etc/localtime  \
     && dpkg-reconfigure -f noninteractive tzdata
 
@@ -21,7 +21,10 @@ RUN apt-get update \
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 
-ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
+RUN curl -sSLf \
+        -o /usr/local/bin/install-php-extensions \
+        https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions
+RUN chmod +x /usr/local/bin/install-php-extensions
 RUN install-php-extensions $PHP_EXTENSIONS
 
 
