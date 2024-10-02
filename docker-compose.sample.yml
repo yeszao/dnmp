@@ -3,51 +3,38 @@ services:
   nginx:
     build:
       context: ./services/nginx
-      args:
-        NGINX_VERSION: nginx:${NGINX_VERSION}
-        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
-        NGINX_INSTALL_APPS: ${NGINX_INSTALL_APPS}
     container_name: nginx
     ports:
-      - "${NGINX_HTTP_HOST_PORT}:80"
-      - "${NGINX_HTTPS_HOST_PORT}:443"
+      - "80:80"
+      - "443:443"
     volumes:
-      - ${SOURCE_DIR}:/www/:rw
-      - ${NGINX_SSL_CERTIFICATE_DIR}:/ssl:rw
-      - ${NGINX_CONFD_DIR}:/etc/nginx/conf.d/:rw
-      - ${NGINX_CONF_FILE}:/etc/nginx/nginx.conf:ro
-      - ${NGINX_FASTCGI_PHP_CONF}:/etc/nginx/fastcgi-php.conf:ro
-      - ${NGINX_FASTCGI_PARAMS}:/etc/nginx/fastcgi_params:ro
-      - ${NGINX_LOG_DIR}:/var/log/nginx/:rw
-    environment:
-      TZ: "$TZ"
+      - ./www:/www
+      - ./services/nginx/ssl:/ssl
+      - ./services/nginx/conf.d:/etc/nginx/conf.d
+      - ./services/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./services/nginx/fastcgi-php.conf:/etc/nginx/fastcgi-php.conf
+      - ./services/nginx/fastcgi_params:/etc/nginx/fastcgi_params
+      - ./logs/nginx:/var/log/nginx
     restart: always
     networks:
       - default
-      # 可以把-default 改成下列配置，以固定容器IP
-      #default:
-      #  ipv4_address: 10.0.0.10
 
-  php:
+  php82:
     build:
-      context: ./services/php
+      context: ./services/php82
       args:
-        PHP_VERSION: php:${PHP_VERSION}-fpm-alpine
         CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
-        COMPOSER_URL: ${COMPOSER_URL}
-        PHP_EXTENSIONS: ${PHP_EXTENSIONS}
-        TZ: "$TZ"
-    container_name: php
+        PHP_EXTENSIONS: pdo_mysql mysqli gd curl opcache
+        TZ: Asia/Dubai
+    container_name: php82
     expose:
       - 9501
-    extra_hosts:
-      - "www.site1.com:172.17.0.1"
     volumes:
-      - ${SOURCE_DIR}:/www/:rw
-      - ${PHP_PHP_CONF_FILE}:/usr/local/etc/php/php.ini:ro
-      - ${PHP_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf:rw
-      - ${PHP_LOG_DIR}:/var/log/php
-      - ${DATA_DIR}/composer:/tmp/composer
+      - ./www:/www
+      - ./services/php/php.ini:/usr/local/etc/php/php.ini
+      - ./services/php/php-fpm.conf:/usr/local/etc/php-fpm.d/www.conf
+      - ./logs/php82:/var/log/php
+      - ./data/composer:/tmp/composer
     restart: always
     cap_add:
       - SYS_PTRACE
