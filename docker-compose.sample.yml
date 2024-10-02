@@ -25,7 +25,7 @@ services:
     build:
       context: ./services/php82
       args:
-        CONTAINER_PACKAGE_URL: ${CONTAINER_PACKAGE_URL}
+        DEBIAN_MIRROR_DOMAIN: deb.debian.org
         PHP_EXTENSIONS: pdo_mysql mysqli gd curl opcache
         TZ: Asia/Dubai
     container_name: php82

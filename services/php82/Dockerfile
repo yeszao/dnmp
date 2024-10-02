@@ -3,11 +3,11 @@ FROM php:8.2-fpm
 
 ARG TZ
 ARG PHP_EXTENSIONS
-ARG CONTAINER_PACKAGE_URL
+ARG DEBIAN_MIRROR_DOMAIN
 
 
-RUN if [ "${CONTAINER_PACKAGE_URL}" != "" ] ; then  \
-    sed -i "s|deb.debian.org|${CONTAINER_PACKAGE_URL}|g" /etc/apt/sources.list ; \
+RUN if [ "${DEBIAN_MIRROR_DOMAIN}" != "" ] ; then  \
+    sed -i "s|deb.debian.org|${DEBIAN_MIRROR_DOMAIN}|g" /etc/apt/sources.list ; \
 fi
 
 
