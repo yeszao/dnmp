@@ -25,7 +25,7 @@ services:
       args:
         DEBIAN_MIRROR_DOMAIN: deb.debian.org
         PHP_EXTENSIONS: pdo_mysql mysqli gd curl opcache
-        TZ: Asia/Dubai
+        TZ: "$TZ"
     container_name: php82
     expose:
       - 9501
