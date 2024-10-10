@@ -16,8 +16,6 @@ services:
       - ./services/nginx/fastcgi_params:/etc/nginx/fastcgi_params
       - ./logs/nginx:/var/log/nginx
     restart: always
-    depends_on:
-      - php82
     networks:
       - default
 
