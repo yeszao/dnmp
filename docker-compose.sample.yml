@@ -24,7 +24,7 @@ services:
       context: ./services/php82
       args:
         DEBIAN_MIRROR_DOMAIN: deb.debian.org
-        PHP_EXTENSIONS: pdo_mysql mysqli gd curl opcache
+        PHP_EXTENSIONS: pdo_mysql mysqli gd curl opcache sockets
         TZ: "$TZ"
     container_name: php82
     expose:
