@@ -597,6 +597,10 @@ sortModulesToInstall() {
 	checkRequiredModule relay igbinary
 	# pq requires raphf
 	checkRequiredModule pq raphf
+	# phalcon up to v5.0.0beta3 requires psr
+	if test $PHP_MAJMINPAT_VERSION -lt 70401; then
+		checkRequiredModule phalcon psr
+	fi
 	# Some module installation may use sockets if available: move it before other modules
 	if stringInList 'sockets' "$PHP_MODULES_TO_INSTALL"; then
 		PHP_MODULES_TO_INSTALL="$(removeStringFromList 'sockets' "$PHP_MODULES_TO_INSTALL")"
@@ -2198,17 +2202,7 @@ isLibaomInstalled() {
 # Install libaom
 installLibaom() {
 	printf 'Installing libaom\n'
-	installLibaom_version=3.8.1
-	case "$DISTRO_VERSION" in
-		debian@10)
-			case $(uname -m) in
-				aarch* | arm*)
-					#see https://bugs.chromium.org/p/aomedia/issues/detail?id=3543
-					installLibaom_version=3.5.0
-					;;
-			esac
-			;;
-	esac
+	installLibaom_version=3.10.0
 	installLibaom_dir="$(getPackageSource https://aomedia.googlesource.com/aom/+archive/v$installLibaom_version.tar.gz)"
 	mkdir -- "$installLibaom_dir/my.build"
 	cd -- "$installLibaom_dir/my.build"
@@ -3644,6 +3638,15 @@ installRemoteModule() {
 				fi
 			fi
 			;;
+		phalcon)
+			if test -z "$installRemoteModule_version"; then
+				if test $PHP_MAJMINPAT_VERSION -lt 70401; then
+					installRemoteModule_version=4.1.2
+				elif test $PHP_MAJMIN_VERSION -lt 800; then
+					installRemoteModule_version=5.4.0
+				fi
+			fi
+			;;
 		php_trie)
 			if ! test -f /usr/local/include/hat-trie/include/tsl/htrie_map.h; then
 				installRemoteModule_src="$(getPackageSource https://codeload.github.com/Tessil/hat-trie/tar.gz/v0.6.0)"
@@ -3670,6 +3673,17 @@ installRemoteModule() {
 					installRemoteModule_version=3.24.4
 				elif test $PHP_MAJMIN_VERSION -lt 801; then
 					installRemoteModule_version=3.25.3
+				fi
+			fi
+			;;
+		psr)
+			if test -z "$installRemoteModule_version"; then
+				if test $PHP_MAJMIN_VERSION -lt 506; then
+					installRemoteModule_version=0.5.1
+				elif test $PHP_MAJMIN_VERSION -lt 700; then
+					installRemoteModule_version=0.6.1
+				elif test $PHP_MAJMIN_VERSION -lt 703; then
+					installRemoteModule_version=1.1.0
 				fi
 			fi
 			;;
@@ -3729,6 +3743,8 @@ installRemoteModule() {
 					installRemoteModule_version=4.3.0
 				elif test $PHP_MAJMIN_VERSION -le 701; then
 					installRemoteModule_version=5.3.7
+				elif test $PHP_MAJMIN_VERSION -le 703; then
+					installRemoteModule_version=6.0.2
 				fi
 			else
 				installRemoteModule_version="$(resolvePeclStabilityVersion "$installRemoteModule_module" "$installRemoteModule_version")"
@@ -3921,7 +3937,7 @@ installRemoteModule() {
 		spx)
 			if test -z "$installRemoteModule_path"; then
 				if test -z "$installRemoteModule_version"; then
-					installRemoteModule_version=v0.4.16
+					installRemoteModule_version=v0.4.17
 				fi
 				if test "${installRemoteModule_version%.*}" = "$installRemoteModule_version"; then
 					installRemoteModule_displayVersion="$installRemoteModule_version"
