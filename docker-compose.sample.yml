@@ -8,7 +8,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./www:/www
+      - ${SOURCE_DIR}:/www/:rw
       - ./services/nginx/ssl:/ssl
       - ./services/nginx/conf.d:/etc/nginx/conf.d
       - ./services/nginx/nginx.conf:/etc/nginx/nginx.conf
@@ -30,7 +30,7 @@ services:
     expose:
       - 9501
     volumes:
-      - ./www:/www
+      - ${SOURCE_DIR}:/www/:rw
       - ./services/php82/php.ini:/usr/local/etc/php/php.ini
       - ./services/php82/php-fpm.conf:/usr/local/etc/php-fpm.d/www.conf
       - ./logs/php82:/var/log/php
