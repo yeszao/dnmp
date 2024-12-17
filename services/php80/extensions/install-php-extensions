@@ -273,6 +273,15 @@ EOT
 #   Nothing
 processPHPModuleArgument() {
 	processPHPModuleArgument_arg="$1"
+	case "$processPHPModuleArgument_arg" in
+		imagick)
+			if test $PHP_MAJMIN_VERSION -ge 804; then
+				processPHPModuleArgument_arg=imagick/imagick@65e27f2bc02e7e8f1bf64e26e359e42a1331fca1
+			elif test $PHP_MAJMIN_VERSION -ge 803; then
+				processPHPModuleArgument_arg=imagick/imagick@28f27044e435a2b203e32675e942eb8de620ee58
+			fi
+			;;
+	esac
 	# Convert GitHub short form to long url,
 	# for example: from
 	# php-memcached-dev/php-memcached@8f106564e6bb005ca6100b12ccc89000daafa9d8
@@ -787,8 +796,11 @@ buildRequiredPackageLists() {
 						buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile enchant2-dev"
 					else
 						# The system provides libenchant2, supported since PHP 8.0: we need to build libenchant1 on our own
-						buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent glib aspell-libs libhunspell"
-						buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile glib-dev aspell-dev hunspell-dev"
+						if ! isLibenchant1Installed; then
+							buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent glib aspell-libs libhunspell"
+							buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile glib-dev aspell-dev hunspell-dev"
+							COMPILE_LIBS="$COMPILE_LIBS libenchant1"
+						fi
 					fi
 				else
 					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent enchant"
@@ -801,9 +813,12 @@ buildRequiredPackageLists() {
 						buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libenchant-2-2"
 						buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libenchant-2-dev"
 					else
-						# The system provides libenchant2, supported since PHP 8.0: we need to build libenchant1 on our own
-						buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent aspell-en libhunspell-1.7-0"
-						buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libglib2.0-dev libaspell-dev libhunspell-dev"
+						if ! isLibenchant1Installed; then
+							# The system provides libenchant2, supported since PHP 8.0: we need to build libenchant1 on our own
+							buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent aspell-en libhunspell-1.7-0"
+							buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libglib2.0-dev libaspell-dev libhunspell-dev"
+							COMPILE_LIBS="$COMPILE_LIBS libenchant1"
+						fi
 					fi
 				else
 					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent libenchant1c2a"
@@ -1416,8 +1431,15 @@ buildRequiredPackageLists() {
 					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent c-ares"
 					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile c-ares-dev"
 					if test $PHP_MAJMIN_VERSION -ge 801; then
-						buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile sqlite-dev"
+						buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent zstd-libs"
+						buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile sqlite-dev zstd-dev"
 					fi
+				fi
+				# iouring support in swoole 6 requires liburing 2.5+: available since Alpine 3.19
+				# but with Alpine 3.19 we have a "invalid use of incomplete type 'const struct statx'" error
+				if test $DISTRO_MAJMIN_VERSION -ge 320; then
+					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent liburing"
+					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile liburing-dev"
 				fi
 				;;
 			swoole@debian)
@@ -1431,8 +1453,18 @@ buildRequiredPackageLists() {
 						buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile zlib1g-dev libbrotli-dev"
 						if test $PHP_MAJMIN_VERSION -ge 801; then
 							buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libsqlite3-dev"
+							if test $DISTRO_VERSION_NUMBER -ge 11; then
+								# swoole 6 requires libzstd >= 1.4.0, but on debian 10 (buster) we have 1.3.8
+								buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent ^libzstd[0-9]*$"
+								buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile libzstd-dev"
+							fi
 						fi
 					fi
+				fi
+				if test $DISTRO_VERSION_NUMBER -ge 13; then
+					# iouring support in swoole 6 requires liburing 2.5+: available since Debian Trixie (13)
+					buildRequiredPackageLists_persistent="$buildRequiredPackageLists_persistent liburing2"
+					buildRequiredPackageLists_volatile="$buildRequiredPackageLists_volatile liburing-dev"
 				fi
 				;;
 			sybase_ct@alpine)
@@ -1696,7 +1728,7 @@ expandPackagesToBeInstalled() {
 			resetIFS
 			;;
 		debian)
-			expandPackagesToBeInstalled_log="$(DEBIAN_FRONTEND=noninteractive apt-get install -sy --no-install-recommends $IPE_APTGET_INSTALLOPTIONS $@ 2>&1 || printf '\nE: apt-get failed\n')"
+			expandPackagesToBeInstalled_log="$(apt-get install -sy --no-install-recommends $@ 2>&1 || printf '\nE: apt-get failed\n')"
 			if test -n "$(printf '%s' "$expandPackagesToBeInstalled_log" | grep -E '^E:')"; then
 				printf 'FAILED TO LIST THE WHOLE PACKAGE LIST FOR\n' >&2
 				printf '%s ' "$@" >&2
@@ -1965,7 +1997,7 @@ markPreinstalledPackagesAsUsed() {
 			apk add $PACKAGES_PERSISTENT_PRE
 			;;
 		debian)
-			DEBIAN_FRONTEND=noninteractive apt-mark manual $PACKAGES_PERSISTENT_PRE
+			apt-mark manual $PACKAGES_PERSISTENT_PRE
 			;;
 	esac
 }
@@ -1991,7 +2023,7 @@ installRequiredPackages() {
 			done
 			;;
 		debian)
-			DEBIAN_FRONTEND=noninteractive apt-get install -qqy --no-install-recommends $IPE_APTGET_INSTALLOPTIONS $PACKAGES_PERSISTENT_NEW $PACKAGES_VOLATILE
+			apt-get install -qqy --no-install-recommends $PACKAGES_PERSISTENT_NEW $PACKAGES_VOLATILE
 			;;
 	esac
 }
@@ -2173,12 +2205,12 @@ installMicrosoftSqlServerODBC() {
 			fi
 			printf -- '- installing the APT package\n'
 			if test $PHP_MAJMIN_VERSION -le 703; then
-				DEBIAN_FRONTEND=noninteractive ACCEPT_EULA=Y apt-get install -qqy --no-install-recommends $IPE_APTGET_INSTALLOPTIONS msodbcsql17
+				ACCEPT_EULA=Y apt-get install -qqy --no-install-recommends msodbcsql17
 			elif test $DISTRO_VERSION_NUMBER -ge 9 && test $DISTRO_VERSION_NUMBER -le 12; then
 				# On Debian 9 to 12 we have both msodbcsql17 and msodbcsql18: let's install just one
-				DEBIAN_FRONTEND=noninteractive ACCEPT_EULA=Y apt-get install -qqy --no-install-recommends $IPE_APTGET_INSTALLOPTIONS msodbcsql18
+				ACCEPT_EULA=Y apt-get install -qqy --no-install-recommends msodbcsql18
 			else
-				DEBIAN_FRONTEND=noninteractive ACCEPT_EULA=Y apt-get install -qqy --no-install-recommends $IPE_APTGET_INSTALLOPTIONS '^msodbcsql[0-9]+$'
+				ACCEPT_EULA=Y apt-get install -qqy --no-install-recommends '^msodbcsql[0-9]+$'
 			fi
 			;;
 	esac
@@ -2442,6 +2474,23 @@ installLibXCrypt() {
 	cd - >/dev/null
 }
 
+isLibenchant1Installed() {
+	if test -f /usr/lib/libenchant.so || test -f /usr/local/lib/libenchant.so; then
+		return 0
+	fi
+	return 1
+}
+
+installLibenchant1() {
+	printf 'Installing libenchant1\n'
+	installLibenchant1_src="$(getPackageSource https://github.com/rrthomas/enchant/releases/download/enchant-1-6-1/enchant-1.6.1.tar.gz)"
+	cd -- "$installLibenchant1_src"
+	./configure
+	make -j$(getProcessorCount)
+	make install
+	cd - >/dev/null
+}
+
 # Install Composer
 installComposer() {
 	installComposer_version="$(getWantedPHPModuleVersion @composer)"
@@ -2640,6 +2689,9 @@ compileLibs() {
 	if stringInList libxcrypt "$COMPILE_LIBS"; then
 		installLibXCrypt
 	fi
+	if stringInList libenchant1 "$COMPILE_LIBS"; then
+		installLibenchant1
+	fi
 }
 
 # Install a bundled PHP module given its handle
@@ -2680,32 +2732,6 @@ installBundledModule() {
 EOF
 			fi
 			docker-php-ext-configure dba --with-db4
-			;;
-		enchant)
-			installBundledModule_tmp=0
-			if test $PHP_MAJMIN_VERSION -lt 800; then
-				case "$DISTRO" in
-					alpine)
-						if test $DISTRO_MAJMIN_VERSION -ge 312; then
-							installBundledModule_tmp=1
-						fi
-						;;
-					debian)
-						if test $DISTRO_VERSION_NUMBER -ge 11; then
-							installBundledModule_tmp=1
-						fi
-						;;
-				esac
-			fi
-			if test $installBundledModule_tmp -eq 1 && ! test -f /usr/lib/libenchant.so && ! test -f /usr/local/lib/libenchant.so; then
-				# We need to install libenchant1 from source
-				installBundledModule_src="$(getPackageSource https://github.com/AbiWord/enchant/releases/download/enchant-1-6-1/enchant-1.6.1.tar.gz)"
-				cd -- "$installBundledModule_src"
-				./configure
-				make -j$(getProcessorCount)
-				make install
-				cd - >/dev/null
-			fi
 			;;
 		ftp)
 			if test $PHP_MAJMIN_VERSION -ge 804; then
@@ -2762,7 +2788,7 @@ EOF
 				debian@9)
 					installBundledModule_tmp="$(pwd)"
 					cd /tmp
-					apt-get download $IPE_APTGET_INSTALLOPTIONS libc-client2007e-dev
+					apt-get download libc-client2007e-dev
 					dpkg -i --ignore-depends=libssl-dev libc-client2007e-dev*
 					rm libc-client2007e-dev*
 					cd "$installBundledModule_tmp"
@@ -2984,7 +3010,7 @@ installRemoteModule() {
 					installRemoteModule_distro=linux
 					;;
 			esac
-			installRemoteModule_tmp2=$(php -r 'echo PHP_MAJOR_VERSION . PHP_MINOR_VERSION;')
+			installRemoteModule_tmp2=$(php -r 'echo PHP_MAJOR_VERSION . PHP_MINOR_VERSION . (ZEND_THREAD_SAFE ? "-zts" : "");')
 			installRemoteModule_tmp="$(mktemp -p /tmp/src -d)"
 			cd "$installRemoteModule_tmp"
 			curl -sSLf --user-agent Docker https://blackfire.io/api/v1/releases/probe/php/$installRemoteModule_distro/$installRemoteModule_tmp1/$installRemoteModule_tmp2 | tar xz
@@ -3873,6 +3899,15 @@ installRemoteModule() {
 				fi
 			fi
 			;;
+		smbclient)
+			if test -z "$installRemoteModule_version"; then
+				if test $PHP_MAJMIN_VERSION -le 506; then
+					installRemoteModule_version=1.1.1
+				elif test $PHP_MAJMIN_VERSION -le 703; then
+					installRemoteModule_version=1.1.2
+				fi
+			fi
+			;;
 		snappy)
 			if test -z "$installRemoteModule_path"; then
 				if test -z "$installRemoteModule_version"; then
@@ -4055,11 +4090,17 @@ installRemoteModule() {
 				installRemoteModule_zts=no
 			fi
 			installRemoteModule_sqlite=yes
+			installRemoteModule_iouring=no
 			case "$DISTRO" in
 				alpine)
 					if test $DISTRO_MAJMIN_VERSION -lt 317; then
 						# we need sqlite3 >= 3.7.7
 						installRemoteModule_sqlite=no
+					fi
+					# iouring support in swoole 6 requires liburing 2.5+: available since Alpine 3.19
+					# but with Alpine 3.19 we have a "invalid use of incomplete type 'const struct statx'" error
+					if test $DISTRO_MAJMIN_VERSION -ge 320; then
+						installRemoteModule_iouring=yes
 					fi
 					;;
 				debian)
@@ -4067,10 +4108,23 @@ installRemoteModule() {
 						# we need sqlite3 >= 3.7.7
 						installRemoteModule_sqlite=no
 					fi
+					if test $DISTRO_VERSION_NUMBER -ge 13; then
+						# iouring support in swoole 6 requires liburing 2.5+: available since Debian Trixie (13)
+						installRemoteModule_iouring=yes
+					fi
+					;;
+			esac
+			installRemoteModule_zstd=yes
+			case "$DISTRO" in
+				debian)
+					if test $DISTRO_VERSION_NUMBER -lt 11; then
+						# swoole 6 requires libzstd >= 1.4.0, but on debian 10 (buster) we have 1.3.8
+						installRemoteModule_zstd=no
+					fi
 					;;
 			esac
 			if test $(compareVersions "$installRemoteModule_version" 6.0.0) -ge 0; then
-				# enable sockets supports?
+				# enable sockets support?
 				addConfigureOption enable-sockets $installRemoteModule_sockets
 				# enable openssl support?
 				addConfigureOption enable-openssl $installRemoteModule_openssl
@@ -4082,6 +4136,8 @@ installRemoteModule() {
 				addConfigureOption enable-cares yes
 				# enable brotli support?
 				addConfigureOption enable-brotli yes
+				# enable zstd support?
+				addConfigureOption enable-zstd $installRemoteModule_zstd
 				# enable PostgreSQL database support?
 				addConfigureOption enable-swoole-pgsql yes
 				# enable ODBC database support?
@@ -4093,7 +4149,7 @@ installRemoteModule() {
 				# enable swoole thread support (need php zts support)?
 				addConfigureOption enable-swoole-thread $installRemoteModule_zts
 				# enable iouring for file async support?
-				addConfigureOption enable-iouring yes
+				addConfigureOption enable-iouring $installRemoteModule_iouring
 			elif test $(compareVersions "$installRemoteModule_version" 5.1.0) -ge 0; then
 				# enable sockets supports?
 				addConfigureOption enable-sockets $installRemoteModule_sockets
@@ -4801,23 +4857,18 @@ removeStringFromList() {
 }
 
 # Invoke apt-get update
-#
-# Set:
-# IPE_APTGET_INSTALLOPTIONS
 invokeAptGetUpdate() {
 	if test -n "${IPE_APTGETUPDATE_ALREADY:-}"; then
-		DEBIAN_FRONTEND=noninteractive apt-get update -q
+		apt-get update -q
 		return
 	fi
-	IPE_APTGET_INSTALLOPTIONS=''
-	invokeAptGetUpdate_fixdistro=''
+	IPE_APTGETUPDATE_ALREADY=y
 	if grep -q 'VERSION="8 (jessie)"' /etc/os-release; then
 		invokeAptGetUpdate_fixdistro=jessie
 	elif grep -q 'VERSION="9 (stretch)"' /etc/os-release; then
 		invokeAptGetUpdate_fixdistro=stretch
 	else
-		IPE_APTGETUPDATE_ALREADY=y
-		DEBIAN_FRONTEND=noninteractive apt-get update -q
+		invokeAptGetUpdate
 		return
 	fi
 	# See https://www.debian.org/distrib/archive.en.html for a list of mirrors
@@ -4832,19 +4883,18 @@ invokeAptGetUpdate() {
 	sed -ri "s;^(\s*deb\s+)http://security.debian.org/debian-security;\1$IPE_DEB_ARCHIVE_SECURITY;" /etc/apt/sources.list
 	sed -ri "s;^(\s*deb\s+)http://security.debian.org;\1$IPE_DEB_ARCHIVE_SECURITY;" /etc/apt/sources.list
 	invokeAptGetUpdate_tmp="$(mktemp)"
-	DEBIAN_FRONTEND=noninteractive apt-get update -q 2>"$invokeAptGetUpdate_tmp"
+	apt-get update -q 2>"$invokeAptGetUpdate_tmp"
 	if test -s "$invokeAptGetUpdate_tmp"; then
 		cat "$invokeAptGetUpdate_tmp" >&2
 		if grep -qE ' KEYEXPIRED [0-9]' "$invokeAptGetUpdate_tmp"; then
-			IPE_APTGET_INSTALLOPTIONS='-o APT::Get::AllowUnauthenticated=true'
 			echo '############' >&2
 			echo '# WARNING! #' >&2
 			echo '############' >&2
 			echo 'apt packages will be installed without checking authenticity!' >&2
+			printf 'APT::Get::AllowUnauthenticated "true";\n' >>/etc/apt/apt.conf.d/99unauthenticated
 		fi
 	fi
 	rm "$invokeAptGetUpdate_tmp"
-	IPE_APTGETUPDATE_ALREADY=y
 }
 
 # Fix the Let's Encrypt CA certificates on old distros
@@ -4875,7 +4925,7 @@ fixLetsEncrypt() {
 					invokeAptGetUpdate
 				fi
 				printf -- '- installing newer ca-certificates package\n'
-				DEBIAN_FRONTEND=noninteractive apt-get install -qqy --no-install-recommends ${IPE_APTGET_INSTALLOPTIONS:-} ca-certificates
+				apt-get install -qqy --no-install-recommends ca-certificates
 			fi
 			;;
 		*)
@@ -4920,11 +4970,11 @@ cleanup() {
 		debian)
 			if test -n "$PACKAGES_VOLATILE"; then
 				printf '### REMOVING UNNEEDED PACKAGES ###\n'
-				DEBIAN_FRONTEND=noninteractive apt-get remove --purge -y $PACKAGES_VOLATILE
+				apt-get remove --purge -y $PACKAGES_VOLATILE
 			fi
 			if test -n "$PACKAGES_PREVIOUS"; then
 				printf '### RESTORING PREVIOUSLY INSTALLED PACKAGES ###\n'
-				DEBIAN_FRONTEND=noninteractive apt-get install -qqy --no-install-recommends --no-upgrade $IPE_APTGET_INSTALLOPTIONS $PACKAGES_PREVIOUS
+				apt-get install -qqy --no-install-recommends --no-upgrade $PACKAGES_PREVIOUS
 			fi
 			;;
 	esac
@@ -4949,6 +4999,8 @@ cleanup() {
 	esac
 }
 
+DEBIAN_FRONTEND=noninteractive
+export DEBIAN_FRONTEND
 resetIFS
 mkdir -p /tmp/src
 mkdir -p /tmp/pickle.tmp
