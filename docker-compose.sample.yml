@@ -24,17 +24,17 @@ services:
       context: ./services/php82
       args:
         DEBIAN_MIRROR_DOMAIN: deb.debian.org
-        PHP_EXTENSIONS: pdo_mysql mysqli gd curl opcache sockets
+        PHP_EXTENSIONS: "$PHP82_EXTENSIONS"
         TZ: "$TZ"
     container_name: php82
     expose:
       - 9501
     volumes:
       - ${SOURCE_DIR}:/www/:rw
-      - ./services/php82/php.ini:/usr/local/etc/php/php.ini
-      - ./services/php82/php-fpm.conf:/usr/local/etc/php-fpm.d/www.conf
-      - ./logs/php82:/var/log/php
-      - ./data/composer:/tmp/composer
+      - ${PHP82_PHP_CONF_FILE}:/usr/local/etc/php/php.ini
+      - ${PHP82_FPM_CONF_FILE}:/usr/local/etc/php-fpm.d/www.conf
+      - ${PHP82_LOG_DIR}:/var/log/php
+      - ${PHP82_DATA_COMPOSER}:/tmp/composer
     restart: always
     cap_add:
       - SYS_PTRACE
